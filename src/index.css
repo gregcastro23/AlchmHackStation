@@ -1,0 +1,142 @@
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Hanken Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Custom Design tokens from Obsidian Command DESIGN.md */
+  --color-surface: #12140e;
+  --color-surface-dim: #12140e;
+  --color-surface-bright: #383a32;
+  --color-surface-container-lowest: #0d0f09;
+  --color-surface-container-low: #1b1c16;
+  --color-surface-container: #1f201a;
+  --color-surface-container-high: #292b24;
+  --color-surface-container-highest: #34362e;
+  
+  --color-on-surface: #e3e3d8;
+  --color-on-surface-variant: #c5c8b6;
+  --color-outline: #8f9282;
+  --color-outline-variant: #44483a;
+  
+  --color-primary: #ffffff;
+  --color-secondary: #9ddf2e;
+  --color-secondary-container: #83c300;
+  
+  --color-error: #ffb4ab;
+  --color-error-container: #93000a;
+
+  /* Theme color overrides to keep existing layout variables connected */
+  --color-page-bg: #0d0f09;
+  --color-shell-bg: #12140e;
+  --color-panel-bg: #1b1c16;
+  --color-panel-bg-alt: #1f201a;
+  --color-panel-raised: #292b24;
+
+  --color-text-primary: #e3e3d8;
+  --color-text-body: #c5c8b6;
+  --color-text-muted: #8f9282;
+  --color-text-muted-alt: #44483a;
+  --color-text-dark: #34362e;
+
+  /* High contrast indicators mapped to the new palette */
+  --color-acid-green: #9ddf2e;
+  --color-acid-secondary: #83c300;
+  --color-cyan-telemetry: #7dd3fc;
+  --color-amber-warning: #ffb020;
+  --color-error-accent: #ffb4ab;
+
+  /* Crisp lines border system */
+  --color-border-titanium: rgba(143, 146, 130, 0.1);
+  --color-border-dark: #44483a;
+  --color-border-medium: #8f9282;
+
+  /* Keyframe mappings */
+  --animate-pulse-slow: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-orbit-slow: orbit-slow 20s linear infinite;
+  --animate-orbit-fast: orbit-fast 12s linear infinite;
+  --animate-scanline: scanline 8s linear infinite;
+
+  /* Enforce sharp 90-degree corners by default for all borders */
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-full: 9999px;
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.9;
+    transform: scale(1) translate(-50%, -50%);
+    box-shadow: 0 0 40px rgba(157, 223, 46, 0.18);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05) translate(-50%, -50%);
+    box-shadow: 0 0 60px rgba(157, 223, 46, 0.28);
+  }
+}
+
+@keyframes orbit-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes orbit-fast {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@layer base {
+  body {
+    background-color: var(--color-page-bg);
+    color: var(--color-text-body);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+}
+
+/* Technical Grid Pattern overlay */
+.tech-grid {
+  background-size: 24px 24px;
+  background-image: 
+    linear-gradient(to right, rgba(143, 146, 130, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(143, 146, 130, 0.04) 1px, transparent 1px);
+}
+
+/* Custom Scrollbar for console terminals */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(13, 15, 9, 0.5);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-outline-variant);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-acid-green);
+}
+
+/* Subtle glow utility helper */
+.glow-acid {
+  box-shadow: 0 0 16px rgba(157, 223, 46, 0.2);
+}
+
+/* Volumetric layering shadow helper */
+.layer-depth {
+  box-shadow: 0 20px 50px -10px rgba(0,0,0,0.85);
+}

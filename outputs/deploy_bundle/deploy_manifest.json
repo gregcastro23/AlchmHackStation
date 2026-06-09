@@ -1,0 +1,16 @@
+{
+  "entity": "CookingWithCastro LLC",
+  "mvp": "AlchmHackStation",
+  "niche": "The App Making App // Multi-AI Design-to-Code Pipeline",
+  "version": "1.0.0-MVP",
+  "buildEngine": "Bun v1.3.13",
+  "framework": "React 19 + TypeScript",
+  "styling": "Tailwind CSS v4 (Obsidian Theme)",
+  "targetHosts": [
+    "Vercel",
+    "Railway",
+    "Tauri App Bundle"
+  ],
+  "timestamp": "2026-06-09T22:11:43.202Z",
+  "status": "PRODUCTION_READY"
+}
