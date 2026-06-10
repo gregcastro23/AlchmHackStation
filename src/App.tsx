@@ -16,6 +16,10 @@ import { SecurityProtocolsView } from './components/SecurityProtocolsView';
 import { AppBuilderDeck } from './components/AppBuilderDeck';
 import { ClaudeDesignBridge } from './components/ClaudeDesignBridge';
 import { MissionControl } from './components/MissionControl';
+import { UsageLimitsView } from './components/UsageLimitsView';
+import { ModelAccountsView } from './components/ModelAccountsView';
+import { RoutingGuardrailsView } from './components/RoutingGuardrailsView';
+import { IntegrationOpsView } from './components/IntegrationOpsView';
 
 function App() {
   const [foundryState, setFoundryState] = useState<'IDLE' | 'BUILDING' | 'SUCCESS' | 'ERROR'>('IDLE');
@@ -36,6 +40,7 @@ function App() {
   // Combined V2 states
   const [activeTab, setActiveTab] = useState<string>('mission-control');
   const [missionReadiness, setMissionReadiness] = useState(86);
+  const [budgetUtilization, setBudgetUtilization] = useState(42);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [gitHubUser, setGitHubUser] = useState<{ username: string; avatarUrl: string; isLoggedIn: boolean } | null>(null);
 
@@ -132,7 +137,7 @@ function App() {
       } else if (cleanCmd === 'clear') {
         setLogs([]);
       } else if (cleanCmd === 'help') {
-        addLog('Available commands: forge build, forge test, anvil, clear, help, ship demo, readiness, agent swarm', 'info');
+        addLog('Available commands: forge build, forge test, anvil, clear, help, ship demo, readiness, agent swarm, usage report, model accounts, route health, integration status, auth watch, v0 handoff', 'info');
       } else if (cleanCmd === 'ship demo') {
         addLog('Mission Control queued demo run: build, proof feed, pitch packet, deploy seal.', 'info');
         setMissionReadiness((prev) => Math.min(97, prev + 2));
@@ -142,6 +147,24 @@ function App() {
       } else if (cleanCmd === 'agent swarm') {
         addLog('Architect, Builder, Designer, QA, Pitch Coach, and Deploy Captain synced.', 'success');
         addLog('Agent board updated: 2 active builds, 1 review, 1 deploy blocker.', 'info');
+      } else if (cleanCmd === 'usage report') {
+        addLog(`Usage report: ${budgetUtilization}% monthly budget utilized, 43% cache hit rate, 2 approvals pending.`, 'info');
+        setActiveTab('usage-limits');
+      } else if (cleanCmd === 'model accounts') {
+        addLog('Opening model account vault: 4 connected providers, 5 stable aliases.', 'info');
+        setActiveTab('model-accounts');
+      } else if (cleanCmd === 'route health') {
+        addLog('Route health: 99.6% success, 18 fallbacks, Google circuit half-open.', 'warning');
+        setActiveTab('routing-guardrails');
+      } else if (cleanCmd === 'integration status') {
+        addLog('Integration preflight: 6 adapters registered; CLI auth and browser sessions require operator review.', 'info');
+        setActiveTab('integration-ops');
+      } else if (cleanCmd === 'auth watch') {
+        addLog('Auth Watch armed: bounded probes, redacted output, operator-confirmed reauthentication.', 'success');
+        setActiveTab('integration-ops');
+      } else if (cleanCmd === 'v0 handoff') {
+        addLog('v0 Bridge opened: prepare source files, locked paths, acceptance criteria, and generation budget.', 'info');
+        setActiveTab('integration-ops');
       } else {
         addLog(`executing custom sidecar process: ${cmd}`, 'info');
         setTimeout(() => {
@@ -192,6 +215,16 @@ function App() {
         readiness: missionReadiness,
         demoTarget: 'real-time hackathon command center',
         crew: ['Architect', 'Builder', 'Designer', 'QA', 'Pitch Coach', 'Deploy Captain'],
+      },
+      operations: {
+        budgetUtilization,
+        modelAccounts: 4,
+        modelAliases: 5,
+        routingProfile: 'Balanced',
+        approvalGates: ['high-spend', 'production-deploy'],
+        integrations: ['Antigravity', 'Claude Code', 'Stitch', 'Codex', 'v0', 'Vercel'],
+        authWatch: 'operator-confirmed',
+        contextPacketSchema: 1,
       },
       environments: [
         { name: 'LOCAL', hash: 'env_4c29', status: 'synced' },
@@ -255,6 +288,7 @@ This file contains compiled telemetry context from the AlchmHackStation console.
 - **Block Height**: ${stateExport.blockHeight}
 - **Foundry State**: ${stateExport.foundryState}
 - **Mission Readiness**: ${missionReadiness}/100
+- **Budget Utilization**: ${budgetUtilization}%
 - **App Stack**: ${framework} // ${cssEngine} // ${database}
 - **Selected Shell Command**: \`${stateExport.activeCommand}\`
 - **GitHub Session**: ${stateExport.gitHubUser}
@@ -296,6 +330,9 @@ You are running as Claude Code in the terminal workspace. Review the developer c
         runtime: 'Bun 1.3.13',
         framework,
         missionReadiness,
+        budgetUtilization,
+        modelAccounts: 4,
+        routingProfile: 'Balanced',
         css: cssEngine,
         database,
       },
@@ -337,13 +374,14 @@ You are running as Claude Code in the terminal workspace. Review the developer c
           onExportToClaude={handleExportToClaudeCode} 
           onExportToCodex={handleExportToCodex}
           missionReadiness={missionReadiness}
+          budgetUtilization={budgetUtilization}
           framework={framework}
           cssEngine={cssEngine}
           database={database}
         />
 
         {/* Horizontal Split for Sidebar + Content Pane */}
-        <div className="flex-1 flex overflow-hidden min-h-0 relative">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 relative">
           {/* Left Navigation Drawer */}
           <SidebarDrawer 
             activeTab={activeTab} 
@@ -370,6 +408,22 @@ You are running as Claude Code in the terminal workspace. Review the developer c
                 onLaunchDemo={handleLaunchDemo}
                 onMissionSignal={handleMissionSignal}
               />
+            )}
+
+            {activeTab === 'usage-limits' && (
+              <UsageLimitsView onCommitLog={addLog} onBudgetChange={setBudgetUtilization} />
+            )}
+
+            {activeTab === 'model-accounts' && (
+              <ModelAccountsView onCommitLog={addLog} />
+            )}
+
+            {activeTab === 'routing-guardrails' && (
+              <RoutingGuardrailsView onCommitLog={addLog} />
+            )}
+
+            {activeTab === 'integration-ops' && (
+              <IntegrationOpsView onCommitLog={addLog} />
             )}
 
             {activeTab === 'console' && (

@@ -178,6 +178,8 @@ const marketSignals = [
   'Rollback mindset',
   'GitHub sync',
   'One-click demo story',
+  'Budget guardrails',
+  'Provider routing',
 ];
 
 const stageColumns: TaskStage[] = ['Draft', 'Active', 'Review', 'Shipped'];

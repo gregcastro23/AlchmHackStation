@@ -1,5 +1,5 @@
 import React from 'react';
-import { Terminal, Cpu, Network, Shield, Wand2, Key, LogOut, Sparkles, PanelsTopLeft } from 'lucide-react';
+import { Terminal, Cpu, Network, Shield, Wand2, Key, LogOut, Sparkles, PanelsTopLeft, Gauge, KeyRound, Route, Waypoints } from 'lucide-react';
 
 interface SidebarDrawerProps {
   activeTab: string;
@@ -18,6 +18,10 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
 }) => {
   const navItems = [
     { id: 'mission-control', label: 'Mission Control', icon: PanelsTopLeft },
+    { id: 'integration-ops', label: 'Integration Ops', icon: Waypoints },
+    { id: 'usage-limits', label: 'Usage & Limits', icon: Gauge },
+    { id: 'model-accounts', label: 'Model Accounts', icon: KeyRound },
+    { id: 'routing-guardrails', label: 'Routing & Guardrails', icon: Route },
     { id: 'console', label: 'Operator Console', icon: Terminal },
     { id: 'network', label: 'Node Network', icon: Network },
     { id: 'security', label: 'Security Protocols', icon: Shield },
@@ -26,7 +30,27 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
   ];
 
   return (
-    <aside className="hidden lg:flex bg-[#1f201a] border-r border-[#44483a] h-full w-80 flex-col select-none py-6 z-40">
+    <>
+      <nav className="lg:hidden w-full shrink-0 overflow-x-auto custom-scrollbar border-b border-[#44483a] bg-[#1f201a]">
+        <div className="flex min-w-max p-2 gap-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`flex items-center gap-2 border px-3 py-2 font-mono text-[10px] uppercase ${isActive ? 'border-[#9ddf2e] bg-[#9ddf2e]/10 text-[#9ddf2e]' : 'border-[#44483a] text-[#c5c8b6]'}`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
+      <aside className="hidden lg:flex bg-[#1f201a] border-r border-[#44483a] h-full w-80 flex-col select-none py-6 z-40">
       {/* Brand Identity / Profile area */}
       <div className="px-6 mb-8 border-b border-[#44483a]/40 pb-6">
         <div className="flex items-center space-x-3 bg-[#12140e] border border-[#44483a] p-3.5 shadow-[0_0_12px_rgba(0,0,0,0.2)]">
@@ -79,7 +103,7 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
       </div>
 
       {/* Nav links */}
-      <nav className="flex-1 flex flex-col space-y-1">
+      <nav className="flex-1 min-h-0 overflow-y-auto custom-scrollbar flex flex-col space-y-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -118,6 +142,7 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
           <span className="text-[#7dd3fc]">18 ACTIVE</span>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 };

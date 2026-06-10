@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cpu, Eye, Database, Hammer, RefreshCw, Network, Clock, Share2, Bot, Wand2, Gauge } from 'lucide-react';
+import { Cpu, Eye, Database, Hammer, RefreshCw, Network, Clock, Share2, Bot, Wand2, Gauge, CircleDollarSign } from 'lucide-react';
 
 interface TopStatusBarProps {
   foundryState: 'IDLE' | 'BUILDING' | 'SUCCESS' | 'ERROR';
@@ -8,6 +8,7 @@ interface TopStatusBarProps {
   onExportToClaude: () => void;
   onExportToCodex: () => void;
   missionReadiness: number;
+  budgetUtilization: number;
   framework: string;
   cssEngine: string;
   database: string;
@@ -20,12 +21,13 @@ export const TopStatusBar: React.FC<TopStatusBarProps> = ({
   onExportToClaude,
   onExportToCodex,
   missionReadiness,
+  budgetUtilization,
   framework,
   cssEngine,
   database,
 }) => {
   return (
-    <header className="h-[64px] min-h-[64px] bg-[#0A0A0B]/95 border-b border-[#23262B] px-6 flex items-center justify-between select-none z-50">
+    <header className="h-[64px] min-h-[64px] bg-[#0A0A0B]/95 border-b border-[#23262B] px-3 md:px-6 flex items-center justify-between select-none z-50">
       {/* Left Identity */}
       <div className="flex items-center space-x-2">
         <div className="w-2.5 h-2.5 bg-[#DEFF9A] rounded-full animate-pulse glow-acid" />
@@ -36,7 +38,7 @@ export const TopStatusBar: React.FC<TopStatusBarProps> = ({
       </div>
 
       {/* Center Status Chips */}
-      <div className="hidden md:flex items-center space-x-3 text-[11px] font-mono tracking-wider">
+      <div className="hidden 2xl:flex items-center space-x-2 text-[10px] font-mono tracking-wider">
         <div className="flex items-center space-x-1.5 border border-[#DEFF9A]/40 text-[#DEFF9A] bg-[#DEFF9A]/5 px-2.5 py-1 rounded-sm">
           <Cpu className="w-3 h-3 text-[#DEFF9A]" />
           <span>{framework.toUpperCase()} CORE</span>
@@ -73,32 +75,36 @@ export const TopStatusBar: React.FC<TopStatusBarProps> = ({
           <Gauge className="w-3 h-3 text-[#ffb020]" />
           <span>DEMO {missionReadiness}%</span>
         </div>
+        <div className={`flex items-center space-x-1.5 border px-2.5 py-1 rounded-sm ${budgetUtilization >= 75 ? 'border-[#ffb020]/40 text-[#ffb020] bg-[#ffb020]/5' : 'border-[#7dd3fc]/40 text-[#7dd3fc] bg-[#7dd3fc]/5'}`}>
+          <CircleDollarSign className="w-3 h-3" />
+          <span>BUDGET {budgetUtilization}%</span>
+        </div>
       </div>
 
       {/* Right Session Area */}
       <div className="flex items-center space-x-3 text-[12px] font-mono text-[#888888]">
         <button
           onClick={onExportToClaude}
-          className="flex items-center space-x-1.5 border border-[#7dd3fc]/40 text-[#7dd3fc] hover:bg-[#7dd3fc]/10 px-3 py-1 rounded-sm text-[11px] font-mono transition-all duration-150 cursor-pointer active:scale-[0.97] hover:border-[#7dd3fc]/80 shadow-[0_0_12px_rgba(125,211,252,0.05)]"
+          className="hidden xl:flex items-center space-x-1.5 border border-[#7dd3fc]/40 text-[#7dd3fc] hover:bg-[#7dd3fc]/10 px-3 py-1 rounded-sm text-[11px] font-mono transition-all duration-150 cursor-pointer active:scale-[0.97] hover:border-[#7dd3fc]/80 shadow-[0_0_12px_rgba(125,211,252,0.05)]"
         >
           <Bot className="w-3.5 h-3.5 text-[#7dd3fc]" />
           <span>EXPORT TO CLAUDE</span>
         </button>
         <button
           onClick={onExport}
-          className="flex items-center space-x-1.5 border border-[#DEFF9A]/40 text-[#DEFF9A] hover:bg-[#DEFF9A]/10 px-3 py-1 rounded-sm text-[11px] font-mono transition-all duration-150 cursor-pointer active:scale-[0.97] hover:border-[#DEFF9A]/80 shadow-[0_0_12px_rgba(157,223,46,0.05)]"
+          className="hidden xl:flex items-center space-x-1.5 border border-[#DEFF9A]/40 text-[#DEFF9A] hover:bg-[#DEFF9A]/10 px-3 py-1 rounded-sm text-[11px] font-mono transition-all duration-150 cursor-pointer active:scale-[0.97] hover:border-[#DEFF9A]/80 shadow-[0_0_12px_rgba(157,223,46,0.05)]"
         >
           <Share2 className="w-3.5 h-3.5 text-[#DEFF9A]" />
           <span>EXPORT TO AGY</span>
         </button>
         <button
           onClick={onExportToCodex}
-          className="flex items-center space-x-1.5 border border-[#ffb020]/40 text-[#ffb020] hover:bg-[#ffb020]/10 px-3 py-1 rounded-sm text-[11px] font-mono transition-all duration-150 cursor-pointer active:scale-[0.97] hover:border-[#ffb020]/80 shadow-[0_0_12px_rgba(255,176,32,0.05)]"
+          className="hidden xl:flex items-center space-x-1.5 border border-[#ffb020]/40 text-[#ffb020] hover:bg-[#ffb020]/10 px-3 py-1 rounded-sm text-[11px] font-mono transition-all duration-150 cursor-pointer active:scale-[0.97] hover:border-[#ffb020]/80 shadow-[0_0_12px_rgba(255,176,32,0.05)]"
         >
           <Wand2 className="w-3.5 h-3.5 text-[#ffb020]" />
           <span>EXPORT TO CODEX</span>
         </button>
-        <div className="flex items-center space-x-2 border border-[#23262B] bg-[#101114] px-3 py-1 rounded-sm text-[#C0C0C5]">
+        <div className="hidden lg:flex items-center space-x-2 border border-[#23262B] bg-[#101114] px-3 py-1 rounded-sm text-[#C0C0C5]">
           <Network className="w-3.5 h-3.5 text-[#DEFF9A]" />
           <span>ETHGLOBAL NY // LOCAL</span>
         </div>
