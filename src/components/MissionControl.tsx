@@ -3,6 +3,7 @@ import {
   Activity,
   AlertTriangle,
   Bot,
+  Braces,
   CheckCircle2,
   ClipboardCheck,
   Code2,
@@ -24,6 +25,7 @@ interface MissionControlProps {
   blockHeight: number;
   foundryState: 'IDLE' | 'BUILDING' | 'SUCCESS' | 'ERROR';
   missionReadiness: number;
+  language: string;
   framework: string;
   cssEngine: string;
   database: string;
@@ -208,6 +210,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
   blockHeight,
   foundryState,
   missionReadiness,
+  language,
   framework,
   cssEngine,
   database,
@@ -261,8 +264,9 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-3">
             {[
+              { icon: Braces, label: 'Language', value: language },
               { icon: Code2, label: 'Frontend', value: framework },
               { icon: Sparkles, label: 'Design', value: cssEngine },
               { icon: Database, label: 'State', value: database },

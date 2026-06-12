@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { TopStatusBar } from './components/TopStatusBar';
 import { FoundryControlDeck } from './components/FoundryControlDeck';
 import { EnvironmentSyncModule } from './components/EnvironmentSyncModule';
@@ -20,6 +20,44 @@ import { UsageLimitsView } from './components/UsageLimitsView';
 import { ModelAccountsView } from './components/ModelAccountsView';
 import { RoutingGuardrailsView } from './components/RoutingGuardrailsView';
 import { IntegrationOpsView } from './components/IntegrationOpsView';
+import { SwarmNexus } from './components/SwarmNexus';
+import { OvermindConsole } from './components/OvermindConsole';
+import { HackathonSpace } from './components/HackathonSpace';
+import { DiscordLiveFeed } from './components/DiscordLiveFeed';
+import type { HackathonTrack } from './components/HackathonSpace';
+import { WorkstationLockOverlay } from './components/WorkstationLockOverlay';
+import { decomposeIdea, LANGUAGE_NAMES, LANGUAGES } from './lib/swarmEngine';
+import {
+  clearPlatformBiometric,
+  enrollPlatformBiometric,
+  getStoredWorkstationCredential,
+  supportsPlatformBiometrics,
+  verifyPlatformBiometric,
+} from './lib/workstationSecurity';
+import {
+  buildMediaProvenanceManifest,
+  getCaptureDeviceContext,
+  hashCaptureSegment,
+  requestCaptureLocation,
+} from './lib/mediaProvenance';
+import type {
+  CaptureDeviceContext,
+  CaptureLocation,
+  CaptureSegmentProof,
+  MediaProvenanceManifest,
+} from './lib/mediaProvenance';
+
+interface SecurityRecording {
+  url: string;
+  filename: string;
+  durationSeconds: number;
+  size: number;
+  proofUrl: string | null;
+  proofFilename: string | null;
+  manifest: MediaProvenanceManifest | null;
+}
+
+type SecurityPhase = 'idle' | 'enrolling' | 'arming' | 'locked' | 'verifying';
 
 function App() {
   const [foundryState, setFoundryState] = useState<'IDLE' | 'BUILDING' | 'SUCCESS' | 'ERROR'>('IDLE');
@@ -27,7 +65,7 @@ function App() {
   const [activeCommand, setActiveCommand] = useState('forge build');
   const [isBuilding, setIsBuilding] = useState(false);
   const [logs, setLogs] = useState<LogLine[]>([
-    { timestamp: '23:41:00', text: 'bun run tauri v2 environment initialized', type: 'info' },
+    { timestamp: '23:41:00', text: 'ETHGlobal New York 2026 build room initialized', type: 'info' },
     { timestamp: '23:41:02', text: 'space-time database local client connected to: spacetime_instance_local', type: 'info' },
     { timestamp: '23:41:05', text: 'vercel sync: matches development branch env_4c29', type: 'success' },
     { timestamp: '23:41:08', text: 'bun run forge build', type: 'default' },
@@ -38,13 +76,32 @@ function App() {
   ]);
 
   // Combined V2 states
-  const [activeTab, setActiveTab] = useState<string>('mission-control');
+  const [activeTab, setActiveTab] = useState<string>('hackathon-space');
   const [missionReadiness, setMissionReadiness] = useState(86);
   const [budgetUtilization, setBudgetUtilization] = useState(42);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [gitHubUser, setGitHubUser] = useState<{ username: string; avatarUrl: string; isLoggedIn: boolean } | null>(null);
+  const [securityCredentialId, setSecurityCredentialId] = useState<string | null>(() => getStoredWorkstationCredential());
+  const [securityPhase, setSecurityPhase] = useState<SecurityPhase>('idle');
+  const [securityStream, setSecurityStream] = useState<MediaStream | null>(null);
+  const [securityStartedAt, setSecurityStartedAt] = useState(0);
+  const [securityError, setSecurityError] = useState<string | null>(null);
+  const [lastSecurityRecording, setLastSecurityRecording] = useState<SecurityRecording | null>(null);
+  const [includeSecurityLocation, setIncludeSecurityLocation] = useState(false);
+  const securityRecorderRef = useRef<MediaRecorder | null>(null);
+  const securityChunksRef = useRef<Blob[]>([]);
+  const securityStreamRef = useRef<MediaStream | null>(null);
+  const securityRecordingUrlRef = useRef<string | null>(null);
+  const securityProofUrlRef = useRef<string | null>(null);
+  const securitySegmentsRef = useRef<CaptureSegmentProof[]>([]);
+  const securitySegmentSequenceRef = useRef(0);
+  const securityHashQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const securityCaptureIdRef = useRef('');
+  const securityDeviceContextRef = useRef<CaptureDeviceContext | null>(null);
+  const securityLocationRef = useRef<CaptureLocation | null>(null);
 
   // App Builder Customizer states
+  const [language, setLanguage] = useState<string>('TypeScript');
   const [framework, setFramework] = useState<string>('Vite React');
   const [cssEngine, setCssEngine] = useState<string>('Tailwind v4');
   const [database, setDatabase] = useState<string>('SpaceTimeDB');
@@ -71,6 +128,212 @@ function App() {
   const addLog = (text: string, type: LogLine['type'] = 'default') => {
     const time = new Date().toLocaleTimeString('en-US', { hour12: false });
     setLogs((prev) => [...prev, { timestamp: time, text, type }]);
+  };
+
+  useEffect(() => () => {
+    const recorder = securityRecorderRef.current;
+    if (recorder) {
+      recorder.ondataavailable = null;
+      recorder.onstop = null;
+      if (recorder.state !== 'inactive') recorder.stop();
+    }
+    securityStreamRef.current?.getTracks().forEach((track) => track.stop());
+    if (securityRecordingUrlRef.current) URL.revokeObjectURL(securityRecordingUrlRef.current);
+    if (securityProofUrlRef.current) URL.revokeObjectURL(securityProofUrlRef.current);
+  }, []);
+
+  const getSecurityError = (error: unknown, fallback: string) => {
+    if (error instanceof DOMException && error.name === 'NotAllowedError') {
+      return 'The request was cancelled or permission was denied.';
+    }
+    return error instanceof Error ? error.message : fallback;
+  };
+
+  const handleEnrollBiometric = async () => {
+    setSecurityError(null);
+    setSecurityPhase('enrolling');
+    try {
+      const isAvailable = await supportsPlatformBiometrics();
+      if (!isAvailable) throw new Error('No platform biometric authenticator is available in this browser.');
+      const credentialId = await enrollPlatformBiometric();
+      setSecurityCredentialId(credentialId);
+      addLog('Workstation biometric enrolled with required local user verification.', 'success');
+    } catch (error) {
+      const message = getSecurityError(error, 'Biometric enrollment failed.');
+      setSecurityError(message);
+      addLog(`Workstation biometric enrollment failed: ${message}`, 'warning');
+    } finally {
+      setSecurityPhase('idle');
+    }
+  };
+
+  const handleForgetBiometric = () => {
+    clearPlatformBiometric();
+    setSecurityCredentialId(null);
+    setSecurityError(null);
+    addLog('Local workstation biometric binding removed from this browser.', 'info');
+  };
+
+  const handleArmSecurity = async () => {
+    if (!securityCredentialId) {
+      setActiveTab('security');
+      setSecurityError('Enroll this laptop\'s platform biometric before locking the space.');
+      addLog('Workstation lock requires biometric enrollment first.', 'warning');
+      return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+      setActiveTab('security');
+      setSecurityError('This browser does not support the required camera recording APIs.');
+      return;
+    }
+
+    setSecurityError(null);
+    setSecurityPhase('arming');
+    let stream: MediaStream | null = null;
+
+    try {
+      securityLocationRef.current = null;
+      if (includeSecurityLocation) {
+        try {
+          securityLocationRef.current = await requestCaptureLocation();
+          addLog('Location consent granted for the next local provenance manifest.', 'info');
+        } catch (error) {
+          addLog(`Location was not included in provenance: ${getSecurityError(error, 'Unavailable')}`, 'warning');
+        }
+      }
+
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      });
+
+      const preferredTypes = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/mp4'];
+      const mimeType = preferredTypes.find((type) => MediaRecorder.isTypeSupported(type));
+      const recorder = new MediaRecorder(stream, {
+        ...(mimeType ? { mimeType } : {}),
+        videoBitsPerSecond: 1_000_000,
+      });
+      const startedAt = Date.now();
+
+      securityChunksRef.current = [];
+      securitySegmentsRef.current = [];
+      securitySegmentSequenceRef.current = 0;
+      securityHashQueueRef.current = Promise.resolve();
+      securityCaptureIdRef.current = window.crypto.randomUUID();
+      securityDeviceContextRef.current = getCaptureDeviceContext(stream);
+      recorder.ondataavailable = (event) => {
+        if (event.data.size === 0) return;
+        securityChunksRef.current.push(event.data);
+        const sequence = securitySegmentSequenceRef.current;
+        securitySegmentSequenceRef.current += 1;
+        const capturedAt = new Date().toISOString();
+        securityHashQueueRef.current = securityHashQueueRef.current.then(async () => {
+          const previousChainHash = securitySegmentsRef.current.at(-1)?.chainHash ?? null;
+          const proof = await hashCaptureSegment(event.data, sequence, capturedAt, previousChainHash);
+          securitySegmentsRef.current.push(proof);
+        });
+      };
+      recorder.onerror = () => {
+        setSecurityError('The local camera recording encountered an error.');
+      };
+      recorder.onstop = async () => {
+        await securityHashQueueRef.current;
+        const blob = new Blob(securityChunksRef.current, { type: recorder.mimeType || 'video/webm' });
+        if (blob.size === 0) return;
+        const completedAt = Date.now();
+        const extension = blob.type.includes('mp4') ? 'mp4' : 'webm';
+        const filename = `ethstation-security-${new Date(startedAt).toISOString().replace(/[:.]/g, '-')}.${extension}`;
+        const url = URL.createObjectURL(blob);
+        let manifest: MediaProvenanceManifest | null = null;
+        let proofUrl: string | null = null;
+        let proofFilename: string | null = null;
+
+        try {
+          if (!securityDeviceContextRef.current) throw new Error('Capture device context was unavailable.');
+          manifest = await buildMediaProvenanceManifest({
+            captureId: securityCaptureIdRef.current,
+            startedAt,
+            completedAt,
+            filename,
+            media: blob,
+            segments: securitySegmentsRef.current,
+            device: securityDeviceContextRef.current,
+            location: securityLocationRef.current,
+            locationConsent: includeSecurityLocation,
+            biometricCredentialId: securityCredentialId,
+          });
+          proofFilename = filename.replace(/\.[^.]+$/, '.provenance.json');
+          proofUrl = URL.createObjectURL(new Blob([JSON.stringify(manifest, null, 2)], { type: 'application/json' }));
+        } catch (error) {
+          const message = getSecurityError(error, 'Unable to generate the provenance manifest.');
+          setSecurityError(message);
+          addLog(`Video saved, but provenance generation failed: ${message}`, 'warning');
+        }
+
+        const recording: SecurityRecording = {
+          url,
+          filename,
+          durationSeconds: Math.max(1, Math.round((completedAt - startedAt) / 1000)),
+          size: blob.size,
+          proofUrl,
+          proofFilename,
+          manifest,
+        };
+        securityRecordingUrlRef.current = recording.url;
+        securityProofUrlRef.current = recording.proofUrl;
+        setLastSecurityRecording((previous) => {
+          if (previous) URL.revokeObjectURL(previous.url);
+          if (previous?.proofUrl) URL.revokeObjectURL(previous.proofUrl);
+          return recording;
+        });
+        if (manifest) {
+          addLog(`Provenance proof created: ${manifest.captureProof.segmentCount} chained segments; anchor status UNANCHORED.`, 'success');
+        }
+      };
+
+      securityRecorderRef.current = recorder;
+      securityStreamRef.current = stream;
+      recorder.start(1000);
+      setSecurityStream(stream);
+      setSecurityStartedAt(startedAt);
+      setSecurityPhase('locked');
+      addLog('SPACE LOCKED: local camera recording active; biometric verification required.', 'warning');
+    } catch (error) {
+      stream?.getTracks().forEach((track) => track.stop());
+      const message = getSecurityError(error, 'Unable to arm workstation security.');
+      setSecurityError(message);
+      setSecurityPhase('idle');
+      setActiveTab('security');
+      addLog(`Workstation security was not armed: ${message}`, 'warning');
+    }
+  };
+
+  const handleUnlockSecurity = async () => {
+    const credentialId = securityCredentialId ?? getStoredWorkstationCredential();
+    if (!credentialId) {
+      setSecurityError('The local biometric binding is missing. Close the browser and use operating-system recovery.');
+      return;
+    }
+
+    setSecurityError(null);
+    setSecurityPhase('verifying');
+    try {
+      await verifyPlatformBiometric(credentialId);
+      const recorder = securityRecorderRef.current;
+      if (recorder && recorder.state !== 'inactive') recorder.stop();
+      securityStream?.getTracks().forEach((track) => track.stop());
+      securityStreamRef.current = null;
+      securityRecorderRef.current = null;
+      setSecurityStream(null);
+      setSecurityPhase('idle');
+      addLog('SPACE UNLOCKED: platform biometric verified; local recording finalized.', 'success');
+    } catch (error) {
+      const message = getSecurityError(error, 'Biometric verification failed.');
+      setSecurityError(message);
+      setSecurityPhase('locked');
+      addLog(`Workstation remains locked: ${message}`, 'warning');
+    }
   };
 
   const handleRunBuild = () => {
@@ -137,7 +400,16 @@ function App() {
       } else if (cleanCmd === 'clear') {
         setLogs([]);
       } else if (cleanCmd === 'help') {
-        addLog('Available commands: forge build, forge test, anvil, clear, help, ship demo, readiness, agent swarm, usage report, model accounts, route health, integration status, auth watch, v0 handoff', 'info');
+        addLog('Available commands: nexus, overmind, languages, forge idea, forge build, forge test, anvil, clear, help, ship demo, readiness, agent swarm, usage report, model accounts, route health, integration status, auth watch, v0 handoff', 'info');
+      } else if (cleanCmd === 'nexus' || cleanCmd === 'swarm nexus' || cleanCmd === 'crucible' || cleanCmd === 'forge idea') {
+        addLog('Opening Swarm Nexus — The Crucible. Type an idea and forge it across the agent swarm.', 'success');
+        setActiveTab('swarm-nexus');
+      } else if (cleanCmd === 'overmind' || cleanCmd === 'ai') {
+        addLog('Opening Overmind — live agentic build authority. Bind an Anthropic key to bring it online.', 'success');
+        setActiveTab('overmind');
+      } else if (cleanCmd === 'languages' || cleanCmd === 'langs') {
+        addLog(`Polyglot foundry online — ${LANGUAGES.length} language toolchains armed: ${LANGUAGE_NAMES.join(', ')}.`, 'success');
+        addLog(`Active core language: ${language}. Switch via the App Builder Configurator or Overmind set_stack.`, 'info');
       } else if (cleanCmd === 'ship demo') {
         addLog('Mission Control queued demo run: build, proof feed, pitch packet, deploy seal.', 'info');
         setMissionReadiness((prev) => Math.min(97, prev + 2));
@@ -175,14 +447,78 @@ function App() {
   };
 
   const handleApplyConfig = () => {
-    addLog(`[SYS] Reconfiguring project specs: ${framework} + ${cssEngine} + ${database}...`, 'info');
+    const lang = LANGUAGES.find((l) => l.name === language);
+    addLog(`[SYS] Reconfiguring project specs: ${language} + ${framework} + ${cssEngine} + ${database}...`, 'info');
     setTimeout(() => {
+      addLog(`✓ Core language toolchain armed: ${lang ? `${lang.name} (${lang.toolchain}, tests via ${lang.testCmd})` : language}`, 'success');
       addLog(`✓ Framework compiler mapped to ${framework}`, 'success');
       addLog(`✓ Style injection hooks set to ${cssEngine}`, 'success');
       addLog(`✓ Database schema sync redirected to ${database}`, 'success');
       addLog('Project workspace configuration RECONCILED successfully.', 'success');
     }, 450);
   };
+
+  // --- Overmind bridge: stable callbacks over always-fresh state ---
+  const stationRef = useRef({
+    missionReadiness, foundryState, language, framework, cssEngine, database, blockHeight, budgetUtilization, logs,
+  });
+  useEffect(() => {
+    stationRef.current = {
+      missionReadiness, foundryState, language, framework, cssEngine, database, blockHeight, budgetUtilization, logs,
+    };
+  }, [missionReadiness, foundryState, language, framework, cssEngine, database, blockHeight, budgetUtilization, logs]);
+
+  const getStationState = useCallback(() => {
+    const s = stationRef.current;
+    const lang = LANGUAGES.find((l) => l.name === s.language);
+    return {
+      missionReadiness: s.missionReadiness,
+      foundryState: s.foundryState,
+      stack: {
+        language: s.language,
+        toolchain: lang?.toolchain ?? 'unknown',
+        framework: s.framework,
+        cssEngine: s.cssEngine,
+        database: s.database,
+      },
+      supportedLanguages: LANGUAGE_NAMES,
+      blockHeight: s.blockHeight,
+      budgetUtilization: s.budgetUtilization,
+      recentLogs: s.logs.slice(-12).map((l) => `[${l.timestamp}] ${l.text}`),
+    };
+  }, []);
+
+  const applyStack = useCallback((patch: { language?: string; framework?: string; cssEngine?: string; database?: string }) => {
+    if (patch.language) setLanguage(patch.language);
+    if (patch.framework) setFramework(patch.framework);
+    if (patch.cssEngine) setCssEngine(patch.cssEngine);
+    if (patch.database) setDatabase(patch.database);
+  }, []);
+
+  const handleOvermindForge = useCallback((idea: string, pattern: string) => {
+    const plan = decomposeIdea(idea);
+    window.dispatchEvent(new CustomEvent('alchm:forge', { detail: { idea, pattern } }));
+    setActiveTab('swarm-nexus');
+    return JSON.stringify({
+      forged: true,
+      pattern,
+      headline: plan.headline,
+      taskCount: plan.tasks.length,
+      domains: plan.domains.map((d) => d.label),
+      stack: plan.stack,
+      totalComplexity: plan.totalComplexity,
+    });
+  }, []);
+
+  const handleStartHackathonBuild = useCallback((idea: string, track: HackathonTrack) => {
+    const trackLabels: Record<HackathonTrack, string> = {
+      'from-scratch': 'From Scratch',
+      'extend-open-source': 'Extend Open Source',
+      'ship-a-feature': 'Ship a Feature',
+    };
+    addLog(`[ETHGLOBAL] Forging "${idea}" on the ${trackLabels[track]} track.`, 'success');
+    handleOvermindForge(idea, 'swarm');
+  }, [handleOvermindForge]);
 
   const handleMissionSignal = (signal: string) => {
     addLog(`[MISSION] ${signal}`, 'info');
@@ -207,6 +543,7 @@ function App() {
       foundryState,
       activeCommand,
       configuration: {
+        language,
         framework,
         cssEngine,
         database,
@@ -248,7 +585,7 @@ function App() {
 - **Exported**: ${stateExport.timestamp}
 - **Active Block**: ${blockHeight}
 - **Foundry State**: ${foundryState}
-- **App Stack**: ${framework} // ${cssEngine} // ${database}
+- **App Stack**: ${language} // ${framework} // ${cssEngine} // ${database}
 - **Selected Forge Command**: \`${activeCommand}\`
 - **Telemetry Logs**:
 \`\`\`
@@ -272,6 +609,7 @@ ${stateExport.activeLogs.join('\n')}
       activeCommand,
       gitHubUser: gitHubUser?.isLoggedIn ? gitHubUser.username : 'GUEST',
       configuration: {
+        language,
         framework,
         cssEngine,
         database,
@@ -289,7 +627,7 @@ This file contains compiled telemetry context from the AlchmHackStation console.
 - **Foundry State**: ${stateExport.foundryState}
 - **Mission Readiness**: ${missionReadiness}/100
 - **Budget Utilization**: ${budgetUtilization}%
-- **App Stack**: ${framework} // ${cssEngine} // ${database}
+- **App Stack**: ${language} // ${framework} // ${cssEngine} // ${database}
 - **Selected Shell Command**: \`${stateExport.activeCommand}\`
 - **GitHub Session**: ${stateExport.gitHubUser}
 
@@ -328,6 +666,7 @@ You are running as Claude Code in the terminal workspace. Review the developer c
       blueprintId: `bp_alchm_${Date.now().toString(36)}`,
       engineSpecs: {
         runtime: 'Bun 1.3.13',
+        language,
         framework,
         missionReadiness,
         budgetUtilization,
@@ -367,17 +706,21 @@ You are running as Claude Code in the terminal workspace. Review the developer c
       <div className="flex-1 flex flex-col bg-[#12140e] border border-[#44483a]/60 shadow-2xl shadow-black/90 z-10 m-0 md:m-3 overflow-hidden">
         
         {/* Top Header System Bar */}
-        <TopStatusBar 
-          foundryState={foundryState} 
-          blockHeight={blockHeight} 
-          onExport={handleExportToAntigravity} 
-          onExportToClaude={handleExportToClaudeCode} 
+        <TopStatusBar
+          foundryState={foundryState}
+          blockHeight={blockHeight}
+          onExport={handleExportToAntigravity}
+          onExportToClaude={handleExportToClaudeCode}
           onExportToCodex={handleExportToCodex}
           missionReadiness={missionReadiness}
           budgetUtilization={budgetUtilization}
+          language={language}
           framework={framework}
           cssEngine={cssEngine}
           database={database}
+          securityReady={Boolean(securityCredentialId)}
+          securityBusy={securityPhase === 'arming' || securityPhase === 'enrolling'}
+          onLockSpace={handleArmSecurity}
         />
 
         {/* Horizontal Split for Sidebar + Content Pane */}
@@ -396,11 +739,49 @@ You are running as Claude Code in the terminal workspace. Review the developer c
 
           {/* Right Content Panels */}
           <main className="flex-1 p-4 overflow-y-auto custom-scrollbar min-h-0 flex flex-col">
+            {activeTab === 'hackathon-space' && (
+              <HackathonSpace
+                missionReadiness={missionReadiness}
+                foundryState={foundryState}
+                gitHubConnected={Boolean(gitHubUser?.isLoggedIn)}
+                onNavigate={setActiveTab}
+                onCommitLog={addLog}
+                onStartBuild={handleStartHackathonBuild}
+              />
+            )}
+
+            {/* Persistent modules — stay mounted so the swarm sim and Overmind's
+                live agent run survive tab switches */}
+            <div className={`flex-1 min-h-0 ${activeTab === 'swarm-nexus' ? '' : 'hidden'}`}>
+              <SwarmNexus
+                onCommitLog={addLog}
+                onReadiness={(delta) =>
+                  setMissionReadiness((prev) => Math.min(99, Math.round(prev + delta)))
+                }
+              />
+            </div>
+
+            <div className={`flex-1 min-h-0 ${activeTab === 'overmind' ? '' : 'hidden'}`}>
+              <OvermindConsole
+                onCommitLog={addLog}
+                setActiveTab={setActiveTab}
+                applyStack={applyStack}
+                getStationState={getStationState}
+                decompose={(idea) => decomposeIdea(idea) as unknown as Record<string, unknown>}
+                forgeSwarm={handleOvermindForge}
+              />
+            </div>
+
+            {activeTab === 'discord-feed' && (
+              <DiscordLiveFeed onCommitLog={addLog} />
+            )}
+
             {activeTab === 'mission-control' && (
               <MissionControl
                 blockHeight={blockHeight}
                 foundryState={foundryState}
                 missionReadiness={missionReadiness}
+                language={language}
                 framework={framework}
                 cssEngine={cssEngine}
                 database={database}
@@ -430,7 +811,9 @@ You are running as Claude Code in the terminal workspace. Review the developer c
               <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0 overflow-hidden h-[calc(100vh-64px-24px)] md:h-auto">
                 {/* Left Orchestration Column (40% width) */}
                 <section className="w-full lg:w-[40%] flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-0 lg:pr-1 min-h-0">
-                  <AppBuilderDeck 
+                  <AppBuilderDeck
+                    language={language}
+                    setLanguage={setLanguage}
                     framework={framework}
                     setFramework={setFramework}
                     cssEngine={cssEngine}
@@ -476,7 +859,17 @@ You are running as Claude Code in the terminal workspace. Review the developer c
 
             {activeTab === 'security' && (
               <div className="flex-1 min-h-0">
-                <SecurityProtocolsView />
+                <SecurityProtocolsView
+                  biometricEnrolled={Boolean(securityCredentialId)}
+                  securityPhase={securityPhase}
+                  securityError={securityError}
+                  lastRecording={lastSecurityRecording}
+                  includeLocation={includeSecurityLocation}
+                  onEnrollBiometric={handleEnrollBiometric}
+                  onForgetBiometric={handleForgetBiometric}
+                  onArmSecurity={handleArmSecurity}
+                  onIncludeLocationChange={setIncludeSecurityLocation}
+                />
               </div>
             )}
 
@@ -509,6 +902,16 @@ You are running as Claude Code in the terminal workspace. Review the developer c
           addLog(`GitHub session authenticated. Bound user: ${username}`, 'success');
         }} 
       />
+
+      {securityStream && (securityPhase === 'locked' || securityPhase === 'verifying') && (
+        <WorkstationLockOverlay
+          stream={securityStream}
+          startedAt={securityStartedAt}
+          isVerifying={securityPhase === 'verifying'}
+          error={securityError}
+          onUnlock={handleUnlockSecurity}
+        />
+      )}
     </div>
   );
 }

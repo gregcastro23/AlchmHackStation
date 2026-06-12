@@ -1,7 +1,10 @@
 import React from 'react';
-import { Settings, LayoutGrid, Palette, Database as DbIcon } from 'lucide-react';
+import { Settings, LayoutGrid, Palette, Database as DbIcon, Braces } from 'lucide-react';
+import { LANGUAGES } from '../lib/swarmEngine';
 
 interface AppBuilderDeckProps {
+  language: string;
+  setLanguage: (language: string) => void;
   framework: string;
   setFramework: (framework: string) => void;
   cssEngine: string;
@@ -12,6 +15,8 @@ interface AppBuilderDeckProps {
 }
 
 export const AppBuilderDeck: React.FC<AppBuilderDeckProps> = ({
+  language,
+  setLanguage,
   framework,
   setFramework,
   cssEngine,
@@ -23,6 +28,7 @@ export const AppBuilderDeck: React.FC<AppBuilderDeckProps> = ({
   const frameworks = ['Vite React', 'Next.js', 'Tauri V2'];
   const cssEngines = ['Tailwind v4', 'Vanilla CSS', 'CSS Modules'];
   const databases = ['SpaceTimeDB', 'PostgreSQL', 'SQLite'];
+  const activeLang = LANGUAGES.find((l) => l.name === language);
 
   return (
     <section className="bg-[#12140e] border border-[#44483a] p-5 flex flex-col space-y-4 select-none">
@@ -37,6 +43,40 @@ export const AppBuilderDeck: React.FC<AppBuilderDeckProps> = ({
       </header>
 
       <div className="space-y-3">
+        {/* Core Language Matrix */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-1.5 font-mono text-[11px] text-[#c5c8b6]">
+              <Braces className="w-3.5 h-3.5 text-[#8f9282]" />
+              <span className="uppercase font-bold tracking-wide">Core Language</span>
+            </div>
+            {activeLang && (
+              <span className="font-mono text-[9px] text-[#ffb020] uppercase">
+                {activeLang.toolchain} // {activeLang.testCmd}
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-5 gap-1">
+            {LANGUAGES.map((lang) => {
+              const isSelected = language === lang.name;
+              return (
+                <button
+                  key={lang.id}
+                  onClick={() => setLanguage(lang.name)}
+                  title={`${lang.name} — ${lang.toolchain}`}
+                  className={`py-1.5 font-mono text-[10px] border text-center transition-all cursor-pointer ${
+                    isSelected
+                      ? 'border-[#9ddf2e] text-[#9ddf2e] bg-[#9ddf2e]/5 font-bold shadow-[0_0_8px_rgba(157,223,46,0.05)]'
+                      : 'border-[#44483a] text-[#c5c8b6] hover:border-[#8f9282] hover:text-[#e3e3d8] bg-transparent'
+                  }`}
+                >
+                  {lang.short}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Framework Toggle Row */}
         <div className="space-y-1.5">
           <div className="flex items-center space-x-1.5 font-mono text-[11px] text-[#c5c8b6]">

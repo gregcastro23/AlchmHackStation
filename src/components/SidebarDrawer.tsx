@@ -1,5 +1,5 @@
 import React from 'react';
-import { Terminal, Cpu, Network, Shield, Wand2, Key, LogOut, Sparkles, PanelsTopLeft, Gauge, KeyRound, Route, Waypoints } from 'lucide-react';
+import { Terminal, Cpu, Network, Shield, Wand2, Key, LogOut, Sparkles, PanelsTopLeft, Gauge, KeyRound, Route, Waypoints, Atom, BrainCircuit, CalendarDays, MessageSquare } from 'lucide-react';
 
 interface SidebarDrawerProps {
   activeTab: string;
@@ -17,7 +17,11 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
   onLogoutClick,
 }) => {
   const navItems = [
+    { id: 'hackathon-space', label: 'ETHGlobal Space', icon: CalendarDays },
+    { id: 'swarm-nexus', label: 'Swarm Nexus', icon: Atom },
+    { id: 'overmind', label: 'Overmind AI', icon: BrainCircuit },
     { id: 'mission-control', label: 'Mission Control', icon: PanelsTopLeft },
+    { id: 'discord-feed', label: 'Discord Live Feed', icon: MessageSquare },
     { id: 'integration-ops', label: 'Integration Ops', icon: Waypoints },
     { id: 'usage-limits', label: 'Usage & Limits', icon: Gauge },
     { id: 'model-accounts', label: 'Model Accounts', icon: KeyRound },
@@ -69,10 +73,10 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
               {gitHubUser?.isLoggedIn ? gitHubUser.username : 'OP_GHOST_01'}
             </div>
             <div className="font-mono text-[9px] text-[#c5c8b6] uppercase tracking-wider mt-0.5">
-              {gitHubUser?.isLoggedIn ? 'ALCHM_OPERATOR' : 'GUEST_CONSOLE'}
+              {gitHubUser?.isLoggedIn ? 'ETHGLOBAL_HACKER' : 'HACKER_GUEST'}
             </div>
             <div className="font-mono text-[9px] text-[#8f9282] uppercase mt-0.5">
-              V.042-ALPHA
+              NEW YORK // 2026
             </div>
           </div>
         </div>
@@ -130,16 +134,16 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
       {/* Footer system details */}
       <div className="px-6 border-t border-[#44483a]/40 pt-4 font-mono text-[10px] text-[#8f9282] space-y-1">
         <div className="flex justify-between">
-          <span>SPACETIMEDB:</span>
+          <span>EVENT WINDOW:</span>
           <span className="text-[#9ddf2e] font-bold">READY</span>
         </div>
         <div className="flex justify-between">
-          <span>ANVIL INSTANCE:</span>
-          <span className="text-[#c5c8b6]">127.0.0.1:8545</span>
+          <span>DATES:</span>
+          <span className="text-[#c5c8b6]">JUN 12-14</span>
         </div>
         <div className="flex justify-between">
-          <span>P2P SYNC PEERS:</span>
-          <span className="text-[#7dd3fc]">18 ACTIVE</span>
+          <span>BUILD PATHS:</span>
+          <span className="text-[#7dd3fc]">3 ACTIVE</span>
         </div>
       </div>
       </aside>
