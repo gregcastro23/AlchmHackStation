@@ -170,48 +170,60 @@ const eventFaqs = [
 
 const resourceLanes = [
   {
-    title: 'Start fast',
-    description: 'Bootstrap the app and validate contracts immediately.',
-    icon: Rocket,
+    title: 'Privy',
+    description: 'Create embedded accounts and wallets on crypto rails.',
+    icon: ShieldCheck,
     tone: 'text-[#9ddf2e]',
+    prizes: [
+      { name: 'Best onchain financial product', amount: '$1,650', req: 'Use embedded wallets & Earn capability' },
+      { name: 'Best cross-chain funding', amount: '$1,650', req: 'Use universal deposit addresses' },
+      { name: 'Best AI agent', amount: '$1,700', req: 'Use Agent Wallet CLI for onchain action' }
+    ],
     links: [
-      { label: 'Privy Embedded Wallets', href: 'https://docs.privy.io/' },
-      { label: 'Privy Agent CLI', href: 'https://docs.privy.io/recipes/agent-integrations/agent-cli' },
-      { label: 'Scaffold-ETH 2', href: 'https://scaffoldeth.io/' },
-      { label: 'Remix IDE', href: 'https://remix.ethereum.org/' },
+      { label: 'Privy Docs', href: 'https://docs.privy.io/' },
+      { label: 'Agent Sandbox', href: 'https://agents.privy.io' },
     ],
   },
   {
-    title: 'Learn & reference',
-    description: 'Reach for focused Solidity examples while the clock is running.',
-    icon: BookOpen,
+    title: 'Base',
+    description: 'A secure, low-cost builder-friendly Ethereum L2.',
+    icon: Rocket,
     tone: 'text-[#7dd3fc]',
+    prizes: [
+      { name: 'Best Consumer App', amount: '$2,000', req: 'Deploy on Base Sepolia/Mainnet' },
+      { name: 'Onchain Commerce', amount: '$1,500', req: 'Build commerce flow on Base' }
+    ],
     links: [
-      { label: 'Solidity Documentation', href: 'https://docs.soliditylang.org/' },
-      { label: 'Solidity by Example', href: 'https://solidity-by-example.org/' },
-      { label: 'SpeedRun Ethereum', href: 'https://speedrunethereum.com/' },
+      { label: 'Base Docs', href: 'https://docs.base.org/' },
+      { label: 'Builder Funding', href: 'https://docs.base.org/get-started/get-funded' },
     ],
   },
   {
-    title: 'Research the chain',
-    description: 'Choose standards and networks with current technical context.',
-    icon: FileCode2,
+    title: 'Arbitrum',
+    description: 'Next-generation L2 for high-throughput dapps.',
+    icon: BookOpen,
     tone: 'text-[#ffb020]',
+    prizes: [
+      { name: 'Best Stylus Use Case', amount: '$2,000', req: 'Build using Rust/C++ via Stylus' },
+      { name: 'Best Gaming Protocol', amount: '$1,500', req: 'Deploy game economy on Arbitrum' }
+    ],
     links: [
-      { label: 'L2BEAT Scaling', href: 'https://l2beat.com/scaling/tvs' },
-      { label: 'Ethereum EIPs', href: 'https://eips.ethereum.org/all' },
-      { label: 'Etherscan Gas Tracker', href: 'https://etherscan.io/gastracker' },
+      { label: 'Arbitrum Docs', href: 'https://docs.arbitrum.io/' },
+      { label: 'Stylus Quickstart', href: 'https://docs.arbitrum.io/stylus' },
     ],
   },
   {
-    title: 'Keep shipping',
-    description: 'Find ecosystem support once the hackathon build has momentum.',
-    icon: Sparkles,
+    title: 'SpaceTimeDB',
+    description: 'Relational database that is also a smart contract platform.',
+    icon: FileCode2,
     tone: 'text-[#e3e3d8]',
+    prizes: [
+      { name: 'Best Multiplayer Game', amount: '$2,000', req: 'Use SpaceTimeDB for game state' },
+      { name: 'Best Social App', amount: '$1,500', req: 'Leverage speed for social features' }
+    ],
     links: [
-      { label: 'EF Ecosystem Support', href: 'https://esp.ethereum.foundation/' },
-      { label: 'Base Builder Funding', href: 'https://docs.base.org/get-started/get-funded' },
-      { label: 'ETHGlobal Showcase', href: 'https://ethglobal.com/showcase' },
+      { label: 'SpaceTimeDB Docs', href: 'https://spacetimedb.com/docs' },
+      { label: 'TypeScript SDK', href: 'https://spacetimedb.com/docs/sdk/typescript' },
     ],
   },
 ];
@@ -821,20 +833,35 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
             {resourceLanes.map((lane) => {
               const Icon = lane.icon;
               return (
-                <div key={lane.title} className="border border-[#44483a] bg-[#0d0f09] p-4">
+                <div key={lane.title} className="border border-[#44483a] bg-[#0d0f09] p-4 flex flex-col">
                   <div className="flex items-center gap-2">
                     <Icon className={`h-4 w-4 ${lane.tone}`} />
                     <h3 className="text-xs font-bold text-[#e3e3d8]">{lane.title}</h3>
                   </div>
                   <p className="mt-2 min-h-10 text-[11px] leading-5 text-[#8f9282]">{lane.description}</p>
-                  <div className="mt-4 space-y-1.5">
+                  
+                  {lane.prizes && (
+                    <div className="mt-3 space-y-2.5 border-t border-[#44483a] pt-3 flex-1">
+                      {lane.prizes.map(p => (
+                        <div key={p.name}>
+                          <div className="flex justify-between items-start text-[10px] font-bold text-[#e3e3d8] gap-2">
+                            <span>{p.name}</span>
+                            <span className={lane.tone}>{p.amount}</span>
+                          </div>
+                          <p className="mt-0.5 text-[9px] leading-4 text-[#8f9282]">{p.req}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="mt-4 space-y-1.5 shrink-0">
                     {lane.links.map((link) => (
                       <a
                         key={link.href}
                         href={link.href}
                         target="_blank"
                         rel="noreferrer"
-                        className="group flex items-center justify-between gap-3 border border-[#44483a] bg-[#12140e] px-3 py-2 text-[11px] text-[#c5c8b6] transition hover:border-[#7dd3fc]/50 hover:text-[#e3e3d8]"
+                        className={`group flex items-center justify-between gap-3 border border-[#44483a] bg-[#12140e] px-3 py-2 text-[11px] text-[#c5c8b6] transition hover:border-[#7dd3fc]/50 hover:text-[#e3e3d8]`}
                       >
                         <span>{link.label}</span>
                         <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-[#44483a] transition group-hover:text-[#7dd3fc]" />
