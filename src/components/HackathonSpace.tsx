@@ -175,7 +175,8 @@ const resourceLanes = [
     icon: Rocket,
     tone: 'text-[#9ddf2e]',
     links: [
-      { label: 'Ethereum Developer Hub', href: 'https://ethereum.org/developers/' },
+      { label: 'Privy Embedded Wallets', href: 'https://docs.privy.io/' },
+      { label: 'Privy Agent CLI', href: 'https://docs.privy.io/recipes/agent-integrations/agent-cli' },
       { label: 'Scaffold-ETH 2', href: 'https://scaffoldeth.io/' },
       { label: 'Remix IDE', href: 'https://remix.ethereum.org/' },
     ],
