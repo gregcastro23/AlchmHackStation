@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Sparkles, Play, FileCheck, Code2 } from 'lucide-react';
+import { loadKey, makeClient, DEFAULT_MODEL } from '../lib/overmind';
 
 interface ClaudeDesignBridgeProps {
   framework: string;
   cssEngine: string;
-  onCommitLog: (text: string, type?: 'info' | 'success' | 'warning' | 'default') => void;
+  onCommitLog: (text: string, type?: 'info' | 'success' | 'warning' | 'default' | 'error') => void;
 }
 
 export const ClaudeDesignBridge: React.FC<ClaudeDesignBridgeProps> = ({
@@ -34,53 +35,65 @@ export const ClaudeDesignBridge: React.FC<ClaudeDesignBridgeProps> = ({
 
   const [logs, setLogs] = useState<string[]>([]);
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
+    const key = loadKey();
+    if (!key) {
+      onCommitLog('Claude Design: No Anthropic key found in local vault. Connect Overmind first.', 'error');
+      return;
+    }
+
     setIsCompiling(true);
     setLogs(['[Claude] Fetching Stitch visual frame nodes...', '[Claude] Ingesting layout parameters and color tokens...']);
     
-    setTimeout(() => {
+    try {
+      const client = await makeClient(key);
+      const stream = await client.messages.create({
+        model: DEFAULT_MODEL,
+        max_tokens: 2000,
+        temperature: 0,
+        system: `You are an expert ${framework} developer utilizing ${cssEngine}. You must convert the provided JSON visual schema into a fully functional, highly polished React component. Return ONLY the raw code inside a markdown block. Use lucide-react for icons. Adhere strictly to the "AlchmHackStation" design language (sharp corners, acid green accents, tech grid borders). The component name should be "GeneratedComponent".`,
+        messages: [{ role: 'user', content: activeSchema }],
+        stream: true,
+      });
+
       setLogs((prev) => [
         ...prev,
         `[Claude] Building component for target framework: ${framework}`,
         `[Claude] Mapping design variables using stylesheet: ${cssEngine}`,
-        '[Claude] Generating type-safe React properties...',
+        '[Claude] Streaming type-safe React properties...',
       ]);
       
-      setTimeout(() => {
-        setLogs((prev) => [...prev, '[Claude] Component blueprint generated successfully.']);
-        setCompiledCode(`import React from 'react';
-import { Play } from 'lucide-react';
+      let fullText = '';
+      setCompiledCode('');
+      for await (const chunk of stream) {
+        if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+          fullText += chunk.delta.text;
+          setCompiledCode(fullText.replace(/^```tsx?\n?/, '').replace(/```$/, ''));
+        }
+      }
 
-// Compiled via Claude Design Bridge
-export const AltarControlDeck: React.FC = () => {
-  return (
-    <div className="bg-[#12140e] border border-[#44483a] p-5 rounded-none flex flex-col space-y-4">
-      <header className="border-b border-[#44483a] pb-2 flex justify-between items-center">
-        <h2 className="font-mono text-[13px] text-[#e3e3d8] uppercase tracking-wider font-bold">
-          Altar Control System
-        </h2>
-        <span className="w-2 h-2 rounded-full bg-[#9ddf2e] animate-pulse" />
-      </header>
-      <div className="grid grid-cols-4 gap-1">
-        <button className="bg-[#9ddf2e]/10 border border-[#9ddf2e] text-[#9ddf2e] font-mono py-2 text-[11px] uppercase tracking-widest font-bold">
-          COMPILE
-        </button>
-      </div>
-    </div>
-  );
-};`);
-        setIsCompiling(false);
-        onCommitLog(`Claude Design: Compiled visual frame deck to a React component for ${framework}.`, 'success');
-      }, 900);
-    }, 600);
+      setLogs((prev) => [...prev, '[Claude] Component blueprint generated successfully.']);
+      onCommitLog(`Claude Design: Compiled visual frame deck to a React component for ${framework}.`, 'success');
+    } catch (err: any) {
+      onCommitLog(`Claude Design: Compilation failed — ${err.message}`, 'error');
+    } finally {
+      setIsCompiling(false);
+    }
   };
 
-  const handleCommit = () => {
-    onCommitLog('Claude Design: Writing component src/components/AltarControlDeck.tsx to workspace...', 'info');
-    setTimeout(() => {
-      onCommitLog('✓ File src/components/AltarControlDeck.tsx committed successfully to disk.', 'success');
+  const handleCommit = async () => {
+    onCommitLog('Claude Design: Writing component src/components/GeneratedComponent.tsx to workspace...', 'info');
+    try {
+      const res = await fetch('/api/fs', {
+        method: 'POST',
+        body: JSON.stringify({ filePath: 'src/components/GeneratedComponent.tsx', content: compiledCode })
+      });
+      if (!res.ok) throw new Error('Failed to write file via local API');
+      onCommitLog('✓ File src/components/GeneratedComponent.tsx committed successfully to disk.', 'success');
       onCommitLog('Vite hot-reloading active target modules...', 'success');
-    }, 600);
+    } catch (err: any) {
+      onCommitLog(`Claude Design: File write failed — ${err.message}`, 'error');
+    }
   };
 
   return (
