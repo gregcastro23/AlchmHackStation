@@ -24,6 +24,7 @@ import { SwarmNexus } from './components/SwarmNexus';
 import { OvermindConsole } from './components/OvermindConsole';
 import { HackathonSpace } from './components/HackathonSpace';
 import { DiscordLiveFeed } from './components/DiscordLiveFeed';
+import { PrivateNanopayments } from './components/PrivateNanopayments';
 import type { HackathonTrack } from './components/HackathonSpace';
 import { WorkstationLockOverlay } from './components/WorkstationLockOverlay';
 import { decomposeIdea, LANGUAGE_NAMES, LANGUAGES } from './lib/swarmEngine';
@@ -774,6 +775,10 @@ You are running as Claude Code in the terminal workspace. Review the developer c
 
             {activeTab === 'discord-feed' && (
               <DiscordLiveFeed onCommitLog={addLog} />
+            )}
+
+            {activeTab === 'private-nanopayments' && (
+              <PrivateNanopayments onCommitLog={addLog} />
             )}
 
             {activeTab === 'mission-control' && (
