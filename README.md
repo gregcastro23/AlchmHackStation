@@ -94,3 +94,15 @@ The current controls are an interactive frontend simulation backed by typed cont
 3. Ingest provider usage and rate-limit headers into a normalized usage snapshot.
 4. Record every account, budget, routing, approval, and secret-reference mutation in the audit stream.
 5. Fail closed when account ownership, policy state, or approval state cannot be verified.
+
+## Use of AI Tools & Spec-Driven Development (ETHGlobal Rules Compliant)
+
+In compliance with the **ETHGlobal New York 2026 Use of AI Tools** and **Spec-Driven Development** rules, this project was developed using a spec-driven, agentic pair-programming workflow directed by the hacker team. 
+
+All planning files, prompts, execution checklists, and walkthroughs generated during the hackathon are version-controlled and located in the [ai-specs/](./ai-specs/) directory:
+
+1. **Integration Research Notes**: [integration_research_notes.md](./ai-specs/integration_research_notes.md) - Deep-dive on Dynamic, Unlink, and Circle Gateway APIs, plus security best practices for timing-obfuscated private withdrawals.
+2. **Implementation Plan**: [implementation_plan.md](./ai-specs/implementation_plan.md) - Technical architecture design and proposed code modifications approved by the team.
+3. **Execution Checklist**: [task.md](./ai-specs/task.md) - Living list of implementation tasks tracked step-by-step.
+4. **Verification Walkthrough**: [walkthrough.md](./ai-specs/walkthrough.md) - Full walkthrough of modifications, visual screenshots, and verified build output.
+5. **Assets**: [ai-specs/assets/](./ai-specs/assets/) - Screenshots and animated recordings proving visual execution and successful integration flows.
