@@ -16,8 +16,9 @@ const alchmBackendPlugin = (): Plugin => ({
         req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
         req.on('end', () => {
           try {
-            const { command } = JSON.parse(body);
-            exec(command, { cwd: process.cwd() }, (error, stdout, stderr) => {
+            const { command, cwd } = JSON.parse(body);
+            const execCwd = cwd ? path.resolve(process.cwd(), cwd) : process.cwd();
+            exec(command, { cwd: execCwd }, (error, stdout, stderr) => {
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({ error: error?.message || null, stdout, stderr }));
             });

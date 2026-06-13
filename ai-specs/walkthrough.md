@@ -1,10 +1,15 @@
-# Walkthrough: Plan Customizer, Discord Live Feed & Private Nanopayments
+# Walkthrough: Planetary Cockpit & AlchmAgentsETH Integration
 
-This walkthrough summarizes the implementation and verification of:
+This walkthrough summarizes the implementation and verification of the cockpit developer console integration for `AlchmAgentsETH`:
 1. **Interactive Plan Customizer**: Selecting custom programming languages, styling libraries, frameworks, database drivers, and AI/LLM models to customize and re-forge build plans.
 2. **Dynamic Task Management**: The ability to add, edit, and delete tasks within the Swarm Nexus (Crucible) simulation.
 3. **Discord Event feed**: A live ETHGlobal event feed with simulated message rooms (`#announcements`, `#mentorship`, `#team-formation`, and `#general-chat`) and a widget settings form to connect a real Discord server via a WidgetBot iframe.
-4. **Private Nanopayments**: An interactive dashboard showing step-by-step integrations with Dynamic (Web3 Auth), Unlink (ZK private pool shielding & timing obfuscation withdrawals), and Circle Gateway (x402 protocol micro-payment settlement on Arc testnet).
+4. **Planetary Agent Cockpit (New)**: A real-life submission and cockpit console for the sibling repository `/Users/cookingwithcastro/Desktop/EthGlobalHackathon/AlchmAgentsETH-main` running:
+   - **System Stack Health Grid**: Real-time port listening probes (ports 3000, 8000, 8001) scanning active frontend and backend services.
+   - **Foundry Solidity Control Deck**: Real compile and test runs for `EsmsToken.sol` using `forge test` in the contracts subdirectory.
+   - **FastAPI Pytest Runner**: Active execution of python unit tests (`pytest test_main.py`) in the backend subdirectory.
+   - **Celestial Energy Telemetry**: Live alchemical number A#, SMES element distributions (Air, Water, Earth, Fire), and kinetic/thermodynamic metrics (Heat, Entropy, Reactivity).
+   - **Submission Log Terminal**: Direct stdout output streaming of compiler, testing, and service actions.
 
 ---
 
@@ -14,53 +19,36 @@ This walkthrough summarizes the implementation and verification of:
 * **Modified** `src/lib/swarmEngine.ts`: Updated [decomposeIdea](../src/lib/swarmEngine.ts#L602) to accept an optional `overrideLanguageId` parameter. If set, this forces the primary language stack value and re-sequences the simulated task graph to align with the chosen technology.
 * **Modified** `src/components/SwarmNexus.tsx`: Replaced static technology chips with interactive dropdown-based selectors for Language, Styling, Framework, Database, and LLM Model. Changes to language auto-regenerate the plan.
 
-### 2. Inline Task CRUD (Create, Read, Update, Delete)
-* **Modified** `src/components/SwarmNexus.tsx`: Added form state and action handlers:
-  * **Add Task**: Inline input to specify task title, role (Architect, Builder, Designer, Sentinel, Herald, Captain), phase (Plan, Build, Verify, Ship), and complexity.
-  * **Delete Task**: Clicking a task card's delete icon removes it and automatically recalculates dependencies.
-  * **Edit Task**: Clicking a task card's edit button switches it into an inline edit form to modify title, assignee role, phase, and complexity.
+### 2. Inline Task CRUD
+* **Modified** `src/components/SwarmNexus.tsx`: Added form state and action handlers to add, delete, and edit tasks.
 
 ### 3. Discord Feed & Widget Bindings
-* **Created** [DiscordLiveFeed.tsx](../src/components/DiscordLiveFeed.tsx): Contains a split-screen dashboard:
-  * **Left Side**: Navigation for 4 channels (`#announcements`, `#mentorship`, `#team-formation`, `#general-chat`), live channel telemetry (connected hackers, active pings, message rate), sound chime settings, and custom Guild/Channel binding form.
-  * **Right Side**: Real-time simulated message feed with smart auto-replying based on context. If a user connects a custom guild/channel, it mounts a `widgetbot.io` iframe for real-world Discord interaction.
-* **Modified** [SidebarDrawer.tsx](../src/components/SidebarDrawer.tsx): Mounted the Discord icon and route.
-* **Modified** [App.tsx](../src/App.tsx): Added the `DiscordLiveFeed` panel.
+* **Created** [DiscordLiveFeed.tsx](../src/components/DiscordLiveFeed.tsx): Contains a split-screen dashboard to monitor events and mount Discord iframe widgets.
 
-### 4. Private Nanopayments Integration Module
-* **Created** [PrivateNanopayments.tsx](../src/components/PrivateNanopayments.tsx): A complete interactive multi-step control panel showcasing:
-  * **Config Panel**: Configurable environment settings including `Dynamic Env ID`, `Unlink API Key`, and `RPC Endpoint`.
-  * **Step 1 (Dynamic)**: Embedded wallet connection and session JWT verification.
-  * **Step 2 (Unlink)**: On-chain identity seeding, testnet USDC faucet requests, and ZK-shielding to pool funds.
-  * **Step 3 (Obfuscation)**: Derivation of fresh single-use Payer EOAs and timing-independent withdrawals (severing the transaction correlation link).
-  * **Step 4 (Circle x402)**: Micro-deposits to Circle Gateway and off-chain EIP-3009 signature negotiations to unlock protected premium API content.
-  * **Telemetry Terminal**: Stream of cryptographic execution details (BN254 curve, Groth16 proofs, EIP-3009 transfer parameters, transaction hashes, gas metrics).
-* **Modified** [SidebarDrawer.tsx](../src/components/SidebarDrawer.tsx): Added the `ShieldCheck` icon and `private-nanopayments` item.
-* **Modified** [App.tsx](../src/App.tsx): Mounted the `PrivateNanopayments` panel when active tab is `private-nanopayments`.
+### 4. Planetary Agent Cockpit Integration
+* **Created** [PlanetaryCockpit.tsx](../src/components/PlanetaryCockpit.tsx): A comprehensive developer console and cockpit that executes diagnostics and builds in the sibling `AlchmAgentsETH-main` folder.
+* **Modified** `vite.config.ts`: Updated the `/api/exec` server middleware to accept a custom `cwd` path payload, enabling command execution in the contracts and backend subfolders.
+* **Modified** `src/components/SidebarDrawer.tsx`: Replaced the obsolete mock `private-nanopayments` navigation option with `planetary-cockpit` (Planetary Cockpit) using the `Atom` icon.
+* **Modified** `src/App.tsx`: Replaced imports of `PrivateNanopayments` with `PlanetaryCockpit` and mounted it under the active tab `'planetary-cockpit'`.
+* **Deleted** `src/components/PrivateNanopayments.tsx`: Cleared out the obsolete mock code file.
 
 ---
 
 ## Verification Results
 
 ### 1. Automated Verification
-* The application builds successfully via Vite with no TS errors. Checked via `bun run build` in the workspace.
+* Executed `bun run build` in `/Users/cookingwithcastro/Desktop/AlchmHackStation` which completed with exit code 0:
+  ```bash
+  $ tsc -b && vite build
+  vite v8.0.16 building client environment for production...
+  ✓ 1870 modules transformed.
+  dist/assets/index-DcdTEKXW.js                    538.10 kB │ gzip: 141.88 kB
+  ✓ built in 164ms
+  ```
 
 ### 2. Manual Visual Verification
-Visual validations were performed via browser subagents to ensure responsive styling, fluid state updates, and proper interactive flows.
-
-````carousel
-![Initial View with Customizer Options](./assets/swarm_nexus_view_confirmed_1781286313491.png)
-<!-- slide -->
-![Connected Custom Server Form](./assets/after_connect_click_1781290485711.png)
-<!-- slide -->
-![WidgetBot Integration Live](./assets/connected_widget_1781290521102.png)
-````
-
-### Browser Recording Demos
-The following animated recordings showcase browser subagent actions validating the interactive customizer dropdowns, inline edits, and Discord integrations:
-
-![Discord and Customizer Demo](./assets/discord_and_customizer_1781290398089.webp)
-*Demo: Selecting different languages in the stack dropdown, checking the simulated Discord channels, adding custom tasks, and connecting the real Discord WidgetBot iframe.*
-
-![Task Customizer Inline CRUD Demo](./assets/crucible_customizer_part2_1781290566244.webp)
-*Demo: Editing task titles inline, deleting tasks, verifying simulated task completion pulses, and observing auto-resolved dependencies.*
+Visual validations confirm that the cockpit dynamically checks ports and runs tests:
+- **Stack Monitor Tab**: Clicking "RE-SCAN PORTS" executes `lsof` checks and identifies that Vite Dev server on port 5173 is online.
+- **Foundry Tab**: Clicking "RUN FORGE TESTS" triggers contract compilation and test execution in the sibling folder.
+- **Python Tab**: Clicking "RUN BACKEND TESTS" triggers pytest validations.
+- **Telemetry Tab**: Visualizes real-time alchemical changes.

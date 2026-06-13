@@ -41,7 +41,7 @@ export const TopStatusBar: React.FC<TopStatusBarProps> = ({
         <div className="w-2.5 h-2.5 bg-[#DEFF9A] rounded-full animate-pulse glow-acid" />
         <h1 className="text-lg font-bold tracking-wider uppercase">
           <span className="text-[#DEFF9A] font-sans">Alchm</span>
-          <span className="text-[#F5F5F5] font-sans">ETHStation</span>
+          <span className="text-[#F5F5F5] font-sans">AgentsETH</span>
         </h1>
       </div>
 

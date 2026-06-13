@@ -1,5 +1,5 @@
 import React from 'react';
-import { Terminal, Cpu, Network, Shield, Wand2, Key, LogOut, Sparkles, PanelsTopLeft, Gauge, KeyRound, Route, Waypoints, Atom, BrainCircuit, CalendarDays, MessageSquare, ShieldCheck } from 'lucide-react';
+import { Terminal, Cpu, Network, Shield, Wand2, Key, LogOut, Sparkles, PanelsTopLeft, Gauge, KeyRound, Route, Waypoints, Atom, BrainCircuit, CalendarDays, MessageSquare } from 'lucide-react';
 
 interface SidebarDrawerProps {
   activeTab: string;
@@ -22,7 +22,7 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
     { id: 'overmind', label: 'Overmind AI', icon: BrainCircuit },
     { id: 'mission-control', label: 'Mission Control', icon: PanelsTopLeft },
     { id: 'discord-feed', label: 'Discord Live Feed', icon: MessageSquare },
-    { id: 'private-nanopayments', label: 'Private Nanopayments', icon: ShieldCheck },
+    { id: 'planetary-cockpit', label: 'Planetary Cockpit', icon: Atom },
     { id: 'integration-ops', label: 'Integration Ops', icon: Waypoints },
     { id: 'usage-limits', label: 'Usage & Limits', icon: Gauge },
     { id: 'model-accounts', label: 'Model Accounts', icon: KeyRound },

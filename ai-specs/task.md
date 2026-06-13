@@ -1,7 +1,13 @@
-# Implementation Tasks: Private Nanopayments
+# Tasks: AlchmAgentsETH Submission & Cockpit Console
 
-- [x] Add `ShieldCheck` icon and navigation menu item to `src/components/SidebarDrawer.tsx`
-- [x] Import and mount the `PrivateNanopayments` panel in `src/App.tsx`
-- [x] Create `src/components/PrivateNanopayments.tsx` with step-by-step interactive flows
-- [x] Verify compilation and bundle builds using `bun run build`
-- [x] Document the updates in `walkthrough.md`
+- [x] Update `vite.config.ts` to support directory-specific execution paths via `/api/exec`
+- [x] Update navigation items in `src/components/SidebarDrawer.tsx` (replace Private Nanopayments with Planetary Cockpit)
+- [x] Update imports and render logic in `src/App.tsx` (replace `PrivateNanopayments` with `PlanetaryCockpit`)
+- [x] Create the new `src/components/PlanetaryCockpit.tsx` component
+  - [x] Implement System Stack Health (Next.js, FastAPI, WebSockets)
+  - [x] Implement Foundry Solidity Control Deck (`forge build`, `forge test`)
+  - [x] Implement Backend Python Test Suite executor (`pytest`)
+  - [x] Implement Live Celestial Energy metrics telemetry widget
+  - [x] Implement RAG Sync & ChromaDB verification panel
+- [x] Remove the obsolete `src/components/PrivateNanopayments.tsx` file
+- [x] Build and verify the application compiles and runs correctly

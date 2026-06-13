@@ -154,7 +154,7 @@ export const SwarmNexus: React.FC<SwarmNexusProps> = ({ onCommitLog, onReadiness
   const simRef = useRef<Sim | null>(null);
   const rafRef = useRef<number>(0);
 
-  const [idea, setIdea] = useState('A realtime multiplayer whiteboard with AI that turns sketches into working apps');
+  const [idea, setIdea] = useState('Launch of Alchm Token System on Ethereum - deploy ERC-20 contract, coordinate planetary agent nodes, and establish on-chain secure verification gates.');
   const [pattern, setPattern] = useState<OrchestrationPattern>('swarm');
   const [plan, setPlan] = useState<BuildPlan | null>(null);
   const [taskView, setTaskView] = useState<Array<{ task: PlanTask; status: SimTask['status']; progress: number }>>([]);

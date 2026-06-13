@@ -177,7 +177,62 @@ const data = await response.json();
 
 ## 4. Quick Config & Hackathon Setup Checklist
 
+- [x] **CircleCI CLI**: Installed successfully via Homebrew (`brew install circleci`).
+- [x] **Arc App Kit SDK**: Packages `@circle-fin/app-kit` and `@circle-fin/adapter-viem-v2` installed successfully via `bun add`.
 - [ ] **Dynamic Dashboard**: Set up a sandbox at [app.dynamic.xyz](https://app.dynamic.xyz/). Go to **Chains and Networks** and enable the EVM-compatible **Arc Testnet** configuration.
 - [ ] **Unlink API Key**: Obtain a testnet API key for `arc-testnet` to authorize register/auth routes on our backend.
 - [ ] **Circle Faucet**: Request testnet USDC for your wallet from the [Circle Faucet](https://faucet.circle.com/) targeting Arc Testnet to seed gas.
 - [ ] **Gateway Client RPC**: Configure a stable RPC endpoint for Arc Testnet (`https://rpc.testnet.arc.io`) in our environment variables.
+
+---
+
+## 5. Circle Arc App Kit + Dynamic Integration Guide
+
+To bridge user wallets connected via Dynamic with Circle's Arc App Kit for cross-chain swaps, transfers, or balance checks, follow this integration pattern.
+
+### 1. Retrieve the Provider from Dynamic
+Dynamic context exposes the `primaryWallet` object. Extract the standard EIP-1193 Web3 provider from its connector:
+
+```typescript
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
+
+const { primaryWallet } = useDynamicContext();
+
+if (primaryWallet) {
+  // Extract standard EIP-1193 provider
+  const provider = await primaryWallet.connector.getProvider();
+}
+```
+
+### 2. Initialize the Viem Adapter
+Pass the Dynamic provider to the `@circle-fin/adapter-viem-v2` helper:
+
+```typescript
+import { createViemAdapterFromProvider } from "@circle-fin/adapter-viem-v2";
+
+const adapter = await createViemAdapterFromProvider({
+  provider: provider, // Standard Dynamic wallet provider
+});
+```
+
+### 3. Initialize the Circle App Kit SDK
+Once you have the adapter, configure the App Kit to perform cross-chain USDC actions:
+
+```typescript
+import { AppKit } from "@circle-fin/app-kit";
+
+const appKit = new AppKit({
+  adapter: adapter,
+});
+
+// Example: Get unified, chain-agnostic USDC balances
+const { balances } = await appKit.getBalances();
+console.log("Spendable USDC balances across all chains:", balances);
+
+// Example: Gasless or USDC-denominated transaction send on Arc L1
+const tx = await appKit.send({
+  to: "0xRecipientAddress",
+  amount: "5.50", // 5.50 USDC
+});
+await tx.wait();
+```

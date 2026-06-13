@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -145,25 +145,80 @@ export const IntegrationOpsView: React.FC<IntegrationOpsViewProps> = ({ onCommit
     manual: integrations.filter((item) => item.health === 'manual').length,
   }), [integrations]);
 
-  const probe = (integration: IntegrationRuntime) => {
-    setProbingId(integration.id);
-    onCommitLog(`Auth Watch executing bounded probe: ${integration.statusCommand}.`, 'info');
-    setTimeout(() => {
-      setProbingId(null);
-      setIntegrations((current) => current.map((item) => item.id === integration.id
-        ? {
-            ...item,
-            health: item.id === 'antigravity' || item.id === 'stitch' ? 'manual' : item.id === 'codex' ? 'error' : 'healthy',
-            message: item.id === 'codex'
-              ? 'Probe reached the CLI, but configuration still blocks auth inspection.'
-              : item.id === 'antigravity' || item.id === 'stitch'
-                ? 'Manual browser-session confirmation is still required.'
-                : 'Latest health probe completed successfully.',
+  const probeAllReal = async (silent = false) => {
+    if (!silent) {
+      onCommitLog('Running real health checks across all integrations.', 'info');
+    }
+    try {
+      const response = await fetch('/api/exec', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ command: 'bun scripts/check_cli_auth.ts' }),
+      });
+      const data = await response.json();
+      if (data.stdout) {
+        const parsed = JSON.parse(data.stdout);
+        setIntegrations((current) => current.map((item) => {
+          const match = parsed.results.find((r: any) => r.id === item.id);
+          if (match) {
+            return {
+              ...item,
+              health: match.state,
+              message: match.message,
+            };
           }
-        : item));
-      onCommitLog(`${integration.label} auth probe recorded without reading or persisting a credential value.`, integration.id === 'codex' ? 'warning' : 'success');
-    }, 650);
+          return item;
+        }));
+        if (!silent) {
+          onCommitLog('All integrations real status updated.', 'success');
+        }
+      } else if (data.error) {
+        if (!silent) {
+          onCommitLog(`Real probe failed: ${data.error}`, 'error');
+        }
+      }
+    } catch (e: any) {
+      if (!silent) {
+        onCommitLog(`Failed to run local probe check: ${e.message}`, 'error');
+      }
+    }
   };
+
+  const probe = async (integration: IntegrationRuntime) => {
+    setProbingId(integration.id);
+    onCommitLog(`Auth Watch executing real bounded probe: ${integration.statusCommand || 'verification'}...`, 'info');
+    
+    try {
+      const response = await fetch('/api/exec', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ command: 'bun scripts/check_cli_auth.ts' }),
+      });
+      const data = await response.json();
+      setProbingId(null);
+      if (data.stdout) {
+        const parsed = JSON.parse(data.stdout);
+        const match = parsed.results.find((r: any) => r.id === integration.id);
+        if (match) {
+          setIntegrations((current) => current.map((item) => item.id === integration.id
+            ? { ...item, health: match.state, message: match.message }
+            : item
+          ));
+          onCommitLog(`${integration.label} real auth probe complete. Status: ${match.state.toUpperCase()}`, match.state === 'healthy' ? 'success' : 'warning');
+        }
+      } else {
+        onCommitLog(`CLI probe did not return stdout: ${data.error || 'unknown error'}`, 'error');
+      }
+    } catch (e: any) {
+      setProbingId(null);
+      onCommitLog(`Failed to connect to local probe server: ${e.message}`, 'error');
+    }
+  };
+
+  useEffect(() => {
+    // Run real checks on mount silently
+    probeAllReal(true);
+  }, []);
 
   const markRenewed = (integration: IntegrationRuntime) => {
     setIntegrations((current) => current.map((item) => item.id === integration.id
@@ -186,10 +241,10 @@ export const IntegrationOpsView: React.FC<IntegrationOpsViewProps> = ({ onCommit
       schemaVersion: 1,
       generatedAt: new Date().toISOString(),
       project: {
-        name: 'AlchmHackStation',
-        repository: 'gregcastro23/AlchmHackStation',
-        mission: 'A unified AI development command center for building, proving, and shipping hackathon products.',
-        stack: ['React', 'TypeScript', 'Vite', 'Bun', 'Tailwind CSS', 'Tauri'],
+        name: 'AlchmAgentsETH',
+        repository: 'CookingWithCastro/AlchmAgentsETH',
+        mission: 'Launch of Alchm Token System on ETH. A planetary agent system coordinating on-chain actions and token mechanics.',
+        stack: ['Solidity', 'TypeScript', 'React', 'Bun', 'Hardhat', 'Foundry'],
       },
       request: {
         objective: objective.trim(),
@@ -241,7 +296,7 @@ export const IntegrationOpsView: React.FC<IntegrationOpsViewProps> = ({ onCommit
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button onClick={() => integrations.forEach((item, index) => setTimeout(() => probe(item), index * 120))} className="inline-flex items-center gap-2 border border-[#7dd3fc]/50 bg-[#7dd3fc]/5 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-[#7dd3fc] hover:bg-[#7dd3fc]/10">
+              <button onClick={() => probeAllReal()} className="inline-flex items-center gap-2 border border-[#7dd3fc]/50 bg-[#7dd3fc]/5 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-[#7dd3fc] hover:bg-[#7dd3fc]/10">
                 <RefreshCw className="h-3.5 w-3.5" /> Probe all
               </button>
               <button onClick={() => onCommitLog('Build Relay queued with auth and approval preflight.', 'success')} className="inline-flex items-center gap-2 border border-[#9ddf2e] bg-[#9ddf2e] px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#0d0f09] hover:bg-[#83c300]">

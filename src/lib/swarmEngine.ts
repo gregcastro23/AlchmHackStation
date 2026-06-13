@@ -600,7 +600,7 @@ const BASELINE: Array<Omit<PlanTask, 'id' | 'dependsOn' | 'domain'>> = [
 const PHASE_ORDER: Record<Phase, number> = { Plan: 0, Build: 1, Verify: 2, Ship: 3 };
 
 export function decomposeIdea(rawIdea: string, overrideLanguageId?: string): BuildPlan {
-  const idea = rawIdea.trim() || 'A realtime AI app that helps people build and ship products faster';
+  const idea = rawIdea.trim() || 'Launch of Alchm Token System on Ethereum - deploy ERC-20 contract, coordinate planetary agent nodes, and establish on-chain secure verification gates';
   const matches = buildMatcher(idea);
   const domains = detectDomains(matches);
   const domainKeys = new Set(domains.map((d) => d.key));
@@ -672,9 +672,9 @@ export function decomposeIdea(rawIdea: string, overrideLanguageId?: string): Bui
 
 // Curated demo prompts that each light up a distinct domain + language mix.
 export const SAMPLE_IDEAS: string[] = [
-  'A realtime multiplayer whiteboard with AI that turns sketches into working apps',
-  'A blazing fast Rust + WASM physics sandbox with realtime multiplayer chat',
-  'A web3 marketplace where creators mint and sell AI-generated music NFTs',
-  'A Python ML dashboard that streams payment data and forecasts churn',
-  'A SwiftUI fitness app with live group challenges, payments, and a leaderboard',
+  'Launch Alchm Token System on Base - deploy ERC-20 contract and set up agent reward pools',
+  'Orchestrate Alchm Planetary Agent MCPs with strict cryptographic secure verification gates',
+  'Deploy Alchm token staking contracts with automated yield distribution agents',
+  'Establish zero-knowledge timing-obfuscated timing gates for private token withdrawals',
+  'Integrate Circle Gateway payment streams with Alchm agent coordination networks',
 ];

@@ -1,63 +1,91 @@
-# Implementation Plan: Private Nanopayments Dashboard
+# Implementation Plan: AlchmAgentsETH Submission & Cockpit Console
 
-We will implement a new interactive **Private Nanopayments** module within the AlchmHackStation developer console. This dashboard will demonstrate the end-to-end integration required for the collaborative Dynamic + Arc + Unlink bounty:
-1. **Dynamic Login & Wallet Connection**
-2. **Unlink Account Registration & ZK-Shielding (arc-testnet)**
-3. **Private Withdrawal to a fresh Payer EOA**
-4. **Circle Gateway x402 Nanopayment (arcTestnet) using the Payer EOA**
+We will repurpose the developer console of the `AlchmHackStation` into a real-life **AlchmAgentsETH Submission & Cockpit Console**. Instead of generic app-building mocks or isolated nanopayments, the console will serve as the hacker cockpit to build, test, monitor, and submit the actual astrological agent platform `AlchmAgentsETH` located in the sibling folder `/Users/cookingwithcastro/Desktop/EthGlobalHackathon/AlchmAgentsETH-main`.
+
+The console will integrate:
+1. **Real-time Stack Monitoring**: Active process checks on port 3000 (Next.js frontend) and port 8000/8001 (FastAPI/Express backend).
+2. **Foundry Smart Contract Operations**: Local execution of `forge build` and `forge test` inside `AlchmAgentsETH-main/contracts/`, surfacing compiler stdout and test pass rates.
+3. **Python FastAPI Backend Test Suite**: Run `pytest` / `test_main.py` directly from the console to verify API endpoints and agent models.
+4. **Live Celestial Energy Telemetry**: Real-time tracking of A# (Alchemical Number), SMES flows, Kinetics, and Thermodynamics (Heat, Entropy, Reactivity) via active API probes or direct astronomical calculations.
+5. **RAG / Vector Database Syncing Status**: Check whether ChromaDB is running and verify the synchronization status of the 35 historical agents' embeddings.
 
 ---
 
 ## User Review Required
 
 > [!IMPORTANT]
-> The new module will be added as a first-class tab in the side menu (using the `ShieldCheck` icon, labeled `Private Nanopayments`).
->
-> By default, it will operate in **Interactive Simulation Mode** displaying real-time cryptographic details (ZK-proof parameters, EIP-3009 signatures, transaction hashes, and status logs) while allowing live environment key configuration (Dynamic Environment ID, Unlink API Key, Payer EOA credentials) for operators to test against live testnet environments.
+> The `Private Nanopayments` tab will be replaced by the **Planetary Agent Cockpit** (using the `Sparkles` or `Atom` icon). 
+> The console will make active `/api/exec` calls to run commands in the sibling `/Users/cookingwithcastro/Desktop/EthGlobalHackathon/AlchmAgentsETH-main` folder.
+
+> [!WARNING]
+> Since executing commands like `forge test` or `pytest` can be resource-intensive in a 16GB M5 Mac environment, the dashboard will run them on-demand with visual indicators to prevent overlapping executions and memory overhead.
+
+---
+
+## Open Questions
+
+> [!IMPORTANT]
+> 1. **Server Management**: Do you want the dashboard to support *starting* and *stopping* the Next.js dev server and FastAPI backend directly from the console, or should it only monitor and report the status of already running services?
+> 2. **Solidity Deployment**: Should we add a button to trigger live contract deployment scripts (e.g. using `forge script` to deploy `EsmsToken.sol` to Base Sepolia/Arc Testnet) or keep the scope restricted to compilation and unit tests?
+> 3. **USDC Tokenomics & Privy Auth**: Do you want to keep a section in the dashboard to review local token balances (Spirit, Essence, Matter, Substance) and verify Privy login integrations, or focus entirely on astrological telemetry and backend services?
 
 ---
 
 ## Proposed Changes
 
-### Layout & Navigation
+### Configuration & Routing
 
-#### [MODIFY] [SidebarDrawer.tsx](../src/components/SidebarDrawer.tsx)
-- Import `ShieldCheck` from `lucide-react`.
-- Add `private-nanopayments` as a navigation tab in the `navItems` roster.
+#### [MODIFY] [vite.config.ts](file:///Users/cookingwithcastro/Desktop/AlchmHackStation/vite.config.ts)
+- Modify the `/api/exec` middleware to accept a custom `cwd` target or resolve the absolute path to `AlchmAgentsETH-main` when requested, ensuring commands run in the correct project directory.
 
-#### [MODIFY] [App.tsx](../src/App.tsx)
-- Import the new `PrivateNanopayments` component.
-- Mount the component when `activeTab === 'private-nanopayments'`.
+#### [MODIFY] [SidebarDrawer.tsx](file:///Users/cookingwithcastro/Desktop/AlchmHackStation/src/components/SidebarDrawer.tsx)
+- Replace `private-nanopayments` (Private Nanopayments) in `navItems` with `planetary-cockpit` (Planetary Cockpit).
+- Replace `ShieldCheck` icon with `Atom` or `Sparkles` icon.
+
+#### [MODIFY] [App.tsx](file:///Users/cookingwithcastro/Desktop/AlchmHackStation/src/App.tsx)
+- Replace import of `PrivateNanopayments` with `PlanetaryCockpit`.
+- Map the `planetary-cockpit` tab to render the new `PlanetaryCockpit` component.
 
 ---
 
 ### Components
 
-#### [NEW] [PrivateNanopayments.tsx](../src/components/PrivateNanopayments.tsx)
-Create a multi-step builder UI using the premium dark-obsidian / acid-green theme:
-- **Header**: Status indicators (Dynamic Connection, Unlink Registration, Circle Gateway Deposit, Settlement Chain: `arc-testnet`).
-- **Flow Control Panel**:
-  - **Step 1: Dynamic Auth**: Simulated login / wallet connection. Provides field to enter a real `Dynamic Environment ID`.
-  - **Step 2: Unlink Shielding**: Shows Bech32m private address (`unlink1...`). Interactive buttons to:
-    - Faucet request testnet USDC.
-    - Deposit/shield USDC into the private pool.
-    - Check shielded balances.
-  - **Step 3: Private Withdrawal**: Input for a fresh destination wallet (Payer EOA) and withdrawal amount. Performs private withdrawal (with ZK-proof status tracker).
-  - **Step 4: Circle Gateway x402**: Connects the Payer EOA, makes a gateway deposit, and executes a nanopayment (EIP-3009 signing and HTTP 402 negotiation).
-- **Log Terminal**: A dedicated panel showing real-time step-by-step console logs with simulated transaction hashes (`tx_...`), gas usage (0 USDC on Gateway!), and cryptographic details.
+#### [NEW] [PlanetaryCockpit.tsx](file:///Users/cookingwithcastro/Desktop/AlchmHackStation/src/components/PlanetaryCockpit.tsx)
+Create a new comprehensive console widget featuring:
+- **System Stack Health Grid**:
+  - Probes port 3000 (Next.js Dev), port 8000 (FastAPI), and port 8001 (WebSockets) in real-time.
+  - Displays service latency, process IDs, and connection status.
+- **Foundry Solidity Control Deck**:
+  - Interactive buttons to run `forge build` and `forge test` in `/contracts`.
+  - Live compiler output feed with error highlighting.
+  - Test suite status (tests passed, gas reports, failures).
+- **Planetary Agent Test Panel**:
+  - Run `bun run test:chat` or individual FastAPI python endpoint tests (`pytest test_main.py`).
+  - Stream live testing stdout directly into a scrollable terminal pane.
+- **Live Celestial Energy Widgets**:
+  - Real-time display of A# (Alchemical Number), SMES balances, Kinetic/Thermodynamic metrics.
+  - Fetches from `/api/planetary-positions` or `/api/consciousness/live` if the backend is running; otherwise degrades gracefully to mock coordinates.
+- **RAG & Sync Control Center**:
+  - Displays sync status for the 35 historical agents.
+  - Buttons to verify ChromaDB container and trigger `rag:ingest` or `sync:db` updates.
+
+#### [DELETE] [PrivateNanopayments.tsx](file:///Users/cookingwithcastro/Desktop/AlchmHackStation/src/components/PrivateNanopayments.tsx)
+- Delete the outdated mock private nanopayments component.
 
 ---
 
 ## Verification Plan
 
 ### Automated Build Verification
-- Verify that TypeScript compile succeeds using `bun run build`.
+- Verify the Vite project builds successfully by executing:
+  ```bash
+  bun run build
+  ```
 
 ### Manual Verification
-- Navigate to the **Private Nanopayments** tab.
-- Walk through the interactive simulation step-by-step:
-  1. Click **Connect Wallet via Dynamic** -> Verify status updates.
-  2. Click **Request Testnet USDC** -> Verify faucet logs and balance increase.
-  3. Click **Shield Funds (Deposit)** -> Verify shielding animation and private balance update.
-  4. Click **Withdraw Privately** -> Verify ZK-proof generation animation and EOA balance increase.
-  5. Click **Settle x402 Nanopayment** -> Verify HTTP 402 negotiation, EIP-3009 signing logs, and successful resource acquisition.
+- Launch the `AlchmHackStation` console.
+- Navigate to the **Planetary Cockpit** tab.
+- Verify that the **System Stack Health** correctly reports active listeners (e.g. starting uvicorn on port 8000 should switch FastAPI status to "ONLINE").
+- Click **Run Solidity Tests** and verify that it compiles and runs Foundry tests for `EsmsToken.sol` in the sibling directory.
+- Click **Run Backend Tests** and check that python test logs are streamed into the log pane.
+- Verify that **Celestial Energy** metrics update dynamically.

@@ -302,7 +302,10 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
   const [entered, setEntered] = useState(() => readStoredValue(storageKeys.entered, false));
   const [track, setTrack] = useState<HackathonTrack>(() => readStoredValue(storageKeys.track, 'from-scratch'));
   const [draft, setDraft] = useState<ProjectDraft>(() =>
-    readStoredValue(storageKeys.draft, { name: '', pitch: '' }),
+    readStoredValue(storageKeys.draft, {
+      name: 'AlchmAgentsETH',
+      pitch: 'A planetary agent system coordinating on-chain actions and token mechanics on Ethereum.',
+    }),
   );
   const [completed, setCompleted] = useState<string[]>(() => readStoredValue(storageKeys.checklist, []));
   const eventPhase = getEventPhase();
@@ -372,7 +375,7 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
                   Ξ
                 </div>
                 <div>
-                  <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#8f9282]">AlchmHackStation presents</div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#8f9282]">AlchmAgentsETH Workspace</div>
                   <div className="mt-1 text-lg font-bold text-[#e3e3d8]">ETHGlobal New York 2026</div>
                 </div>
               </div>
@@ -393,7 +396,7 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
                   <span className="block text-[#9ddf2e]">Leave with proof.</span>
                 </h1>
                 <p className="mt-6 max-w-2xl text-base leading-7 text-[#c5c8b6] md:text-lg">
-                  One workspace for the full ETHGlobal weekend: choose your build path, forge the project, track eligibility, test contracts, package the demo, and walk into judging ready.
+                  One workspace to facilitate the successful submission of AlchmAgentsETH: choose your build path, forge the project, track eligibility, test contracts, package the demo, and walk into judging ready.
                 </p>
               </div>
 
