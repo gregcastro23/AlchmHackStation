@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Atom, 
   Activity, 
@@ -43,16 +43,15 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
   
   // Service Stack States
   const [services, setServices] = useState<ServiceStatus[]>([
-    { name: 'Next.js Frontend', port: 3000, status: 'OFFLINE' },
-    { name: 'FastAPI Backend', port: 8000, status: 'OFFLINE' },
-    { name: 'WebSockets Service', port: 8001, status: 'OFFLINE' },
-    { name: 'ChromaDB Server', port: 8000, status: 'OFFLINE', details: 'Embedded / Port 8000' }
+    { name: 'Web Client Server', port: 8080, status: 'OFFLINE' },
+    { name: 'SpacetimeDB Local Server', port: 3000, status: 'OFFLINE' },
+    { name: 'Ephemeris Feeder', port: 4000, status: 'OFFLINE', details: 'feeder/push-ephemeris.ts' },
+    { name: 'Oracle Chat Service', port: 5005, status: 'OFFLINE', details: 'feeder/oracle-service.ts' }
   ]);
 
   // Foundry States
   const [foundryStatus, setFoundryStatus] = useState<'idle' | 'running' | 'success' | 'failed'>('idle');
   const [foundryLogs, setFoundryLogs] = useState<string>('No compilation or test run executed yet.');
-  const [foundryStats, setFoundryStats] = useState<{ passed: number; failed: number; total: number } | null>(null);
 
   // Pytest States
   const [pytestStatus, setPytestStatus] = useState<'idle' | 'running' | 'success' | 'failed'>('idle');
@@ -71,13 +70,13 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
 
   const logsEndRef = useRef<HTMLDivElement>(null);
 
-  const addLocalLog = (message: string, type: LogLine['type'] = 'default') => {
+  const addLocalLog = useCallback((message: string, type: LogLine['type'] = 'default') => {
     const timestamp = new Date().toLocaleTimeString();
     setLogs((prev) => [...prev, { timestamp, message, type }]);
     if (onCommitLog) {
       onCommitLog(message, type);
     }
-  };
+  }, [onCommitLog]);
 
   useEffect(() => {
     logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -103,12 +102,7 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
     return () => clearInterval(interval);
   }, []);
 
-  // Initial Status Check
-  useEffect(() => {
-    checkAllServices();
-  }, []);
-
-  const runCommand = async (command: string, cwd?: string): Promise<{ stdout: string; stderr: string; error: string | null }> => {
+  const runCommand = useCallback(async (command: string, cwd?: string): Promise<{ stdout: string; stderr: string; error: string | null }> => {
     try {
       const response = await fetch('/api/exec', {
         method: 'POST',
@@ -116,12 +110,13 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
         body: JSON.stringify({ command, cwd })
       });
       return await response.json();
-    } catch (e: any) {
-      return { stdout: '', stderr: e.message, error: e.message };
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      return { stdout: '', stderr: message, error: message };
     }
-  };
+  }, []);
 
-  const checkAllServices = async () => {
+  const checkAllServices = useCallback(async () => {
     addLocalLog('Probing system stack ports for active services...', 'info');
     
     // Set services status to checking
@@ -136,45 +131,54 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
       return;
     }
 
-    const updated: ServiceStatus[] = services.map((service) => {
-      // Look for a listener matching the port
+    setServices((currentServices) => {
       const lines = stdout.split('\n');
-      const match = lines.find((l) => l.includes(`:${service.port} `) || l.includes(`*:${service.port} `));
-      
-      if (match) {
-        const parts = match.trim().split(/\s+/);
-        const pid = parts[1];
-        const processName = parts[0];
+      return currentServices.map((service) => {
+        // Look for a listener matching the port
+        const match = lines.find((l) => l.includes(`:${service.port} `) || l.includes(`*:${service.port} `));
         
-        // Special logic for ChromaDB vs FastAPI (both share port 8000 in local dev)
-        if (service.name === 'ChromaDB Server') {
+        if (match) {
+          const parts = match.trim().split(/\s+/);
+          const pid = parts[1];
+          const processName = parts[0];
+          
+          // Special logic for ChromaDB vs FastAPI (both share port 8000 in local dev)
+          if (service.name === 'ChromaDB Server') {
+            return {
+              ...service,
+              status: 'ONLINE' as const,
+              pid,
+              details: `Docker/Process: ${processName}`
+            };
+          }
+
           return {
             ...service,
             status: 'ONLINE' as const,
             pid,
-            details: `Docker/Process: ${processName}`
+            details: `Process: ${processName}`
+          };
+        } else {
+          return {
+            ...service,
+            status: 'OFFLINE' as const,
+            pid: undefined,
+            details: undefined
           };
         }
-
-        return {
-          ...service,
-          status: 'ONLINE' as const,
-          pid,
-          details: `Process: ${processName}`
-        };
-      } else {
-        return {
-          ...service,
-          status: 'OFFLINE' as const,
-          pid: undefined,
-          details: undefined
-        };
-      }
+      });
     });
 
-    setServices(updated);
     addLocalLog('System stack ports scan complete.', 'success');
-  };
+  }, [addLocalLog, runCommand]);
+
+  // Initial Status Check
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      checkAllServices();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [checkAllServices]);
 
   const killService = async (service: ServiceStatus) => {
     if (!service.pid) {
@@ -216,65 +220,42 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
   // Run Foundry Compile & Test
   const runFoundryTests = async () => {
     setFoundryStatus('running');
-    setFoundryLogs('Compiling smart contracts and executing Foundry tests...\n');
-    addLocalLog('Starting Foundry test suite in contracts directory...', 'info');
+    setFoundryLogs('Compiling SpacetimeDB Rust module...\n');
+    addLocalLog('Starting spacetime build in server directory...', 'info');
 
-    const contractsCwd = '../EthGlobalHackathon/AlchmAgentsETH-main/contracts';
-    const { stdout, stderr, error } = await runCommand('forge test --gas-report', contractsCwd);
+    const contractsCwd = '../Spacetimedbhackathon/Pentacles/server';
+    const { stdout, stderr, error } = await runCommand('spacetime build', contractsCwd);
 
     const fullLog = stdout + '\n' + stderr;
     setFoundryLogs(fullLog);
 
-    if (error || stderr.includes('Error:') || stdout.includes('Failed')) {
+    if (error || stderr.includes('error:') || stderr.includes('Error:')) {
       setFoundryStatus('failed');
-      addLocalLog('Foundry tests failed. Check compilation errors.', 'error');
+      addLocalLog('SpacetimeDB module compilation failed.', 'error');
     } else {
       setFoundryStatus('success');
-      addLocalLog('Foundry test suite executed successfully.', 'success');
-    }
-
-    // Parse stats
-    const match = stdout.match(/Suite result: (ok|failed)\. (\d+) passed; (\d+) failed;/);
-    if (match) {
-      setFoundryStats({
-        passed: parseInt(match[2]),
-        failed: parseInt(match[3]),
-        total: parseInt(match[2]) + parseInt(match[3])
-      });
-    } else {
-      const passCount = (stdout.match(/\[PASS\]/g) || []).length;
-      const failCount = (stdout.match(/\[FAIL\]/g) || []).length;
-      if (passCount > 0 || failCount > 0) {
-        setFoundryStats({
-          passed: passCount,
-          failed: failCount,
-          total: passCount + failCount
-        });
-      } else {
-        setFoundryStats(null);
-      }
+      addLocalLog('SpacetimeDB module compiled successfully.', 'success');
     }
   };
 
   // Run Pytest Suite
   const runPytests = async () => {
     setPytestStatus('running');
-    setPytestLogs('Activating virtualenv and running python test suites...\n');
-    addLocalLog('Executing FastAPI backend pytest suite...', 'info');
+    setPytestLogs('Executing ephemeris feeder check...\n');
+    addLocalLog('Executing ephemeris feeder simulation pass...', 'info');
 
-    const backendCwd = '../EthGlobalHackathon/AlchmAgentsETH-main/backend';
-    // Run pytest on the test_main.py file
-    const { stdout, stderr, error } = await runCommand('poetry run pytest test_main.py || bun run python3 -m pytest test_main.py || python3 -m pytest test_main.py || pytest test_main.py', backendCwd);
+    const backendCwd = '../Spacetimedbhackathon/Pentacles/feeder';
+    const { stdout, stderr, error } = await runCommand('bun run push-ephemeris.ts --once || tsx push-ephemeris.ts --once || npx ts-node push-ephemeris.ts --once', backendCwd);
 
     const fullLog = stdout + '\n' + stderr;
     setPytestLogs(fullLog);
 
-    if (error || fullLog.includes('FAILED') || fullLog.includes('errors during collection')) {
+    if (error || fullLog.includes('FAILED') || fullLog.includes('error')) {
       setPytestStatus('failed');
-      addLocalLog('FastAPI python tests failed.', 'error');
+      addLocalLog('Ephemeris feeder dry run failed.', 'error');
     } else {
       setPytestStatus('success');
-      addLocalLog('FastAPI backend tests passed.', 'success');
+      addLocalLog('Ephemeris feeder dry run completed successfully.', 'success');
     }
   };
 
@@ -287,8 +268,8 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
             <Atom className="h-5 w-5 animate-spin-slow" />
           </div>
           <div>
-            <div className="text-[13px] font-bold text-[#e3e3d8] tracking-wider uppercase">AlchmAgentsETH Console</div>
-            <div className="text-[9px] text-[#8f9282] uppercase mt-0.5">Submission readiness & cockpit control</div>
+            <div className="text-[13px] font-bold text-[#e3e3d8] tracking-wider uppercase">Pentacles Console</div>
+            <div className="text-[9px] text-[#8f9282] uppercase mt-0.5">Project readiness & cockpit control</div>
           </div>
         </div>
 
@@ -334,14 +315,14 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
               className={`px-4 py-2 text-[10px] uppercase font-bold tracking-wider border cursor-pointer transition ${activeSubTab === 'solidity' ? 'border-[#9ddf2e] text-[#9ddf2e] bg-[#9ddf2e]/5' : 'border-transparent text-[#8f9282] hover:text-[#c5c8b6]'}`}
             >
               <Layers className="inline w-3.5 h-3.5 mr-1.5 -mt-0.5" />
-              Solidity Contracts (Foundry)
+              SpaceTimeDB Module (Rust)
             </button>
             <button 
               onClick={() => setActiveSubTab('python')}
               className={`px-4 py-2 text-[10px] uppercase font-bold tracking-wider border cursor-pointer transition ${activeSubTab === 'python' ? 'border-[#9ddf2e] text-[#9ddf2e] bg-[#9ddf2e]/5' : 'border-transparent text-[#8f9282] hover:text-[#c5c8b6]'}`}
             >
               <Activity className="inline w-3.5 h-3.5 mr-1.5 -mt-0.5" />
-              Python backend (pytest)
+              TypeScript Feeder
             </button>
             <button 
               onClick={() => setActiveSubTab('telemetry')}
@@ -407,20 +388,20 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
                           </button>
                         ) : (
                           <div className="flex gap-2">
-                            {service.name.includes('Frontend') && (
+                            {service.name.includes('Web Client') && (
                               <button
-                                onClick={() => startServiceInCwd('Frontend', 'bun run dev', '../EthGlobalHackathon/AlchmAgentsETH-main')}
+                                onClick={() => startServiceInCwd('Web Client Server', 'bun --bun run serve.ts', '../Spacetimedbhackathon/Pentacles')}
                                 className="border border-[#9ddf2e]/40 hover:border-[#9ddf2e] bg-[#9ddf2e]/5 hover:bg-[#9ddf2e]/10 text-[#9ddf2e] font-bold text-[9px] uppercase px-2 py-1 transition cursor-pointer"
                               >
-                                Launch Bun Dev
+                                Launch Server
                               </button>
                             )}
-                            {service.name.includes('Backend') && (
+                            {service.name.includes('SpacetimeDB') && (
                               <button
-                                onClick={() => startServiceInCwd('Backend', 'python3 -m uvicorn main:app --reload --port 8000', '../EthGlobalHackathon/AlchmAgentsETH-main/backend')}
+                                onClick={() => startServiceInCwd('SpacetimeDB Local Server', 'spacetime check', '../Spacetimedbhackathon/Pentacles/server')}
                                 className="border border-[#9ddf2e]/40 hover:border-[#9ddf2e] bg-[#9ddf2e]/5 hover:bg-[#9ddf2e]/10 text-[#9ddf2e] font-bold text-[9px] uppercase px-2 py-1 transition cursor-pointer"
                               >
-                                Launch FastAPI
+                                Launch DB
                               </button>
                             )}
                           </div>
@@ -441,11 +422,11 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
                   <div className="space-y-3 mt-4 text-[10px]">
                     <div className="flex items-center justify-between border-b border-[#44483a]/40 pb-2">
                       <div>
-                        <div className="font-bold text-[#c5c8b6]">1. Frontend Next.js (port 3000)</div>
-                        <div className="font-mono text-[#8f9282] mt-0.5">bun --bun run dev</div>
+                        <div className="font-bold text-[#c5c8b6]">1. Web Client Server (port 8080)</div>
+                        <div className="font-mono text-[#8f9282] mt-0.5">bun --bun run serve.ts</div>
                       </div>
                       <button 
-                        onClick={() => copyToClipboard('bun --bun run dev', 'Next.js Dev')}
+                        onClick={() => copyToClipboard('bun --bun run serve.ts', 'Web Serve')}
                         className="p-1 border border-[#44483a] hover:border-[#9ddf2e] hover:text-[#9ddf2e] cursor-pointer"
                       >
                         <Copy className="h-3.5 w-3.5" />
@@ -454,11 +435,11 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
 
                     <div className="flex items-center justify-between border-b border-[#44483a]/40 pb-2">
                       <div>
-                        <div className="font-bold text-[#c5c8b6]">2. Backend FastAPI (port 8000)</div>
-                        <div className="font-mono text-[#8f9282] mt-0.5">cd backend && uvicorn main:app --reload --port 8000</div>
+                        <div className="font-bold text-[#c5c8b6]">2. SpaceTimeDB Compile & Publish</div>
+                        <div className="font-mono text-[#8f9282] mt-0.5">cd server && spacetime build && spacetime publish cookingwithcastrollc</div>
                       </div>
                       <button 
-                        onClick={() => copyToClipboard('cd backend && uvicorn main:app --reload --port 8000', 'FastAPI Uvicorn')}
+                        onClick={() => copyToClipboard('cd server && spacetime build && spacetime publish cookingwithcastrollc', 'SpacetimeDB Publish')}
                         className="p-1 border border-[#44483a] hover:border-[#9ddf2e] hover:text-[#9ddf2e] cursor-pointer"
                       >
                         <Copy className="h-3.5 w-3.5" />
@@ -467,11 +448,11 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
 
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="font-bold text-[#c5c8b6]">3. Planetary Hour MCP Server</div>
-                        <div className="font-mono text-[#8f9282] mt-0.5">cd backend && python3 planetary_agents_mcp_server.py</div>
+                        <div className="font-bold text-[#c5c8b6]">3. Ephemeris Feeder Push</div>
+                        <div className="font-mono text-[#8f9282] mt-0.5">cd feeder && bun run push-ephemeris.ts --once</div>
                       </div>
                       <button 
-                        onClick={() => copyToClipboard('cd backend && python3 planetary_agents_mcp_server.py', 'MCP Server')}
+                        onClick={() => copyToClipboard('cd feeder && bun run push-ephemeris.ts --once', 'Feeder Push')}
                         className="p-1 border border-[#44483a] hover:border-[#9ddf2e] hover:text-[#9ddf2e] cursor-pointer"
                       >
                         <Copy className="h-3.5 w-3.5" />
@@ -487,8 +468,8 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-[12px] font-bold uppercase tracking-wider text-[#e3e3d8]">Foundry Solidity Contracts</h2>
-                    <p className="text-[10px] text-[#8f9282] mt-0.5 font-mono">Target: EsmsToken.sol (contracts/src/EsmsToken.sol)</p>
+                    <h2 className="text-[12px] font-bold uppercase tracking-wider text-[#e3e3d8]">SpaceTimeDB Server Module</h2>
+                    <p className="text-[10px] text-[#8f9282] mt-0.5 font-mono">Target: server/src/lib.rs (Rust authoritative state)</p>
                   </div>
                   <button 
                     onClick={runFoundryTests}
@@ -498,43 +479,23 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
                     {foundryStatus === 'running' ? (
                       <>
                         <RefreshCw className="h-3 w-3 animate-spin" />
-                        RUNNING TESTS...
+                        BUILDING MODULE...
                       </>
                     ) : (
                       <>
                         <Play className="h-3 w-3 fill-[#0d0f09]" />
-                        RUN FORGE TESTS
+                        BUILD MODULE
                       </>
                     )}
                   </button>
                 </div>
-
-                {/* Foundry Stats Summary */}
-                {foundryStats && (
-                  <div className="border border-[#44483a] bg-[#12140e] p-4 flex justify-around items-center text-center">
-                    <div>
-                      <div className="text-[10px] text-[#8f9282] uppercase">Solidity Tests</div>
-                      <div className="text-xl font-bold text-[#e3e3d8] mt-1">{foundryStats.total} total</div>
-                    </div>
-                    <div className="h-8 w-px bg-[#44483a]" />
-                    <div>
-                      <div className="text-[10px] text-[#8f9282] uppercase">Passed</div>
-                      <div className="text-xl font-bold text-[#9ddf2e] mt-1">{foundryStats.passed}</div>
-                    </div>
-                    <div className="h-8 w-px bg-[#44483a]" />
-                    <div>
-                      <div className="text-[10px] text-[#8f9282] uppercase">Failed</div>
-                      <div className="text-xl font-bold text-red-500 mt-1">{foundryStats.failed}</div>
-                    </div>
-                  </div>
-                )}
 
                 {/* Console Output */}
                 <div className="border border-[#44483a] flex flex-col bg-[#050604] min-h-[300px]">
                   <div className="border-b border-[#44483a] bg-[#12140e] px-4 py-2 flex items-center justify-between text-[10px] font-bold text-[#8f9282]">
                     <span className="flex items-center gap-1.5 uppercase">
                       <Terminal className="h-3.5 w-3.5 text-[#9ddf2e]" />
-                      Forge Console Output
+                      Spacetime Build Console Output
                     </span>
                     <button 
                       onClick={() => setFoundryLogs('Logs cleared.')}
@@ -555,8 +516,8 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-[12px] font-bold uppercase tracking-wider text-[#e3e3d8]">FastAPI Pytest Runner</h2>
-                    <p className="text-[10px] text-[#8f9282] mt-0.5 font-mono">Target: backend/test_main.py (Uvicorn API endpoints)</p>
+                    <h2 className="text-[12px] font-bold uppercase tracking-wider text-[#e3e3d8]">TypeScript Feeder Runner</h2>
+                    <p className="text-[10px] text-[#8f9282] mt-0.5 font-mono">Target: feeder/push-ephemeris.ts (astronomical coordinates feed)</p>
                   </div>
                   <button 
                     onClick={runPytests}
@@ -566,12 +527,12 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
                     {pytestStatus === 'running' ? (
                       <>
                         <RefreshCw className="h-3 w-3 animate-spin" />
-                        RUNNING PYTEST...
+                        RUNNING FEEDER...
                       </>
                     ) : (
                       <>
                         <Play className="h-3 w-3 fill-[#0d0f09]" />
-                        RUN BACKEND TESTS
+                        RUN FEEDER CHECK
                       </>
                     )}
                   </button>
@@ -591,10 +552,10 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
                     {pytestStatus === 'running' && <RefreshCw className="h-5 w-5 shrink-0 animate-spin" />}
                     <div>
                       <div className="text-xs font-bold uppercase font-mono">
-                        {pytestStatus === 'success' ? 'All Python Backend Tests Passed' : pytestStatus === 'failed' ? 'Python Tests Failed' : 'Executing Python Test Framework...'}
+                        {pytestStatus === 'success' ? 'Feeder validation run passed' : pytestStatus === 'failed' ? 'Feeder run failed' : 'Executing Feeder simulation...'}
                       </div>
                       <div className="text-[9px] opacity-80 mt-0.5">
-                        {pytestStatus === 'success' ? 'Gateway endpoint configurations are secure.' : pytestStatus === 'failed' ? 'Check python dependency mismatches or database connectivity.' : 'Running uvicorn environment probe tests...'}
+                        {pytestStatus === 'success' ? 'Planetary coordinates fed and committed successfully.' : 'Check owner SPACETIME_TOKEN presence or network endpoints.'}
                       </div>
                     </div>
                   </div>
@@ -605,7 +566,7 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
                   <div className="border-b border-[#44483a] bg-[#12140e] px-4 py-2 flex items-center justify-between text-[10px] font-bold text-[#8f9282]">
                     <span className="flex items-center gap-1.5 uppercase">
                       <Terminal className="h-3.5 w-3.5 text-[#9ddf2e]" />
-                      Pytest Console Output
+                      Feeder Output Stream
                     </span>
                     <button 
                       onClick={() => setPytestLogs('Logs cleared.')}

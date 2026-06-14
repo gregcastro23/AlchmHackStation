@@ -74,8 +74,9 @@ export const ClaudeDesignBridge: React.FC<ClaudeDesignBridgeProps> = ({
 
       setLogs((prev) => [...prev, '[Claude] Component blueprint generated successfully.']);
       onCommitLog(`Claude Design: Compiled visual frame deck to a React component for ${framework}.`, 'success');
-    } catch (err: any) {
-      onCommitLog(`Claude Design: Compilation failed — ${err.message}`, 'error');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      onCommitLog(`Claude Design: Compilation failed — ${message}`, 'error');
     } finally {
       setIsCompiling(false);
     }
@@ -91,8 +92,9 @@ export const ClaudeDesignBridge: React.FC<ClaudeDesignBridgeProps> = ({
       if (!res.ok) throw new Error('Failed to write file via local API');
       onCommitLog('✓ File src/components/GeneratedComponent.tsx committed successfully to disk.', 'success');
       onCommitLog('Vite hot-reloading active target modules...', 'success');
-    } catch (err: any) {
-      onCommitLog(`Claude Design: File write failed — ${err.message}`, 'error');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      onCommitLog(`Claude Design: File write failed — ${message}`, 'error');
     }
   };
 

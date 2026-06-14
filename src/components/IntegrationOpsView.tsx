@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -145,7 +145,7 @@ export const IntegrationOpsView: React.FC<IntegrationOpsViewProps> = ({ onCommit
     manual: integrations.filter((item) => item.health === 'manual').length,
   }), [integrations]);
 
-  const probeAllReal = async (silent = false) => {
+  const probeAllReal = useCallback(async (silent = false) => {
     if (!silent) {
       onCommitLog('Running real health checks across all integrations.', 'info');
     }
@@ -159,7 +159,7 @@ export const IntegrationOpsView: React.FC<IntegrationOpsViewProps> = ({ onCommit
       if (data.stdout) {
         const parsed = JSON.parse(data.stdout);
         setIntegrations((current) => current.map((item) => {
-          const match = parsed.results.find((r: any) => r.id === item.id);
+          const match = parsed.results.find((r: { id: string; state: AuthHealth; message: string }) => r.id === item.id);
           if (match) {
             return {
               ...item,
@@ -177,12 +177,13 @@ export const IntegrationOpsView: React.FC<IntegrationOpsViewProps> = ({ onCommit
           onCommitLog(`Real probe failed: ${data.error}`, 'error');
         }
       }
-    } catch (e: any) {
+    } catch (e) {
       if (!silent) {
-        onCommitLog(`Failed to run local probe check: ${e.message}`, 'error');
+        const message = e instanceof Error ? e.message : String(e);
+        onCommitLog(`Failed to run local probe check: ${message}`, 'error');
       }
     }
-  };
+  }, [onCommitLog]);
 
   const probe = async (integration: IntegrationRuntime) => {
     setProbingId(integration.id);
@@ -198,7 +199,7 @@ export const IntegrationOpsView: React.FC<IntegrationOpsViewProps> = ({ onCommit
       setProbingId(null);
       if (data.stdout) {
         const parsed = JSON.parse(data.stdout);
-        const match = parsed.results.find((r: any) => r.id === integration.id);
+        const match = parsed.results.find((r: { id: string; state: AuthHealth; message: string }) => r.id === integration.id);
         if (match) {
           setIntegrations((current) => current.map((item) => item.id === integration.id
             ? { ...item, health: match.state, message: match.message }
@@ -209,16 +210,20 @@ export const IntegrationOpsView: React.FC<IntegrationOpsViewProps> = ({ onCommit
       } else {
         onCommitLog(`CLI probe did not return stdout: ${data.error || 'unknown error'}`, 'error');
       }
-    } catch (e: any) {
+    } catch (e) {
       setProbingId(null);
-      onCommitLog(`Failed to connect to local probe server: ${e.message}`, 'error');
+      const message = e instanceof Error ? e.message : String(e);
+      onCommitLog(`Failed to connect to local probe server: ${message}`, 'error');
     }
   };
 
   useEffect(() => {
-    // Run real checks on mount silently
-    probeAllReal(true);
-  }, []);
+    // Run real checks on mount silently, deferred to avoid synchronous setState inside render/effect phase
+    const timer = setTimeout(() => {
+      probeAllReal(true);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [probeAllReal]);
 
   const markRenewed = (integration: IntegrationRuntime) => {
     setIntegrations((current) => current.map((item) => item.id === integration.id

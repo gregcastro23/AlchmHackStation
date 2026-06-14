@@ -12,19 +12,15 @@ import {
   ExternalLink,
   FileCode2,
   Gauge,
-  GitBranch,
   Hammer,
   HelpCircle,
-  Landmark,
   Lightbulb,
   Play,
   Rocket,
   Scale,
   ShieldCheck,
   Sparkles,
-  Timer,
   Users,
-  Video,
   WandSparkles,
 } from 'lucide-react';
 
@@ -44,46 +40,8 @@ interface ProjectDraft {
   pitch: string;
 }
 
-const eventLinks = [
-  {
-    label: 'Hacker Dashboard',
-    description: 'Team, project, schedule, and submission home.',
-    href: 'https://ethglobal.com/events/newyork2026/home',
-    icon: Gauge,
-  },
-  {
-    label: 'Info Center',
-    description: 'Official event onboarding and logistics.',
-    href: 'https://ethglobal.com/events/newyork2026/info',
-    icon: BookOpen,
-  },
-  {
-    label: 'Rules & Judging',
-    description: 'Eligibility, submission, demo, and judging rules.',
-    href: 'https://ethglobal.com/events/newyork2026/info/details',
-    icon: Scale,
-  },
-  {
-    label: 'Builder Resources',
-    description: 'Ethereum, Solidity, L2, education, and prize resources.',
-    href: 'https://ethglobal.com/events/newyork2026/info/resources',
-    icon: FileCode2,
-  },
-  {
-    label: 'NYC Guide',
-    description: 'Venue guidance and local side-event updates.',
-    href: 'https://ethglobal.com/events/newyork2026/city',
-    icon: Landmark,
-  },
-  {
-    label: 'Event FAQ',
-    description: 'Applications, teams, staking, travel, and participation.',
-    href: 'https://ethglobal.com/events/newyork2026#faq',
-    icon: HelpCircle,
-  },
-];
 
-const tracks: Array<{
+const pentaclesModules: Array<{
   id: HackathonTrack;
   number: string;
   title: string;
@@ -94,146 +52,112 @@ const tracks: Array<{
   {
     id: 'from-scratch',
     number: '01',
-    title: 'From Scratch',
-    shortTitle: 'Classic track',
-    description: 'Arrive with an empty project and create the full submission during the event.',
-    rule: 'No pre-event project-specific code, designs, or assets. Public libraries and starter kits are allowed with transparency.',
+    title: 'Rust Server Module',
+    shortTitle: 'authoritative state',
+    description: 'Authoritative transaction loop, 18 tables, scheduled ticks, and owner-gated reducers.',
+    rule: 'Location: /server (Rust). spacetime build compiles it to WASM to run directly inside SpacetimeDB.',
   },
   {
     id: 'extend-open-source',
     number: '02',
-    title: 'Extend Open Source',
-    shortTitle: 'Continuity track',
-    description: 'Bring an open-source repository you maintain and ship a meaningful backlog feature.',
-    rule: 'Document the pre-existing baseline and clearly identify the functionality created during the hackathon.',
+    title: 'Playable Web Client',
+    shortTitle: '2D / AR simulation',
+    description: 'Browser client using HTML5 Canvas, Web Audio, and offline fallback local storage simulation.',
+    rule: 'Location: / (client.html). Currently runs standalone offline; requires TS SDK live module integration.',
   },
   {
     id: 'ship-a-feature',
     number: '03',
-    title: 'Ship a Feature',
-    shortTitle: 'Continuity track',
-    description: 'Add one new feature to an existing private product and release the weekend work as open source.',
-    rule: 'The submitted feature must be new, built during the event, and published openly with the prior work distinguished.',
+    title: 'AR Unity Client',
+    shortTitle: 'MMO interface',
+    description: 'Client utilizing AR Foundation, true North gyroscope alignment, and generated C# bindings.',
+    rule: 'Location: /unity. Renders live stars, maps alt/az, and dispatches reducer transactions on tap-to-strike.',
   },
 ];
 
 const checklist = [
-  { id: 'track', label: 'Track selected and eligibility understood', group: 'Before build' },
-  { id: 'team', label: 'Team created or joined (maximum 5 accepted hackers)', group: 'Before build' },
-  { id: 'repo', label: 'Git history shows progress throughout the event', group: 'Build proof' },
-  { id: 'reuse', label: 'Repo, Figma, or equivalent proof separates reused and new work', group: 'Build proof' },
-  { id: 'ai', label: 'AI-assisted files, assets, prompts, specs, and plans are attributed', group: 'Build proof' },
-  { id: 'working', label: 'Core user flow works in a live demo', group: 'Submission' },
-  { id: 'submission', label: 'Title, description, and repository link are ready', group: 'Submission' },
-  { id: 'mode', label: 'Finalist + Partner or Partner Prizes Only mode is selected', group: 'Submission' },
-  { id: 'prizes', label: 'Up to 3 partners include integration notes and feedback', group: 'Submission' },
-  { id: 'video', label: 'Optional 2-4 minute demo video is 720p or higher', group: 'Submission' },
-  { id: 'deadline', label: 'Submit before Sunday, June 14 at 9:00 AM EDT', group: 'Submission' },
-  { id: 'pitch', label: '4-minute demo and 3-minute Q&A are rehearsed', group: 'Judging' },
-  { id: 'questions', label: 'Inspiration, tools, and technical challenges are explainable', group: 'Judging' },
+  { id: 'btree_index', label: 'Add btree indexes on card.owner, deck_slot.owner, and trade.proposer/partner', group: 'Database Optimization' },
+  { id: 'prune_tables', label: 'Implement scheduled prune janitor on battle and oracle_request tables', group: 'Database Optimization' },
+  { id: 'prompt_cache', label: 'Verify prompt cache size is >4096 tokens (Haiku 4.5 minimum cache block)', group: 'AI & Oracle Hardening' },
+  { id: 'rebill_fix', label: 'Fix Oracle re-billing infinite loop on failed request API errors', group: 'AI & Oracle Hardening' },
+  { id: 'groq_integration', label: 'Configure Groq API (Llama-70B) for free-chain planetary agent responses', group: 'AI & Oracle Hardening' },
+  { id: 'owner_token', label: 'Mint deployable owner SPACETIME_TOKEN for feeder and oracle cron services', group: 'Services Deployment' },
+  { id: 'sdk_wiring', label: 'Wire web client client.js to wss maincloud using TypeScript SDK', group: 'Web Client Integration' },
+  { id: 'word_duel_brain', label: 'Wire planetary-agents Word Duel brain to the agent_letters seam', group: 'Web Client Integration' },
 ];
 
-const judgingCriteria = [
-  { label: 'Technicality', prompt: 'Is the problem hard and the implementation sophisticated?', icon: Code2 },
-  { label: 'Originality', prompt: 'Does the project introduce a fresh idea or approach?', icon: Lightbulb },
-  { label: 'Practicality', prompt: 'Is the product complete enough to be useful today?', icon: CheckCircle2 },
-  { label: 'Usability', prompt: 'Is the UI, UX, or developer experience intuitive?', icon: Users },
-  { label: 'WOW Factor', prompt: 'Will judges remember the experience after the demo?', icon: Sparkles },
+const pentaclesFeatures = [
+  { label: 'Eleven-Zone Partition', prompt: 'Canvas coordinates dividing sky into 5 houses, 5 spires, and 1 crown.', icon: Code2 },
+  { label: 'Environmental Weather', prompt: 'Element weather factors: x1.35 matched suit, x0.75 opposite.', icon: Lightbulb },
+  { label: 'Zodiac Seals', prompt: 'Seals grant x1.15 element mastery buff in duels and sieges.', icon: CheckCircle2 },
+  { label: 'Multi-Faction Siege', prompt: 'Auto-resolve combat loop supporting up to 10 contesting factions.', icon: Users },
+  { label: 'Tarot Deck Minting', prompt: 'Starting deck (40 cards) generated from natal chart dignity scores.', icon: Sparkles },
 ];
 
-const eventFaqs = [
+const pentaclesFaqs = [
   {
-    question: 'Who can participate?',
-    answer: 'Developers and builders who want to create or contribute during the hackathon. Beginners, veteran web3 builders, and solo hackers are welcome.',
+    question: 'What is the SpacetimeDB Maincloud deployment details?',
+    answer: 'The published module is named "cookingwithcastrollc". The owner identity is "c2007058fefb90b9ffcd33379c03d135cbecadda7b901575d9b8ed8ca06ddb52". The live host endpoint is wss://maincloud.spacetimedb.com.',
   },
   {
-    question: 'Is the event free?',
-    answer: 'Attendance and food are free. Accepted hackers stake a small amount of crypto to confirm their place; it is returned after participating and submitting a project, including a partial project.',
+    question: 'Why is adding btree indexes critical?',
+    answer: 'Currently, every player check (fetching active cards, loadout, trade processing) is an O(N) table scan over all cards in the game. This causes quadratic complexity (N players scanning N*C rows on a 1-minute schedule). Adding indexes scales it to O(C).',
   },
   {
-    question: 'Can I participate remotely?',
-    answer: 'No. ETHGlobal New York 2026 is strictly in person, and hackers must attend the event to participate.',
+    question: 'How does the Oracle chat service communicate safely?',
+    answer: 'The client writes a question to the private oracle_request table. The trusted oracle-service reads it, calls Claude (caching system prompt), and writes the answer to oracle_reply. No API keys are stored in the client.',
   },
   {
-    question: 'How do teams work?',
-    answer: 'Teams can have up to five members. Every member must apply, be accepted, and stake individually. You may hack solo, but joining two projects can lead to disqualification.',
-  },
-  {
-    question: 'Are travel and lodging covered?',
-    answer: 'No. ETHGlobal does not cover travel, visa, or accommodation costs. Food is provided, and limited rest areas may be available without shower facilities.',
-  },
-  {
-    question: 'Where do I get help?',
-    answer: 'Use mentors in the Hacker Dashboard, the mentorship and partner Discord channels, or speak with mentors and partner teams at the venue.',
+    question: 'How do planetary agents determine Word Duel moves?',
+    answer: 'The planetary agents use the planetary-agents API endpoint (running Groq/Llama-70B) to pick the best move in character, returning a themed one-line rationale, falling back to a greedy resolver if slow.',
   },
 ];
 
 const resourceLanes = [
   {
-    title: 'Privy',
-    description: 'Create embedded accounts and wallets on crypto rails.',
-    icon: ShieldCheck,
-    tone: 'text-[#9ddf2e]',
-    prizes: [
-      { name: 'Best onchain financial product', amount: '$1,650', req: 'Use embedded wallets & Earn capability' },
-      { name: 'Best cross-chain funding', amount: '$1,650', req: 'Use universal deposit addresses' },
-      { name: 'Best AI agent', amount: '$1,700', req: 'Use Agent Wallet CLI for onchain action' }
-    ],
-    links: [
-      { label: 'Privy Docs', href: 'https://docs.privy.io/' },
-      { label: 'Agent Sandbox', href: 'https://agents.privy.io' },
-    ],
-  },
-  {
-    title: 'Base',
-    description: 'A secure, low-cost builder-friendly Ethereum L2.',
-    icon: Rocket,
-    tone: 'text-[#7dd3fc]',
-    prizes: [
-      { name: 'Best Consumer App', amount: '$2,000', req: 'Deploy on Base Sepolia/Mainnet' },
-      { name: 'Onchain Commerce', amount: '$1,500', req: 'Build commerce flow on Base' }
-    ],
-    links: [
-      { label: 'Base Docs', href: 'https://docs.base.org/' },
-      { label: 'Builder Funding', href: 'https://docs.base.org/get-started/get-funded' },
-    ],
-  },
-  {
-    title: 'Arbitrum',
-    description: 'Next-generation L2 for high-throughput dapps.',
-    icon: BookOpen,
-    tone: 'text-[#ffb020]',
-    prizes: [
-      { name: 'Best Stylus Use Case', amount: '$2,000', req: 'Build using Rust/C++ via Stylus' },
-      { name: 'Best Gaming Protocol', amount: '$1,500', req: 'Deploy game economy on Arbitrum' }
-    ],
-    links: [
-      { label: 'Arbitrum Docs', href: 'https://docs.arbitrum.io/' },
-      { label: 'Stylus Quickstart', href: 'https://docs.arbitrum.io/stylus' },
-    ],
-  },
-  {
     title: 'SpaceTimeDB',
-    description: 'Relational database that is also a smart contract platform.',
+    description: 'Relational database + WASM game server hosting the Rust module authoritative state.',
     icon: FileCode2,
     tone: 'text-[#e3e3d8]',
-    prizes: [
-      { name: 'Best Multiplayer Game', amount: '$2,000', req: 'Use SpaceTimeDB for game state' },
-      { name: 'Best Social App', amount: '$1,500', req: 'Leverage speed for social features' }
-    ],
     links: [
-      { label: 'SpaceTimeDB Docs', href: 'https://spacetimedb.com/docs' },
-      { label: 'TypeScript SDK', href: 'https://spacetimedb.com/docs/sdk/typescript' },
+      { label: 'SpacetimeDB Docs', href: 'https://spacetimedb.com/docs' },
+      { label: 'Rust SDK', href: 'https://spacetimedb.com/docs/sdk/rust' },
+    ],
+  },
+  {
+    title: 'TypeScript SDK',
+    description: 'Enables browser client.js to subscribe to database tables and call reducers reactively.',
+    icon: Code2,
+    tone: 'text-[#7dd3fc]',
+    links: [
+      { label: 'TS SDK Docs', href: 'https://spacetimedb.com/docs/sdk/typescript' },
+    ],
+  },
+  {
+    title: 'Anthropic Claude',
+    description: 'Powers the Oracle chatbot, utilizing tiered models (Haiku 4.5/Sonnet 4.6) with prompt caching.',
+    icon: ShieldCheck,
+    tone: 'text-[#9ddf2e]',
+    links: [
+      { label: 'Anthropic Docs', href: 'https://docs.anthropic.com' },
+    ],
+  },
+  {
+    title: 'Groq Cloud',
+    description: 'Executes fast, cost-efficient Llama-70B inference for planetary agent duels.',
+    icon: Rocket,
+    tone: 'text-[#ffb020]',
+    links: [
+      { label: 'Groq API Docs', href: 'https://console.groq.com/docs' },
     ],
   },
 ];
 
 const buildTools = [
-  { label: 'Forge the idea', detail: 'Turn the pitch into an agent task graph.', tab: 'swarm-nexus', icon: WandSparkles, tone: 'acid' },
-  { label: 'Run the mission', detail: 'Track build proof and demo readiness.', tab: 'mission-control', icon: Gauge, tone: 'cyan' },
-  { label: 'Build contracts', detail: 'Compile, test, and operate the local chain.', tab: 'console', icon: Hammer, tone: 'amber' },
-  { label: 'Audit security', detail: 'Review smart-contract safety gates.', tab: 'security', icon: ShieldCheck, tone: 'white' },
-  { label: 'Ship the project', detail: 'Prepare integrations, auth, and handoffs.', tab: 'integration-ops', icon: Rocket, tone: 'acid' },
+  { label: 'Verify codebase', detail: 'Verify Rust build and check client syntax.', tab: 'console', icon: Hammer, tone: 'amber' },
+  { label: 'Track tasks', detail: 'Check completion progress and pending tasks.', tab: 'mission-control', icon: Gauge, tone: 'cyan' },
+  { label: 'Manage environment', detail: 'Review environment variables and sync state.', tab: 'integration-ops', icon: Rocket, tone: 'acid' },
+  { label: 'Security & proofs', detail: 'Enroll biometrics and inspect provenance proofs.', tab: 'security', icon: ShieldCheck, tone: 'white' },
 ];
 
 const toneStyles: Record<string, string> = {
@@ -244,10 +168,10 @@ const toneStyles: Record<string, string> = {
 };
 
 const storageKeys = {
-  entered: 'alchm-ethglobal-entered',
-  track: 'alchm-ethglobal-track',
-  draft: 'alchm-ethglobal-draft',
-  checklist: 'alchm-ethglobal-checklist',
+  entered: 'pentacles-workspace-entered',
+  track: 'pentacles-workspace-module',
+  draft: 'pentacles-workspace-draft',
+  checklist: 'pentacles-workspace-checklist',
 };
 
 const readStoredValue = <T,>(key: string, fallback: T): T => {
@@ -257,38 +181,6 @@ const readStoredValue = <T,>(key: string, fallback: T): T => {
   } catch {
     return fallback;
   }
-};
-
-const getEventPhase = () => {
-  const now = new Date();
-  const start = new Date('2026-06-12T00:00:00-04:00');
-  const end = new Date('2026-06-15T00:00:00-04:00');
-
-  if (now < start) {
-    const hours = Math.max(1, Math.ceil((start.getTime() - now.getTime()) / 3_600_000));
-    return { label: 'Starts soon', detail: `${hours}h to opening day`, tone: 'text-[#ffb020]' };
-  }
-
-  if (now < end) {
-    return { label: 'Hackathon live', detail: 'Build window active', tone: 'text-[#9ddf2e]' };
-  }
-
-  return { label: 'Event complete', detail: 'Keep shipping the project', tone: 'text-[#7dd3fc]' };
-};
-
-const getSubmissionWindow = () => {
-  const deadline = new Date('2026-06-14T09:00:00-04:00');
-  const remainingMs = deadline.getTime() - Date.now();
-
-  if (remainingMs <= 0) {
-    return { label: 'Submission closed', detail: 'Deadline passed', tone: 'text-[#ffb4ab]' };
-  }
-
-  const totalHours = Math.ceil(remainingMs / 3_600_000);
-  const days = Math.floor(totalHours / 24);
-  const hours = totalHours % 24;
-  const detail = days > 0 ? `${days}d ${hours}h remaining` : `${hours}h remaining`;
-  return { label: 'Submission countdown', detail, tone: 'text-[#ffb020]' };
 };
 
 export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
@@ -303,14 +195,12 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
   const [track, setTrack] = useState<HackathonTrack>(() => readStoredValue(storageKeys.track, 'from-scratch'));
   const [draft, setDraft] = useState<ProjectDraft>(() =>
     readStoredValue(storageKeys.draft, {
-      name: 'AlchmAgentsETH',
-      pitch: 'A planetary agent system coordinating on-chain actions and token mechanics on Ethereum.',
+      name: 'Pentacles MMO',
+      pitch: 'Location-based AR MMO on SpaceTimeDB. Birth chart faction, Tarot arsenal, and 5,041 capturable stars.',
     }),
   );
   const [completed, setCompleted] = useState<string[]>(() => readStoredValue(storageKeys.checklist, []));
-  const eventPhase = getEventPhase();
-  const submissionWindow = getSubmissionWindow();
-  const activeTrack = tracks.find((item) => item.id === track) ?? tracks[0];
+  const activeTrack = pentaclesModules.find((item) => item.id === track) ?? pentaclesModules[0];
   const completion = Math.round((completed.length / checklist.length) * 100);
 
   useEffect(() => {
@@ -328,7 +218,7 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
   const enterHackathon = () => {
     setEntered(true);
     window.localStorage.setItem(storageKeys.entered, JSON.stringify(true));
-    onCommitLog(`ETHGlobal New York space entered on ${activeTrack.title} track.`, 'success');
+    onCommitLog(`Pentacles Workspace loaded. Selected core context: ${activeTrack.title}.`, 'success');
   };
 
   const returnToTrackSelection = () => {
@@ -345,20 +235,10 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
   const startProject = () => {
     const idea = draft.pitch.trim() || draft.name.trim();
     if (!idea) {
-      onCommitLog('Add a project name or one-line pitch before forging the build plan.', 'warning');
+      onCommitLog('Add a description before starting the forge build plan.', 'warning');
       return;
     }
-
     onStartBuild(idea, track);
-  };
-
-  const copyStarterCommand = async () => {
-    try {
-      await navigator.clipboard.writeText('npx create-eth@latest');
-      onCommitLog('Scaffold-ETH starter command copied: npx create-eth@latest', 'success');
-    } catch {
-      onCommitLog('Starter command: npx create-eth@latest', 'info');
-    }
   };
 
   if (!entered) {
@@ -372,16 +252,16 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#44483a] pb-5">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center border border-[#9ddf2e] bg-[#9ddf2e]/10 font-mono text-xl font-bold text-[#9ddf2e]">
-                  Ξ
+                  ✦
                 </div>
                 <div>
-                  <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#8f9282]">AlchmAgentsETH Workspace</div>
-                  <div className="mt-1 text-lg font-bold text-[#e3e3d8]">ETHGlobal New York 2026</div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#8f9282]">Pentacles Workspace Indicator</div>
+                  <div className="mt-1 text-lg font-bold text-[#e3e3d8]">SpaceTimeDB MMO Module</div>
                 </div>
               </div>
               <div className="flex items-center gap-2 border border-[#44483a] bg-[#12140e] px-3 py-2 font-mono text-[10px] uppercase tracking-[0.16em]">
-                <span className="h-2 w-2 rounded-full bg-[#ffb020] animate-pulse" />
-                <span className={eventPhase.tone}>{eventPhase.detail}</span>
+                <span className="h-2 w-2 rounded-full bg-[#9ddf2e] animate-pulse" />
+                <span className="text-[#9ddf2e]">Module Status: Active</span>
               </div>
             </div>
 
@@ -389,24 +269,29 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
               <div>
                 <div className="inline-flex items-center gap-2 border border-[#7dd3fc]/40 bg-[#7dd3fc]/5 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.24em] text-[#7dd3fc]">
                   <CalendarDays className="h-3.5 w-3.5" />
-                  June 12-14 // New York City
+                  Claim the night sky // AR MMO
                 </div>
                 <h1 className="mt-6 max-w-4xl text-5xl font-bold leading-[0.95] tracking-[-0.05em] text-[#e3e3d8] md:text-7xl">
-                  Enter with an idea.
-                  <span className="block text-[#9ddf2e]">Leave with proof.</span>
+                  Map the heavens.
+                  <span className="block text-[#9ddf2e]">Fight star by star.</span>
                 </h1>
                 <p className="mt-6 max-w-2xl text-base leading-7 text-[#c5c8b6] md:text-lg">
-                  One workspace to facilitate the successful submission of AlchmAgentsETH: choose your build path, forge the project, track eligibility, test contracts, package the demo, and walk into judging ready.
+                  A real-time project status and verification dashboard. Track database indexes, verify prompt caching, deploy feeders, and manage the live module status.
                 </p>
               </div>
 
               <div className="border border-[#44483a] bg-[#12140e]/90 p-5">
                 <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.18em] text-[#8f9282]">
-                  <span>Event protocol</span>
-                  <span className="text-[#9ddf2e]">3 paths // 1 weekend</span>
+                  <span>Server info</span>
+                  <span className="text-[#9ddf2e]">cookingwithcastrollc</span>
                 </div>
                 <div className="mt-4 space-y-3">
-                  {['Show what changed', 'Commit throughout the event', 'Attribute AI-assisted work', 'Finalist mix: up to 7 classic + 3 continuity'].map((item) => (
+                  {[
+                    'wss://maincloud.spacetimedb.com',
+                    '5,041 stars magnitude catalog',
+                    'Tarot deck procedural stats',
+                    'Word Duel planetary agents',
+                  ].map((item) => (
                     <div key={item} className="flex items-center gap-3 border border-[#44483a] bg-[#0d0f09] px-3 py-2.5 text-sm text-[#e3e3d8]">
                       <Check className="h-4 w-4 text-[#9ddf2e]" />
                       {item}
@@ -417,7 +302,7 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
             </div>
 
             <div className="grid gap-3 lg:grid-cols-3">
-              {tracks.map((item) => {
+              {pentaclesModules.map((item) => {
                 const selected = track === item.id;
                 return (
                   <button
@@ -441,23 +326,14 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
 
             <div className="mt-6 flex flex-col items-stretch justify-between gap-4 border-t border-[#44483a] pt-6 lg:flex-row lg:items-center">
               <p className="max-w-2xl text-xs leading-5 text-[#8f9282]">
-                Selected: <span className="font-semibold text-[#e3e3d8]">{activeTrack.title}</span>. {activeTrack.rule}
+                Selected context: <span className="font-semibold text-[#e3e3d8]">{activeTrack.title}</span>. {activeTrack.rule}
               </p>
               <div className="flex flex-col gap-2 sm:flex-row">
-                <a
-                  href="https://ethglobal.com/events/newyork2026/home"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex shrink-0 items-center justify-center gap-2 border border-[#7dd3fc]/50 bg-[#7dd3fc]/5 px-5 py-3 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#7dd3fc] transition hover:bg-[#7dd3fc]/10"
-                >
-                  Open hacker dashboard
-                  <ExternalLink className="h-4 w-4" />
-                </a>
                 <button
                   onClick={enterHackathon}
                   className="inline-flex shrink-0 items-center justify-center gap-3 border border-[#9ddf2e] bg-[#9ddf2e] px-6 py-3 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-[#0d0f09] transition hover:bg-[#83c300]"
                 >
-                  Enter hackathon space
+                  Enter Project Workspace
                   <ArrowUpRight className="h-4 w-4" />
                 </button>
               </div>
@@ -478,36 +354,32 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-2 border border-[#9ddf2e]/40 bg-[#9ddf2e]/5 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-[#9ddf2e]">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#9ddf2e] animate-pulse" />
-                  {eventPhase.label}
+                  STATUS: HARDENING PHASE
                 </span>
                 <span className="border border-[#44483a] bg-[#0d0f09] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-[#c5c8b6]">
-                  Jun 12-14 // NYC
+                  cookingwithcastrollc
                 </span>
                 <span className="border border-[#7dd3fc]/30 bg-[#7dd3fc]/5 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-[#7dd3fc]">
                   {activeTrack.title}
                 </span>
-                <span className="inline-flex items-center gap-1.5 border border-[#ffb020]/40 bg-[#ffb020]/5 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-[#ffb020]">
-                  <Timer className="h-3 w-3" />
-                  Due Sun Jun 14 // 09:00 EDT
-                </span>
                 <a
-                  href="https://ethglobal.com/events/newyork2026/home"
+                  href="https://maincloud.spacetimedb.com"
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1.5 border border-[#e3e3d8]/30 bg-[#e3e3d8]/5 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-[#e3e3d8] transition hover:border-[#7dd3fc]/60 hover:text-[#7dd3fc]"
                 >
-                  Hacker dashboard
+                  STDB Dashboard
                   <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
               <h1 className="mt-5 text-3xl font-bold tracking-[-0.035em] text-[#e3e3d8] md:text-5xl">
-                Your ETHGlobal build room
+                Pentacles Control Deck
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-6 text-[#c5c8b6] md:text-base">
-                Keep the idea, implementation, evidence, and judge story moving together. Everything below is organized around what ETHGlobal asks you to prove by submission time.
+                Monitor implementation plan verification, compile state, check authentication probes, and manage the cross-project seams with planetary agents.
               </p>
 
-              <div className="mt-6 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+              <div className="mt-6 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                 {buildTools.map((tool) => {
                   const Icon = tool.icon;
                   return (
@@ -518,7 +390,7 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
                     >
                       <div className="flex items-center justify-between">
                         <Icon className="h-4 w-4" />
-                        <ChevronRight className="h-3.5 w-3.5 opacity-50" />
+                        <ChevronRight className="h-3.5 w-3.5" />
                       </div>
                       <div className="mt-4 text-xs font-bold text-[#e3e3d8]">{tool.label}</div>
                       <div className="mt-1 text-[11px] leading-4 text-[#8f9282]">{tool.detail}</div>
@@ -531,7 +403,7 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
             <div className="border border-[#44483a] bg-[#0d0f09]/90 p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#8f9282]">Submission readiness</div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#8f9282]">Completion Readiness</div>
                   <div className="mt-2 flex items-baseline gap-2">
                     <span className="text-5xl font-bold text-[#9ddf2e]">{Math.round((missionReadiness + completion) / 2)}</span>
                     <span className="font-mono text-xs text-[#8f9282]">/ 100</span>
@@ -542,10 +414,6 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
               <div className="mt-5 h-2 border border-[#44483a] bg-[#12140e]">
                 <div className="h-full bg-[#9ddf2e] transition-all" style={{ width: `${Math.round((missionReadiness + completion) / 2)}%` }} />
               </div>
-              <div className="mt-3 flex items-center justify-between border border-[#ffb020]/30 bg-[#ffb020]/5 px-3 py-2 font-mono text-[10px] uppercase">
-                <span className="text-[#8f9282]">{submissionWindow.label}</span>
-                <span className={submissionWindow.tone}>{submissionWindow.detail}</span>
-              </div>
               <div className="mt-5 grid grid-cols-2 gap-2 font-mono text-[10px] uppercase">
                 <div className="border border-[#44483a] bg-[#12140e] p-3">
                   <span className="block text-[#8f9282]">Build</span>
@@ -554,16 +422,16 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
                 <div className="border border-[#44483a] bg-[#12140e] p-3">
                   <span className="block text-[#8f9282]">GitHub</span>
                   <span className={`mt-1 block ${gitHubConnected ? 'text-[#9ddf2e]' : 'text-[#ffb020]'}`}>
-                    {gitHubConnected ? 'Connected' : 'Not linked'}
+                    {gitHubConnected ? 'Linked' : 'Not linked'}
                   </span>
                 </div>
                 <div className="border border-[#44483a] bg-[#12140e] p-3">
-                  <span className="block text-[#8f9282]">Rules</span>
+                  <span className="block text-[#8f9282]">Tasks</span>
                   <span className="mt-1 block text-[#7dd3fc]">{completion}%</span>
                 </div>
                 <div className="border border-[#44483a] bg-[#12140e] p-3">
-                  <span className="block text-[#8f9282]">Deadline</span>
-                  <span className="mt-1 block text-[#ffb020]">Sun 09:00</span>
+                  <span className="block text-[#8f9282]">Module</span>
+                  <span className="mt-1 block text-[#9ddf2e]">Active</span>
                 </div>
               </div>
             </div>
@@ -581,7 +449,7 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
                 onClick={returnToTrackSelection}
                 className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#8f9282] hover:text-[#9ddf2e]"
               >
-                Change track
+                Change Module View
               </button>
             </div>
 
@@ -591,16 +459,16 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
                 <input
                   value={draft.name}
                   onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
-                  placeholder="e.g. ProofPort"
+                  placeholder="e.g. Pentacles"
                   className="mt-2 w-full border border-[#44483a] bg-[#0d0f09] px-3 py-3 text-sm text-[#e3e3d8] outline-none transition placeholder:text-[#44483a] focus:border-[#9ddf2e]"
                 />
               </label>
               <label className="block">
-                <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#8f9282]">One-line pitch</span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#8f9282]">Objective</span>
                 <input
                   value={draft.pitch}
                   onChange={(event) => setDraft((current) => ({ ...current, pitch: event.target.value }))}
-                  placeholder="What are you building, for whom, and why now?"
+                  placeholder="Workspace objective summary"
                   className="mt-2 w-full border border-[#44483a] bg-[#0d0f09] px-3 py-3 text-sm text-[#e3e3d8] outline-none transition placeholder:text-[#44483a] focus:border-[#9ddf2e]"
                 />
               </label>
@@ -609,7 +477,7 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
             <div className="mt-4 border border-[#44483a] bg-[#1b1c16] p-4">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#7dd3fc]">Active path // {activeTrack.shortTitle}</div>
+                  <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#7dd3fc]">Active Module // {activeTrack.shortTitle}</div>
                   <div className="mt-1 text-base font-bold text-[#e3e3d8]">{activeTrack.title}</div>
                 </div>
                 <span className="font-mono text-3xl font-bold text-[#44483a]">{activeTrack.number}</span>
@@ -623,13 +491,13 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
                 className="inline-flex flex-1 items-center justify-center gap-2 border border-[#9ddf2e] bg-[#9ddf2e] px-4 py-3 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-[#0d0f09] transition hover:bg-[#83c300]"
               >
                 <Play className="h-4 w-4 fill-current" />
-                Forge project plan
+                Forge Project Plan
               </button>
               <button
                 onClick={() => onNavigate('mission-control')}
                 className="inline-flex items-center justify-center gap-2 border border-[#7dd3fc]/50 bg-[#7dd3fc]/5 px-4 py-3 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#7dd3fc] transition hover:bg-[#7dd3fc]/10"
               >
-                Open mission board
+                Open status board
                 <ArrowUpRight className="h-4 w-4" />
               </button>
             </div>
@@ -639,7 +507,7 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
             <div className="flex items-center justify-between border-b border-[#44483a] pb-4">
               <div className="flex items-center gap-2">
                 <ClipboardCheck className="h-4 w-4 text-[#9ddf2e]" />
-                <h2 className="font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-[#e3e3d8]">Submission checklist</h2>
+                <h2 className="font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-[#e3e3d8]">Pending Tasks Checklist</h2>
               </div>
               <span className="font-mono text-[10px] text-[#9ddf2e]">{completed.length}/{checklist.length}</span>
             </div>
@@ -666,169 +534,14 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
           </section>
         </div>
 
-        <section className="border border-[#ffb020]/40 bg-[#12140e] p-5">
-          <div className="flex flex-col gap-4 border-b border-[#44483a] pb-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <Timer className="h-4 w-4 text-[#ffb020]" />
-                <h2 className="font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-[#e3e3d8]">Submission protocol</h2>
-              </div>
-              <p className="mt-2 text-sm font-bold text-[#ffb020]">Sunday, June 14, 2026 at 9:00 AM EDT</p>
-              <p className="mt-1 text-xs text-[#8f9282]">Late projects are not accepted. Submit through the Hacker Dashboard before the clock reaches zero.</p>
-            </div>
-            <a
-              href="https://ethglobal.com/events/newyork2026/home"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex shrink-0 items-center justify-center gap-2 border border-[#ffb020] bg-[#ffb020] px-5 py-3 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#0d0f09] transition hover:bg-[#f59e0b]"
-            >
-              Open submission dashboard
-              <ArrowUpRight className="h-4 w-4" />
-            </a>
-          </div>
-
-          <div className="mt-4 grid gap-3 lg:grid-cols-3">
-            <div className="border border-[#44483a] bg-[#0d0f09] p-4">
-              <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#7dd3fc]">Required materials</div>
-              <ul className="mt-3 space-y-2 text-xs leading-5 text-[#c5c8b6]">
-                <li className="flex gap-2"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ddf2e]" />Project title and clear description</li>
-                <li className="flex gap-2"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ddf2e]" />Repository plus Figma or equivalent proof</li>
-                <li className="flex gap-2"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ddf2e]" />New work distinguished from reused work</li>
-                <li className="flex gap-2"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ddf2e]" />AI use, prompts, specs, and plans attributed</li>
-              </ul>
-            </div>
-
-            <div className="border border-[#44483a] bg-[#0d0f09] p-4">
-              <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#7dd3fc]">Choose a submission mode</div>
-              <div className="mt-3 space-y-2">
-                <div className="border border-[#9ddf2e]/30 bg-[#9ddf2e]/5 p-3">
-                  <div className="text-xs font-bold text-[#e3e3d8]">Finalist + Partner Prizes</div>
-                  <p className="mt-1 text-[11px] leading-4 text-[#8f9282]">Requires presenting at the assigned Finalist judging session.</p>
-                </div>
-                <div className="border border-[#44483a] bg-[#12140e] p-3">
-                  <div className="text-xs font-bold text-[#e3e3d8]">Partner Prizes Only</div>
-                  <p className="mt-1 text-[11px] leading-4 text-[#8f9282]">Select up to three partners and explain integration, feedback, and relevant comments.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="border border-[#44483a] bg-[#0d0f09] p-4">
-              <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#7dd3fc]">Video upload QA</div>
-              <p className="mt-3 text-xs leading-5 text-[#c5c8b6]">Optional, but strongly encouraged for the Showcase. Keep it 2-4 minutes and at least 720p.</p>
-              <div className="mt-3 grid grid-cols-2 gap-1.5 font-mono text-[9px] uppercase text-[#ffb4ab]">
-                <span className="border border-[#ffb4ab]/20 bg-[#ffb4ab]/5 px-2 py-1.5">No mobile recording</span>
-                <span className="border border-[#ffb4ab]/20 bg-[#ffb4ab]/5 px-2 py-1.5">No AI voiceover</span>
-                <span className="border border-[#ffb4ab]/20 bg-[#ffb4ab]/5 px-2 py-1.5">Do not speed up</span>
-                <span className="border border-[#ffb4ab]/20 bg-[#ffb4ab]/5 px-2 py-1.5">Do not exceed 4 min</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div className="grid gap-4 xl:grid-cols-12">
-          <section className="xl:col-span-7 border border-[#44483a] bg-[#12140e] p-5">
-            <div className="flex items-center gap-2 border-b border-[#44483a] pb-4">
-              <Scale className="h-4 w-4 text-[#ffb020]" />
-              <h2 className="font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-[#e3e3d8]">Build for the judging room</h2>
-            </div>
-            <div className="mt-4 grid gap-2 md:grid-cols-5">
-              {judgingCriteria.map((criterion) => {
-                const Icon = criterion.icon;
-                return (
-                  <div key={criterion.label} className="border border-[#44483a] bg-[#0d0f09] p-3">
-                    <Icon className="h-4 w-4 text-[#ffb020]" />
-                    <div className="mt-3 text-xs font-bold text-[#e3e3d8]">{criterion.label}</div>
-                    <p className="mt-2 text-[11px] leading-4 text-[#8f9282]">{criterion.prompt}</p>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              <div className="border border-[#7dd3fc]/30 bg-[#7dd3fc]/5 p-3">
-                <Timer className="h-4 w-4 text-[#7dd3fc]" />
-                <div className="mt-2 font-mono text-[10px] uppercase text-[#7dd3fc]">Live judging</div>
-                <div className="mt-1 text-sm font-bold text-[#e3e3d8]">4 min demo + 3 min Q&A</div>
-                <div className="mt-2 text-[10px] leading-4 text-[#8f9282]">Check in at the judging table before your assigned session.</div>
-              </div>
-              <div className="border border-[#ffb020]/30 bg-[#ffb020]/5 p-3">
-                <Video className="h-4 w-4 text-[#ffb020]" />
-                <div className="mt-2 font-mono text-[10px] uppercase text-[#ffb020]">Demo video</div>
-                <div className="mt-1 text-sm font-bold text-[#e3e3d8]">2-4 min // 720p minimum</div>
-              </div>
-              <div className="border border-[#9ddf2e]/30 bg-[#9ddf2e]/5 p-3">
-                <GitBranch className="h-4 w-4 text-[#9ddf2e]" />
-                <div className="mt-2 font-mono text-[10px] uppercase text-[#9ddf2e]">Source proof</div>
-                <div className="mt-1 text-sm font-bold text-[#e3e3d8]">Frequent commits // clear README</div>
-              </div>
-            </div>
-            <div className="mt-3 border border-[#44483a] bg-[#0d0f09] p-3">
-              <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#8f9282]">Prepare for judge questions</div>
-              <div className="mt-2 grid gap-2 text-[11px] text-[#c5c8b6] md:grid-cols-3">
-                <span>What inspired the project?</span>
-                <span>Which tools did you use, and why?</span>
-                <span>What technical challenges did you solve?</span>
-              </div>
-              <p className="mt-3 border-t border-[#44483a] pt-3 text-[10px] leading-4 text-[#8f9282]">Partner booth presentations are optional. Partners judge from the submitted project materials, so make those materials stand on their own.</p>
-            </div>
-          </section>
-
-          <section className="xl:col-span-5 border border-[#44483a] bg-[#1b1c16] p-5">
-            <div className="flex items-center gap-2 border-b border-[#44483a] pb-4">
-              <ExternalLink className="h-4 w-4 text-[#7dd3fc]" />
-              <h2 className="font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-[#e3e3d8]">Official event links</h2>
-            </div>
-            <div className="mt-4 space-y-2">
-              {eventLinks.map((link) => {
-                const Icon = link.icon;
-                return (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="group flex items-center gap-3 border border-[#44483a] bg-[#12140e] p-3 transition hover:border-[#7dd3fc]/60"
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center border border-[#44483a] bg-[#0d0f09] text-[#7dd3fc]">
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-xs font-bold text-[#e3e3d8]">{link.label}</span>
-                      <span className="mt-1 block truncate text-[11px] text-[#8f9282]">{link.description}</span>
-                    </span>
-                    <ArrowUpRight className="h-4 w-4 text-[#44483a] transition group-hover:text-[#7dd3fc]" />
-                  </a>
-                );
-              })}
-            </div>
-          </section>
-        </div>
-
         <section className="border border-[#44483a] bg-[#12140e] p-5">
           <div className="flex flex-col gap-4 border-b border-[#44483a] pb-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4 text-[#9ddf2e]" />
-                <h2 className="font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-[#e3e3d8]">36-hour builder kit</h2>
+                <h2 className="font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-[#e3e3d8]">Technical Stack</h2>
               </div>
-              <p className="mt-2 text-xs leading-5 text-[#8f9282]">A focused route through the official ETHGlobal resource library for getting from empty repo to working onchain demo.</p>
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <button
-                onClick={copyStarterCommand}
-                className="inline-flex items-center justify-center gap-2 border border-[#9ddf2e]/50 bg-[#9ddf2e]/5 px-4 py-2.5 font-mono text-[10px] font-bold text-[#9ddf2e] transition hover:bg-[#9ddf2e]/10"
-              >
-                <Code2 className="h-3.5 w-3.5" />
-                npx create-eth@latest
-              </button>
-              <a
-                href="https://ethglobal.com/events/newyork2026/info/resources"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center justify-center gap-2 border border-[#7dd3fc]/50 bg-[#7dd3fc]/5 px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#7dd3fc] transition hover:bg-[#7dd3fc]/10"
-              >
-                Full resource library
-                <ExternalLink className="h-3.5 w-3.5" />
-              </a>
+              <p className="mt-2 text-xs leading-5 text-[#8f9282]">Core technologies, APIs, and frameworks running in the Pentacles ecosystem.</p>
             </div>
           </div>
 
@@ -836,26 +549,14 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
             {resourceLanes.map((lane) => {
               const Icon = lane.icon;
               return (
-                <div key={lane.title} className="border border-[#44483a] bg-[#0d0f09] p-4 flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <Icon className={`h-4 w-4 ${lane.tone}`} />
-                    <h3 className="text-xs font-bold text-[#e3e3d8]">{lane.title}</h3>
-                  </div>
-                  <p className="mt-2 min-h-10 text-[11px] leading-5 text-[#8f9282]">{lane.description}</p>
-                  
-                  {lane.prizes && (
-                    <div className="mt-3 space-y-2.5 border-t border-[#44483a] pt-3 flex-1">
-                      {lane.prizes.map(p => (
-                        <div key={p.name}>
-                          <div className="flex justify-between items-start text-[10px] font-bold text-[#e3e3d8] gap-2">
-                            <span>{p.name}</span>
-                            <span className={lane.tone}>{p.amount}</span>
-                          </div>
-                          <p className="mt-0.5 text-[9px] leading-4 text-[#8f9282]">{p.req}</p>
-                        </div>
-                      ))}
+                <div key={lane.title} className="border border-[#44483a] bg-[#0d0f09] p-4 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Icon className={`h-4 w-4 ${lane.tone}`} />
+                      <h3 className="text-xs font-bold text-[#e3e3d8]">{lane.title}</h3>
                     </div>
-                  )}
+                    <p className="mt-2 text-[11px] leading-5 text-[#8f9282]">{lane.description}</p>
+                  </div>
 
                   <div className="mt-4 space-y-1.5 shrink-0">
                     {lane.links.map((link) => (
@@ -864,7 +565,7 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
                         href={link.href}
                         target="_blank"
                         rel="noreferrer"
-                        className={`group flex items-center justify-between gap-3 border border-[#44483a] bg-[#12140e] px-3 py-2 text-[11px] text-[#c5c8b6] transition hover:border-[#7dd3fc]/50 hover:text-[#e3e3d8]`}
+                        className="group flex items-center justify-between gap-3 border border-[#44483a] bg-[#12140e] px-3 py-2 text-[11px] text-[#c5c8b6] transition hover:border-[#7dd3fc]/50 hover:text-[#e3e3d8]"
                       >
                         <span>{link.label}</span>
                         <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-[#44483a] transition group-hover:text-[#7dd3fc]" />
@@ -881,20 +582,11 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
           <div className="flex flex-col gap-3 border-b border-[#44483a] pb-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
               <HelpCircle className="h-4 w-4 text-[#7dd3fc]" />
-              <h2 className="font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-[#e3e3d8]">Hacker FAQ</h2>
+              <h2 className="font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-[#e3e3d8]">Retrospective FAQs</h2>
             </div>
-            <a
-              href="https://ethglobal.com/events/newyork2026#faq"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[#7dd3fc] hover:text-[#e3e3d8]"
-            >
-              Open official FAQ
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
           </div>
           <div className="mt-4 grid gap-2 lg:grid-cols-2">
-            {eventFaqs.map((faq) => (
+            {pentaclesFaqs.map((faq) => (
               <details
                 key={faq.question}
                 className="group border border-[#44483a] bg-[#0d0f09] open:border-[#7dd3fc]/40"
@@ -909,25 +601,35 @@ export const HackathonSpace: React.FC<HackathonSpaceProps> = ({
           </div>
         </section>
 
+        <section className="border border-[#44483a] bg-[#12140e] p-5">
+          <div className="flex items-center gap-2 border-b border-[#44483a] pb-4">
+            <Scale className="h-4 w-4 text-[#ffb020]" />
+            <h2 className="font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-[#e3e3d8]">Core Game Specifications</h2>
+          </div>
+          <div className="mt-4 grid gap-2 md:grid-cols-5">
+            {pentaclesFeatures.map((feat) => {
+              const Icon = feat.icon;
+              return (
+                <div key={feat.label} className="border border-[#44483a] bg-[#0d0f09] p-3">
+                  <Icon className="h-4 w-4 text-[#ffb020]" />
+                  <div className="mt-3 text-xs font-bold text-[#e3e3d8]">{feat.label}</div>
+                  <p className="mt-2 text-[11px] leading-4 text-[#8f9282]">{feat.prompt}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
         <section className="flex flex-col gap-4 border border-[#ffb020]/30 bg-[#ffb020]/5 p-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-start gap-3">
             <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#ffb020]" />
             <div>
-              <div className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#ffb020]">Rules snapshot</div>
+              <div className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#ffb020]">Rules & Hardening Snapshot</div>
               <p className="mt-1 text-xs leading-5 text-[#c5c8b6]">
-                AI tools are allowed, but meaningful team contribution and transparent attribution are required. Include prompts and planning artifacts for spec-driven workflows. Event-specific deadlines and partner requirements should always be confirmed in the Hacker Dashboard.
+                Secure verification bounds must gate all reducers. Btree indexing stops quadratically-scaled full table scans. Direct owner tokens enable autonomous feeder scripts without developer login dependencies.
               </p>
             </div>
           </div>
-          <a
-            href="https://ethglobal.com/events/newyork2026/info/details"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex shrink-0 items-center justify-center gap-2 border border-[#ffb020]/50 px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#ffb020] transition hover:bg-[#ffb020]/10"
-          >
-            Read full rules
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
         </section>
       </div>
     </div>

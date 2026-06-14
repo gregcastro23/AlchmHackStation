@@ -22,7 +22,7 @@ const alchmBackendPlugin = (): Plugin => ({
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({ error: error?.message || null, stdout, stderr }));
             });
-          } catch (e) {
+          } catch {
             res.statusCode = 400;
             res.end(JSON.stringify({ error: 'Invalid payload' }));
           }
@@ -41,9 +41,10 @@ const alchmBackendPlugin = (): Plugin => ({
             await fs.writeFile(fullPath, content, 'utf-8');
             res.setHeader('Content-Type', 'application/json');
             res.end(JSON.stringify({ success: true }));
-          } catch (error: any) {
+          } catch (error) {
             res.statusCode = 500;
-            res.end(JSON.stringify({ error: error.message }));
+            const message = error instanceof Error ? error.message : 'Unknown write error';
+            res.end(JSON.stringify({ error: message }));
           }
         });
         return;

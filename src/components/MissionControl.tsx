@@ -46,52 +46,52 @@ const agentCrew: Array<{
   load: number;
 }> = [
   {
-    name: 'Architect',
-    role: 'system map',
+    name: 'Rust Backend',
+    role: 'spacetimedb module',
     status: 'active',
-    lane: 'Core loop',
-    output: 'mission data model locked',
-    load: 76,
+    lane: 'server/src/',
+    output: 'indexes & table pruning pending',
+    load: 68,
   },
   {
-    name: 'Builder',
-    role: 'implementation',
+    name: 'Web Client',
+    role: '2d / ar client',
     status: 'active',
-    lane: 'React shell',
-    output: 'dashboard surface compiling',
-    load: 88,
+    lane: 'client.js',
+    output: 'standalone offline simulation ok',
+    load: 85,
   },
   {
-    name: 'Designer',
-    role: 'interaction',
-    status: 'review',
-    lane: 'Visual pass',
-    output: 'operator UI tuned for demo scan',
-    load: 63,
-  },
-  {
-    name: 'QA',
-    role: 'verification',
+    name: 'Unity Client',
+    role: 'ar foundation client',
     status: 'ready',
-    lane: 'Browser checks',
-    output: 'readiness score gates green',
-    load: 54,
+    lane: 'unity/',
+    output: 'c# bindings generated and verified',
+    load: 45,
   },
   {
-    name: 'Pitch Coach',
-    role: 'story',
+    name: 'Ephemeris Feeder',
+    role: 'bun cron runner',
     status: 'active',
-    lane: 'Judge flow',
-    output: '90 second demo arc drafted',
-    load: 71,
+    lane: 'feeder/push-ephemeris.ts',
+    output: 'pushing planetary alt/az values',
+    load: 50,
   },
   {
-    name: 'Deploy Captain',
-    role: 'release',
+    name: 'Oracle Service',
+    role: 'anthropic bot handler',
+    status: 'review',
+    lane: 'feeder/oracle-service.ts',
+    output: 'failed request billing leak found',
+    load: 70,
+  },
+  {
+    name: 'Planetary Duelist',
+    role: 'groq brain helper',
     status: 'blocked',
-    lane: 'Production',
-    output: 'awaiting final env seal',
-    load: 42,
+    lane: 'api.agents.alchm.kitchen',
+    output: 'waiting for duel challenge wiring',
+    load: 90,
   },
 ];
 
@@ -103,46 +103,60 @@ const tasks: Array<{
   priority: 'P0' | 'P1' | 'P2';
 }> = [
   {
-    title: 'Ship Mission Control first screen',
+    title: 'Add #[index(btree)] on card.owner and deck_slot.owner',
     stage: 'Active',
-    owner: 'Builder',
-    proof: 'React component diff',
+    owner: 'Rust Backend',
+    proof: 'Rust schema btree tags',
     priority: 'P0',
   },
   {
-    title: 'Add agent crew status board',
+    title: 'Fix Oracle re-billing loop on failed API requests',
     stage: 'Active',
-    owner: 'Architect',
-    proof: 'typed status model',
+    owner: 'Oracle Service',
+    proof: 'exception catch & terminal response',
     priority: 'P0',
   },
   {
-    title: 'Package judge-facing demo narrative',
+    title: 'Verify prompt cache prefix size exceeds Haiku 4096 min',
+    stage: 'Active',
+    owner: 'Oracle Service',
+    proof: 'cache_read_input_tokens > 0',
+    priority: 'P1',
+  },
+  {
+    title: 'Set up non-interactive owner SPACETIME_TOKEN',
     stage: 'Review',
-    owner: 'Pitch Coach',
-    proof: 'README and export payload',
+    owner: 'Ephemeris Feeder',
+    proof: 'env-loaded token credential check',
     priority: 'P1',
   },
   {
-    title: 'Verify build and visual shell',
+    title: 'Wire client.js to SpacetimeDB TypeScript SDK',
     stage: 'Draft',
-    owner: 'QA',
-    proof: 'bun run build',
+    owner: 'Web Client',
+    proof: 'wss maincloud connections active',
     priority: 'P0',
   },
   {
-    title: 'Seal Vercel env and deploy bundle',
+    title: 'Replace spacetime sql CLI-polling with subscription',
     stage: 'Draft',
-    owner: 'Deploy Captain',
-    proof: 'deploy_manifest.json',
+    owner: 'Oracle Service',
+    proof: 'onInsert listener replaces loop',
     priority: 'P1',
   },
   {
-    title: 'Keep original operator console online',
+    title: 'Prune battle/oracle tables in tick_sky schedule',
     stage: 'Shipped',
-    owner: 'Designer',
-    proof: 'console tab preserved',
+    owner: 'Rust Backend',
+    proof: 'janitor cleanup reducer run',
     priority: 'P2',
+  },
+  {
+    title: 'Wire Word Duel brain to agent_letters seam',
+    stage: 'Draft',
+    owner: 'Planetary Duelist',
+    proof: 'POST api.agents.alchm.kitchen',
+    priority: 'P0',
   },
 ];
 
@@ -219,10 +233,10 @@ export const MissionControl: React.FC<MissionControlProps> = ({
   onMissionSignal,
 }) => {
   const readinessItems = [
-    { label: 'Local build', score: foundryState === 'SUCCESS' ? 96 : isBuilding ? 74 : 82 },
-    { label: 'Realtime sync', score: database === 'SpaceTimeDB' ? 94 : 83 },
-    { label: 'Pitch clarity', score: 88 },
-    { label: 'Deploy path', score: missionReadiness - 8 },
+    { label: 'Rust backend tests', score: foundryState === 'SUCCESS' ? 98 : isBuilding ? 74 : 85 },
+    { label: 'Web client SDK sync', score: 20 },
+    { label: 'Oracle chatbot safety', score: 75 },
+    { label: 'Word duel integration', score: 10 },
   ];
 
   return (
@@ -234,42 +248,42 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             <div>
               <div className="inline-flex items-center gap-2 border border-[#9ddf2e]/40 bg-[#9ddf2e]/5 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.22em] text-[#9ddf2e]">
                 <Radio className="h-3.5 w-3.5" />
-                live hackstation
+                project status
               </div>
               <h2 className="mt-4 text-3xl md:text-4xl font-bold text-[#e3e3d8] tracking-normal">
-                Mission Control
+                Pentacles Status
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[#c5c8b6]">
-                Ship a real-time agent command center that turns a hackathon idea into a working demo, a reviewable build, and a judge-ready story.
+                Monitor implementation plan verification, database indexing, API safety gates, and cross-project seams with planetary agents.
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-2 min-w-[220px] font-mono text-[10px] uppercase">
               <div className="border border-[#44483a] bg-[#0d0f09] p-2">
-                <span className="block text-[#8f9282]">Deadline</span>
-                <span className="mt-1 block text-[#e3e3d8]">Demo window</span>
+                <span className="block text-[#8f9282]">Database</span>
+                <span className="mt-1 block text-[#e3e3d8]">cookingwithcastro</span>
               </div>
               <div className="border border-[#44483a] bg-[#0d0f09] p-2">
-                <span className="block text-[#8f9282]">Block</span>
+                <span className="block text-[#8f9282]">Height</span>
                 <span className="mt-1 block text-[#7dd3fc]">{blockHeight}</span>
               </div>
               <div className="border border-[#44483a] bg-[#0d0f09] p-2">
-                <span className="block text-[#8f9282]">Mode</span>
+                <span className="block text-[#8f9282]">Module</span>
                 <span className="mt-1 block text-[#9ddf2e]">{foundryState}</span>
               </div>
               <div className="border border-[#44483a] bg-[#0d0f09] p-2">
-                <span className="block text-[#8f9282]">Crew</span>
-                <span className="mt-1 block text-[#e3e3d8]">6 agents</span>
+                <span className="block text-[#8f9282]">Components</span>
+                <span className="mt-1 block text-[#e3e3d8]">6 active</span>
               </div>
             </div>
           </div>
 
           <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-3">
             {[
-              { icon: Braces, label: 'Language', value: language },
-              { icon: Code2, label: 'Frontend', value: framework },
-              { icon: Sparkles, label: 'Design', value: cssEngine },
-              { icon: Database, label: 'State', value: database },
+              { icon: Braces, label: 'Backend', value: language },
+              { icon: Code2, label: 'Web Client', value: framework },
+              { icon: Sparkles, label: 'Aesthetics', value: cssEngine },
+              { icon: Database, label: 'Database', value: database },
             ].map((item) => {
               const Icon = item.icon;
               return (
@@ -291,21 +305,21 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               className="inline-flex items-center justify-center gap-2 border border-[#9ddf2e] bg-[#9ddf2e] px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-[#0d0f09] transition hover:bg-[#83c300] disabled:cursor-not-allowed disabled:border-[#44483a] disabled:bg-[#1b1c16] disabled:text-[#8f9282]"
             >
               <Play className="h-4 w-4 fill-current" />
-              {isBuilding ? 'Build running' : 'Launch demo run'}
+              {isBuilding ? 'Running check' : 'Run validation build'}
             </button>
             <button
-              onClick={() => onMissionSignal('agent swarm sync requested')}
+              onClick={() => onMissionSignal('service re-probe initiated')}
               className="inline-flex items-center justify-center gap-2 border border-[#7dd3fc]/50 bg-[#7dd3fc]/5 px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-[#7dd3fc] transition hover:bg-[#7dd3fc]/10"
             >
               <Users className="h-4 w-4" />
-              Sync agent crew
+              Re-probe services
             </button>
             <button
-              onClick={() => onMissionSignal('pitch packet generated')}
+              onClick={() => onMissionSignal('project status exported')}
               className="inline-flex items-center justify-center gap-2 border border-[#ffb020]/50 bg-[#ffb020]/5 px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-[#ffb020] transition hover:bg-[#ffb020]/10"
             >
               <FileText className="h-4 w-4" />
-              Pack pitch
+              Export status
             </button>
           </div>
         </section>
@@ -336,10 +350,10 @@ export const MissionControl: React.FC<MissionControlProps> = ({
           <div className="mt-5 border border-[#44483a] bg-[#0d0f09] p-3">
             <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-[#ffb020]">
               <AlertTriangle className="h-3.5 w-3.5" />
-              final risk
+              primary risk
             </div>
             <p className="mt-2 text-xs leading-5 text-[#c5c8b6]">
-              Production deploy seal is the last visible blocker.
+              Database scaling cliff: full-table scans over all cards will bottleneck on high traffic.
             </p>
           </div>
         </section>

@@ -17,12 +17,12 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
   onLogoutClick,
 }) => {
   const navItems = [
-    { id: 'hackathon-space', label: 'ETHGlobal Space', icon: CalendarDays },
+    { id: 'hackathon-space', label: 'Pentacles Overview', icon: CalendarDays },
     { id: 'swarm-nexus', label: 'Swarm Nexus', icon: Atom },
     { id: 'overmind', label: 'Overmind AI', icon: BrainCircuit },
-    { id: 'mission-control', label: 'Mission Control', icon: PanelsTopLeft },
+    { id: 'mission-control', label: 'Status Indicator', icon: PanelsTopLeft },
     { id: 'discord-feed', label: 'Discord Live Feed', icon: MessageSquare },
-    { id: 'planetary-cockpit', label: 'Planetary Cockpit', icon: Atom },
+    { id: 'planetary-cockpit', label: 'Celestial Cockpit', icon: Atom },
     { id: 'integration-ops', label: 'Integration Ops', icon: Waypoints },
     { id: 'usage-limits', label: 'Usage & Limits', icon: Gauge },
     { id: 'model-accounts', label: 'Model Accounts', icon: KeyRound },
@@ -71,13 +71,13 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-mono text-[13px] font-bold text-[#9ddf2e] truncate">
-              {gitHubUser?.isLoggedIn ? gitHubUser.username : 'OP_GHOST_01'}
+              {gitHubUser?.isLoggedIn ? gitHubUser.username : 'OP_CELESTIAL'}
             </div>
             <div className="font-mono text-[9px] text-[#c5c8b6] uppercase tracking-wider mt-0.5">
-              {gitHubUser?.isLoggedIn ? 'ETHGLOBAL_HACKER' : 'HACKER_GUEST'}
+              {gitHubUser?.isLoggedIn ? 'PENTACLES_OPERATOR' : 'OP_GUEST'}
             </div>
             <div className="font-mono text-[9px] text-[#8f9282] uppercase mt-0.5">
-              NEW YORK // 2026
+              SPACETIMEDB // MAINCLOUD
             </div>
           </div>
         </div>
@@ -135,16 +135,16 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
       {/* Footer system details */}
       <div className="px-6 border-t border-[#44483a]/40 pt-4 font-mono text-[10px] text-[#8f9282] space-y-1">
         <div className="flex justify-between">
-          <span>EVENT WINDOW:</span>
-          <span className="text-[#9ddf2e] font-bold">READY</span>
+          <span>DEPLOY WINDOW:</span>
+          <span className="text-[#9ddf2e] font-bold">OPEN</span>
         </div>
         <div className="flex justify-between">
-          <span>DATES:</span>
-          <span className="text-[#c5c8b6]">JUN 12-14</span>
+          <span>LAST SYNC:</span>
+          <span className="text-[#c5c8b6]">2026-06-14</span>
         </div>
         <div className="flex justify-between">
-          <span>BUILD PATHS:</span>
-          <span className="text-[#7dd3fc]">3 ACTIVE</span>
+          <span>STDB MODULE:</span>
+          <span className="text-[#7dd3fc]">ACTIVE</span>
         </div>
       </div>
       </aside>

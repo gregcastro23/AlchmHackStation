@@ -66,14 +66,12 @@ function App() {
   const [activeCommand, setActiveCommand] = useState('forge build');
   const [isBuilding, setIsBuilding] = useState(false);
   const [logs, setLogs] = useState<LogLine[]>([
-    { timestamp: '23:41:00', text: 'ETHGlobal New York 2026 build room initialized', type: 'info' },
-    { timestamp: '23:41:02', text: 'space-time database local client connected to: spacetime_instance_local', type: 'info' },
-    { timestamp: '23:41:05', text: 'vercel sync: matches development branch env_4c29', type: 'success' },
-    { timestamp: '23:41:08', text: 'bun run forge build', type: 'default' },
-    { timestamp: '23:41:08', text: 'compiling 37 contracts with solc 0.8.26', type: 'info' },
-    { timestamp: '23:41:09', text: 'gas snapshot delta -8.2%', type: 'warning' },
-    { timestamp: '23:41:09', text: 'deployment reducer emitted verified address: 0x5FbDB2315678afecb367f032d93F642f64180aa3', type: 'success' },
-    { timestamp: '23:41:10', text: 'spacetime sync committed ActivityLog row', type: 'success' },
+    { timestamp: '05:26:00', text: 'Pentacles Project status dashboard initialized', type: 'info' },
+    { timestamp: '05:26:02', text: 'Connecting to maincloud wss://maincloud.spacetimedb.com', type: 'info' },
+    { timestamp: '05:26:05', text: 'SpacetimeDB module verified: cookingwithcastrollc', type: 'success' },
+    { timestamp: '05:26:08', text: 'bun scripts/preflight.ts', type: 'default' },
+    { timestamp: '05:26:09', text: '5,041 stars magnitude catalog verified in database', type: 'success' },
+    { timestamp: '05:26:10', text: 'ephemeris push validation: 10 geocentric body rows synced', type: 'success' },
   ]);
 
   // Combined V2 states
@@ -383,63 +381,29 @@ function App() {
   };
 
   const handleCommandInput = (cmd: string) => {
-    addLog(`operator@alchm ~ % ${cmd}`, 'default');
+    addLog(`operator@pentacles ~ % ${cmd}`, 'default');
     
     // Command parser simulation
     setTimeout(() => {
       const cleanCmd = cmd.toLowerCase().trim();
-      if (cleanCmd === 'forge build' || cleanCmd === 'bun run build') {
+      if (cleanCmd === 'spacetime build' || cleanCmd === 'bun run build') {
         handleRunBuild();
-      } else if (cleanCmd.startsWith('forge test')) {
-        addLog('Running 42 tests via Bun sidecar Anvil instance...', 'info');
+      } else if (cleanCmd.startsWith('spacetime test') || cleanCmd === 'cargo test') {
+        addLog('Running Rust module tests...', 'info');
         setTimeout(() => {
-          addLog('Test suite passed. Gas snapshot delta: -8.2%', 'success');
+          addLog('All 8 backend module tests passed.', 'success');
         }, 800);
-      } else if (cleanCmd === 'anvil') {
-        addLog('Spawning Anvil Ethereum local testnet node...', 'info');
-        addLog('Anvil listening on 127.0.0.1:8545', 'success');
+      } else if (cleanCmd === 'feeder' || cleanCmd === 'bun run push-ephemeris.ts') {
+        addLog('Running ephemeris feeder script...', 'info');
+        addLog('Planetary degrees successfully pushed to database.', 'success');
       } else if (cleanCmd === 'clear') {
         setLogs([]);
       } else if (cleanCmd === 'help') {
-        addLog('Available commands: nexus, overmind, languages, forge idea, forge build, forge test, anvil, clear, help, ship demo, readiness, agent swarm, usage report, model accounts, route health, integration status, auth watch, v0 handoff', 'info');
-      } else if (cleanCmd === 'nexus' || cleanCmd === 'swarm nexus' || cleanCmd === 'crucible' || cleanCmd === 'forge idea') {
-        addLog('Opening Swarm Nexus — The Crucible. Type an idea and forge it across the agent swarm.', 'success');
-        setActiveTab('swarm-nexus');
-      } else if (cleanCmd === 'overmind' || cleanCmd === 'ai') {
-        addLog('Opening Overmind — live agentic build authority. Bind an Anthropic key to bring it online.', 'success');
-        setActiveTab('overmind');
-      } else if (cleanCmd === 'languages' || cleanCmd === 'langs') {
-        addLog(`Polyglot foundry online — ${LANGUAGES.length} language toolchains armed: ${LANGUAGE_NAMES.join(', ')}.`, 'success');
-        addLog(`Active core language: ${language}. Switch via the App Builder Configurator or Overmind set_stack.`, 'info');
-      } else if (cleanCmd === 'ship demo') {
-        addLog('Mission Control queued demo run: build, proof feed, pitch packet, deploy seal.', 'info');
-        setMissionReadiness((prev) => Math.min(97, prev + 2));
-        handleRunBuild();
+        addLog('Available commands: spacetime build, spacetime test, cargo test, feeder, clear, help, readiness', 'info');
       } else if (cleanCmd === 'readiness') {
-        addLog(`Mission readiness score: ${missionReadiness}/100. Final blocker: production deploy seal.`, 'info');
-      } else if (cleanCmd === 'agent swarm') {
-        addLog('Architect, Builder, Designer, QA, Pitch Coach, and Deploy Captain synced.', 'success');
-        addLog('Agent board updated: 2 active builds, 1 review, 1 deploy blocker.', 'info');
-      } else if (cleanCmd === 'usage report') {
-        addLog(`Usage report: ${budgetUtilization}% monthly budget utilized, 43% cache hit rate, 2 approvals pending.`, 'info');
-        setActiveTab('usage-limits');
-      } else if (cleanCmd === 'model accounts') {
-        addLog('Opening model account vault: 4 connected providers, 5 stable aliases.', 'info');
-        setActiveTab('model-accounts');
-      } else if (cleanCmd === 'route health') {
-        addLog('Route health: 99.6% success, 18 fallbacks, Google circuit half-open.', 'warning');
-        setActiveTab('routing-guardrails');
-      } else if (cleanCmd === 'integration status') {
-        addLog('Integration preflight: 6 adapters registered; CLI auth and browser sessions require operator review.', 'info');
-        setActiveTab('integration-ops');
-      } else if (cleanCmd === 'auth watch') {
-        addLog('Auth Watch armed: bounded probes, redacted output, operator-confirmed reauthentication.', 'success');
-        setActiveTab('integration-ops');
-      } else if (cleanCmd === 'v0 handoff') {
-        addLog('v0 Bridge opened: prepare source files, locked paths, acceptance criteria, and generation budget.', 'info');
-        setActiveTab('integration-ops');
+        addLog(`Pentacles completion readiness: ${missionReadiness}/100. Pending btree indexes.`, 'info');
       } else {
-        addLog(`executing custom sidecar process: ${cmd}`, 'info');
+        addLog(`executing custom process: ${cmd}`, 'info');
         setTimeout(() => {
           addLog(`Process exit 0: ${cmd}`, 'success');
         }, 500);
@@ -513,11 +477,11 @@ function App() {
 
   const handleStartHackathonBuild = useCallback((idea: string, track: HackathonTrack) => {
     const trackLabels: Record<HackathonTrack, string> = {
-      'from-scratch': 'From Scratch',
-      'extend-open-source': 'Extend Open Source',
-      'ship-a-feature': 'Ship a Feature',
+      'from-scratch': 'Rust Backend',
+      'extend-open-source': 'Web Client',
+      'ship-a-feature': 'Unity Client',
     };
-    addLog(`[ETHGLOBAL] Forging "${idea}" on the ${trackLabels[track]} track.`, 'success');
+    addLog(`[PENTACLES] Building plan for ${trackLabels[track]} module: "${idea}".`, 'success');
     handleOvermindForge(idea, 'swarm');
   }, [handleOvermindForge]);
 
@@ -551,8 +515,8 @@ function App() {
       },
       mission: {
         readiness: missionReadiness,
-        demoTarget: 'real-time hackathon command center',
-        crew: ['Architect', 'Builder', 'Designer', 'QA', 'Pitch Coach', 'Deploy Captain'],
+        demoTarget: 'location-based AR MMO night sky',
+        crew: ['Rust Backend', 'Web Client', 'Unity Client', 'Ephemeris Feeder', 'Oracle Service', 'Planetary Duelist'],
       },
       operations: {
         budgetUtilization,
