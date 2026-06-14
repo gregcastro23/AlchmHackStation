@@ -1,5 +1,5 @@
 import React from 'react';
-import { Terminal, Cpu, Network, Shield, Wand2, Key, LogOut, Sparkles, PanelsTopLeft, Gauge, KeyRound, Route, Waypoints, Atom, BrainCircuit, CalendarDays, MessageSquare } from 'lucide-react';
+import { Terminal, Cpu, Network, Shield, Wand2, Key, LogOut, Sparkles, PanelsTopLeft, Gauge, KeyRound, Route, Waypoints, Atom, BrainCircuit, CalendarDays, MessageSquare, Coins } from 'lucide-react';
 
 interface SidebarDrawerProps {
   activeTab: string;
@@ -17,6 +17,7 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
   onLogoutClick,
 }) => {
   const navItems = [
+    { id: 'web3-hub', label: 'Web3 Hackathon Hub', icon: Coins },
     { id: 'hackathon-space', label: 'Pentacles Overview', icon: CalendarDays },
     { id: 'swarm-nexus', label: 'Swarm Nexus', icon: Atom },
     { id: 'overmind', label: 'Overmind AI', icon: BrainCircuit },

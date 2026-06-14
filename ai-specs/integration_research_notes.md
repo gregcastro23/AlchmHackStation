@@ -182,7 +182,7 @@ const data = await response.json();
 - [ ] **Dynamic Dashboard**: Set up a sandbox at [app.dynamic.xyz](https://app.dynamic.xyz/). Go to **Chains and Networks** and enable the EVM-compatible **Arc Testnet** configuration.
 - [ ] **Unlink API Key**: Obtain a testnet API key for `arc-testnet` to authorize register/auth routes on our backend.
 - [ ] **Circle Faucet**: Request testnet USDC for your wallet from the [Circle Faucet](https://faucet.circle.com/) targeting Arc Testnet to seed gas.
-- [ ] **Gateway Client RPC**: Configure a stable RPC endpoint for Arc Testnet (`https://rpc.testnet.arc.io`) in our environment variables.
+- [x] **Gateway Client RPC**: Configure a stable RPC endpoint for Arc Testnet (`https://rpc.testnet.arc.io`) in our environment variables.
 
 ---
 

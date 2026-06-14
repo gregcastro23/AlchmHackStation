@@ -25,6 +25,7 @@ import { OvermindConsole } from './components/OvermindConsole';
 import { HackathonSpace } from './components/HackathonSpace';
 import { DiscordLiveFeed } from './components/DiscordLiveFeed';
 import { PlanetaryCockpit } from './components/PlanetaryCockpit';
+import { Web3HackathonHub } from './components/Web3HackathonHub';
 import type { HackathonTrack } from './components/HackathonSpace';
 import { WorkstationLockOverlay } from './components/WorkstationLockOverlay';
 import { decomposeIdea, LANGUAGE_NAMES, LANGUAGES } from './lib/swarmEngine';
@@ -75,7 +76,7 @@ function App() {
   ]);
 
   // Combined V2 states
-  const [activeTab, setActiveTab] = useState<string>('hackathon-space');
+  const [activeTab, setActiveTab] = useState<string>('web3-hub');
   const [missionReadiness, setMissionReadiness] = useState(86);
   const [budgetUtilization, setBudgetUtilization] = useState(42);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -704,6 +705,10 @@ You are running as Claude Code in the terminal workspace. Review the developer c
 
           {/* Right Content Panels */}
           <main className="flex-1 p-4 overflow-y-auto custom-scrollbar min-h-0 flex flex-col">
+            {activeTab === 'web3-hub' && (
+              <Web3HackathonHub onCommitLog={addLog} />
+            )}
+
             {activeTab === 'hackathon-space' && (
               <HackathonSpace
                 missionReadiness={missionReadiness}
