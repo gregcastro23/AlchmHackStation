@@ -1,5 +1,4 @@
 import React from 'react';
-import { Cpu, Eye, Database, Hammer, RefreshCw, Network, Clock, Share2, Bot, Wand2, Gauge, CircleDollarSign, Braces, LockKeyhole } from 'lucide-react';
 
 interface TopStatusBarProps {
   foundryState: 'IDLE' | 'BUILDING' | 'SUCCESS' | 'ERROR';
@@ -35,106 +34,83 @@ export const TopStatusBar: React.FC<TopStatusBarProps> = ({
   onLockSpace,
 }) => {
   return (
-    <header className="h-[64px] min-h-[64px] bg-[#0A0A0B]/95 border-b border-[#23262B] px-3 md:px-6 flex items-center justify-between select-none z-50">
-      {/* Left Identity */}
-      <div className="flex items-center space-x-2">
-        <div className="w-2.5 h-2.5 bg-[#DEFF9A] rounded-full animate-pulse glow-acid" />
-        <h1 className="text-lg font-bold tracking-wider uppercase">
-          <span className="text-[#DEFF9A] font-sans">Pentacles</span>
-          <span className="text-[#F5F5F5] font-sans"> Console</span>
+    <header className="sticky top-0 h-[64px] z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-xl border-b border-outline-variant/40 shadow-[0_0_15px_rgba(163,230,53,0.1)] flex justify-between items-center px-lg w-full shrink-0">
+      
+      {/* Left Logo / Identity */}
+      <div className="flex items-center gap-md">
+        <span className="material-symbols-outlined text-primary text-[24px]">terminal</span>
+        <h1 className="font-headline-lg text-headline-lg tracking-tighter text-primary italic uppercase select-none">
+          ALCHMHACKSTATION
         </h1>
       </div>
 
-      {/* Center Status Chips */}
-      <div className="hidden 2xl:flex items-center space-x-2 text-[10px] font-mono tracking-wider">
-        <div className="flex items-center space-x-1.5 border border-[#ffb020]/40 text-[#ffb020] bg-[#ffb020]/5 px-2.5 py-1 rounded-sm">
-          <Braces className="w-3 h-3 text-[#ffb020]" />
-          <span>{language.toUpperCase()} LANG</span>
-        </div>
-        <div className="flex items-center space-x-1.5 border border-[#DEFF9A]/40 text-[#DEFF9A] bg-[#DEFF9A]/5 px-2.5 py-1 rounded-sm">
-          <Cpu className="w-3 h-3 text-[#DEFF9A]" />
-          <span>{framework.toUpperCase()} CORE</span>
-        </div>
-        <div className="flex items-center space-x-1.5 border border-[#DEFF9A]/40 text-[#DEFF9A] bg-[#DEFF9A]/5 px-2.5 py-1 rounded-sm">
-          <Eye className="w-3 h-3 text-[#DEFF9A]" />
-          <span>{cssEngine.toUpperCase()} SYNC</span>
-        </div>
-        <div className="flex items-center space-x-1.5 border border-[#DEFF9A]/40 text-[#DEFF9A] bg-[#DEFF9A]/5 px-2.5 py-1 rounded-sm relative">
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#DEFF9A] opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#DEFF9A]"></span>
-          </span>
-          <Database className="w-3 h-3 text-[#DEFF9A]" />
-          <span>{database.toUpperCase()} LIVE</span>
-        </div>
-        <div className={`flex items-center space-x-1.5 border px-2.5 py-1 rounded-sm transition-all duration-300 ${
-          foundryState === 'BUILDING' 
-            ? 'border-[#FDE68A]/40 text-[#FDE68A] bg-[#FDE68A]/5' 
-            : foundryState === 'ERROR'
-            ? 'border-[#FB7185]/40 text-[#FB7185] bg-[#FB7185]/5'
-            : 'border-[#DEFF9A]/40 text-[#DEFF9A] bg-[#DEFF9A]/5'
-        }`}>
-          <Hammer className={`w-3 h-3 ${foundryState === 'BUILDING' ? 'animate-spin' : ''} ${
-            foundryState === 'BUILDING' ? 'text-[#FDE68A]' : foundryState === 'ERROR' ? 'text-[#FB7185]' : 'text-[#DEFF9A]'
-          }`} />
-          <span>FOUNDRY {foundryState}</span>
-        </div>
-        <div className="flex items-center space-x-1.5 border border-[#DEFF9A]/40 text-[#DEFF9A] bg-[#DEFF9A]/5 px-2.5 py-1 rounded-sm">
-          <RefreshCw className="w-3 h-3 text-[#DEFF9A]" />
-          <span>VERCEL SYNCED</span>
-        </div>
-        <div className="flex items-center space-x-1.5 border border-[#ffb020]/40 text-[#ffb020] bg-[#ffb020]/5 px-2.5 py-1 rounded-sm">
-          <Gauge className="w-3 h-3 text-[#ffb020]" />
-          <span>DEMO {missionReadiness}%</span>
-        </div>
-        <div className={`flex items-center space-x-1.5 border px-2.5 py-1 rounded-sm ${budgetUtilization >= 75 ? 'border-[#ffb020]/40 text-[#ffb020] bg-[#ffb020]/5' : 'border-[#7dd3fc]/40 text-[#7dd3fc] bg-[#7dd3fc]/5'}`}>
-          <CircleDollarSign className="w-3 h-3" />
-          <span>BUDGET {budgetUtilization}%</span>
-        </div>
+      {/* Center status indicator badges */}
+      <div className="hidden xl:flex items-center gap-md font-mono text-[9px] uppercase select-none">
+        <span className="border border-outline-variant/40 bg-black/40 px-2 py-1 text-on-surface-variant font-medium">
+          LANG: <span className="text-primary font-bold">{language.split(' ')[0]}</span>
+        </span>
+        <span className="border border-outline-variant/40 bg-black/40 px-2 py-1 text-on-surface-variant font-medium">
+          CORE: <span className="text-secondary font-bold">{framework.split(' ')[0]}</span>
+        </span>
+        <span className="border border-outline-variant/40 bg-black/40 px-2 py-1 text-on-surface-variant font-medium">
+          STYLE: <span className="text-primary font-bold">{cssEngine}</span>
+        </span>
+        <span className="border border-outline-variant/40 bg-black/40 px-2 py-1 text-on-surface-variant font-medium">
+          DB: <span className="text-tertiary-container font-bold">{database}</span>
+        </span>
+        <span className="border border-outline-variant/40 bg-black/40 px-2 py-1 text-on-surface-variant font-medium flex items-center gap-1">
+          <span className={`h-1.5 w-1.5 rounded-full ${foundryState === 'BUILDING' ? 'bg-[#ffcb56] animate-pulse' : foundryState === 'ERROR' ? 'bg-error' : 'bg-primary'}`} />
+          BUILD: <span className="text-on-surface font-bold">{foundryState}</span>
+        </span>
+        <span className="border border-outline-variant/40 bg-black/40 px-2 py-1 text-on-surface-variant font-medium">
+          DEMO: <span className="text-secondary font-bold">{missionReadiness}%</span>
+        </span>
+        <span className="border border-outline-variant/40 bg-black/40 px-2 py-1 text-on-surface-variant font-medium">
+          BUDGET: <span className="text-tertiary-container font-bold">{budgetUtilization}%</span>
+        </span>
+        <span className="border border-outline-variant/40 bg-black/40 px-2 py-1 text-on-surface-variant font-medium">
+          BLOCK: <span className="text-primary font-bold">{blockHeight}</span>
+        </span>
       </div>
 
-      {/* Right Session Area */}
-      <div className="flex items-center space-x-3 text-[12px] font-mono text-[#888888]">
+      {/* Right control deck buttons */}
+      <div className="flex items-center gap-md">
+        <div className="hidden md:flex gap-sm">
+          <button
+            onClick={onExportToClaude}
+            title="Export session context to Claude Code"
+            className="border border-secondary/40 text-secondary hover:bg-secondary/10 px-3 py-1 text-[10px] font-label-caps uppercase transition-colors cursor-pointer active:scale-95"
+          >
+            CLAUDE_SYNC
+          </button>
+          <button
+            onClick={onExport}
+            title="Export session to Antigravity SDK agent"
+            className="border border-primary/40 text-primary hover:bg-primary/10 px-3 py-1 text-[10px] font-label-caps uppercase transition-colors cursor-pointer active:scale-95"
+          >
+            AGY_EXPORT
+          </button>
+          <button
+            onClick={onExportToCodex}
+            title="Export workspace blueprint to Codex"
+            className="border border-tertiary-container/40 text-tertiary-container hover:bg-tertiary-container/10 px-3 py-1 text-[10px] font-label-caps uppercase transition-colors cursor-pointer active:scale-95"
+          >
+            CODEX_SYNC
+          </button>
+        </div>
+
         <button
           onClick={onLockSpace}
           disabled={securityBusy}
-          className={`hidden md:flex items-center space-x-1.5 border px-3 py-1 text-[11px] font-mono transition-all duration-150 active:scale-[0.97] disabled:cursor-wait ${securityReady ? 'border-[#ffb4ab]/40 text-[#ffb4ab] hover:border-[#ffb4ab]/80 hover:bg-[#ffb4ab]/10' : 'border-[#44483a] text-[#8f9282] hover:border-[#ffb020]/60 hover:text-[#ffb020]'}`}
-          title={securityReady ? 'Start local camera recording and lock the workspace' : 'Open Security Protocols to enroll platform biometrics'}
+          className="bg-primary text-on-primary font-label-caps text-label-caps px-md py-xs flex items-center gap-xs active:scale-95 duration-75 cursor-pointer disabled:opacity-50"
         >
-          <LockKeyhole className="w-3.5 h-3.5" />
-          <span>{securityBusy ? 'ARMING...' : securityReady ? 'LOCK SPACE' : 'SETUP LOCK'}</span>
+          <span className="material-symbols-outlined text-[16px]">
+            {securityReady ? 'lock' : 'lock_open'}
+          </span>
+          <span>{securityBusy ? 'ARMING...' : securityReady ? 'LOCK' : 'ARM_LOCK'}</span>
         </button>
-        <button
-          onClick={onExportToClaude}
-          className="hidden xl:flex items-center space-x-1.5 border border-[#7dd3fc]/40 text-[#7dd3fc] hover:bg-[#7dd3fc]/10 px-3 py-1 rounded-sm text-[11px] font-mono transition-all duration-150 cursor-pointer active:scale-[0.97] hover:border-[#7dd3fc]/80 shadow-[0_0_12px_rgba(125,211,252,0.05)]"
-        >
-          <Bot className="w-3.5 h-3.5 text-[#7dd3fc]" />
-          <span>EXPORT TO CLAUDE</span>
-        </button>
-        <button
-          onClick={onExport}
-          className="hidden xl:flex items-center space-x-1.5 border border-[#DEFF9A]/40 text-[#DEFF9A] hover:bg-[#DEFF9A]/10 px-3 py-1 rounded-sm text-[11px] font-mono transition-all duration-150 cursor-pointer active:scale-[0.97] hover:border-[#DEFF9A]/80 shadow-[0_0_12px_rgba(157,223,46,0.05)]"
-        >
-          <Share2 className="w-3.5 h-3.5 text-[#DEFF9A]" />
-          <span>EXPORT TO AGY</span>
-        </button>
-        <button
-          onClick={onExportToCodex}
-          className="hidden xl:flex items-center space-x-1.5 border border-[#ffb020]/40 text-[#ffb020] hover:bg-[#ffb020]/10 px-3 py-1 rounded-sm text-[11px] font-mono transition-all duration-150 cursor-pointer active:scale-[0.97] hover:border-[#ffb020]/80 shadow-[0_0_12px_rgba(255,176,32,0.05)]"
-        >
-          <Wand2 className="w-3.5 h-3.5 text-[#ffb020]" />
-          <span>EXPORT TO CODEX</span>
-        </button>
-        <div className="hidden lg:flex items-center space-x-2 border border-[#23262B] bg-[#101114] px-3 py-1 rounded-sm text-[#C0C0C5]">
-          <Network className="w-3.5 h-3.5 text-[#DEFF9A]" />
-          <span>SPACETIMEDB // MAINCLOUD</span>
-        </div>
-        <div className="hidden lg:flex items-center space-x-1.5">
-          <Clock className="w-3.5 h-3.5 text-[#525861]" />
-          <span>BLOCK: <span className="text-[#F5F5F5]">{blockHeight}</span></span>
-        </div>
-        <div className="w-2.5 h-2.5 bg-[#DEFF9A] rounded-full animate-ping opacity-60" />
       </div>
+
     </header>
   );
 };

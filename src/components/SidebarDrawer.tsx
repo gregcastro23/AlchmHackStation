@@ -1,5 +1,4 @@
-import React from 'react';
-import { Terminal, Cpu, Network, Shield, Wand2, Key, LogOut, Sparkles, PanelsTopLeft, Gauge, KeyRound, Route, Waypoints, Atom, BrainCircuit, CalendarDays, MessageSquare, Coins } from 'lucide-react';
+import React, { useState } from 'react';
 
 interface SidebarDrawerProps {
   activeTab: string;
@@ -16,39 +15,65 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
   onLoginClick,
   onLogoutClick,
 }) => {
-  const navItems = [
-    { id: 'web3-hub', label: 'Web3 Hackathon Hub', icon: Coins },
-    { id: 'hackathon-space', label: 'Pentacles Overview', icon: CalendarDays },
-    { id: 'swarm-nexus', label: 'Swarm Nexus', icon: Atom },
-    { id: 'overmind', label: 'Overmind AI', icon: BrainCircuit },
-    { id: 'mission-control', label: 'Status Indicator', icon: PanelsTopLeft },
-    { id: 'discord-feed', label: 'Discord Live Feed', icon: MessageSquare },
-    { id: 'planetary-cockpit', label: 'Celestial Cockpit', icon: Atom },
-    { id: 'integration-ops', label: 'Integration Ops', icon: Waypoints },
-    { id: 'usage-limits', label: 'Usage & Limits', icon: Gauge },
-    { id: 'model-accounts', label: 'Model Accounts', icon: KeyRound },
-    { id: 'routing-guardrails', label: 'Routing & Guardrails', icon: Route },
-    { id: 'console', label: 'Operator Console', icon: Terminal },
-    { id: 'network', label: 'Node Network', icon: Network },
-    { id: 'security', label: 'Security Protocols', icon: Shield },
-    { id: 'stitch', label: 'Stitch AI Co-Op', icon: Wand2 },
-    { id: 'claude-design', label: 'Claude Design', icon: Sparkles },
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const primaryItems = [
+    { id: 'web3-hub', label: 'Web3 Hub', icon: 'hub' },
+    { id: 'hackathon-space', label: 'Active Workstation', icon: 'terminal' },
+    { id: 'history', label: 'Hackathon History', icon: 'history' },
+    { id: 'swarm-nexus', label: 'Swarm Nexus', icon: 'groups' },
+    { id: 'overmind', label: 'Overmind AI', icon: 'psychology' },
+    { id: 'console', label: 'Operator Console', icon: 'settings_input_component' },
   ];
+
+  const advancedItems = [
+    { id: 'integration-ops', label: 'Integration Ops', icon: 'settings_ethernet' },
+    { id: 'usage-limits', label: 'Usage & Limits', icon: 'query_stats' },
+    { id: 'model-accounts', label: 'Model Accounts', icon: 'vpn_key' },
+    { id: 'routing-guardrails', label: 'Routing Rules', icon: 'alt_route' },
+    { id: 'security', label: 'Security Specs', icon: 'verified_user' },
+    { id: 'stitch', label: 'Stitch AI Co-Op', icon: 'auto_awesome' },
+    { id: 'claude-design', label: 'Claude Design', icon: 'palette' },
+  ];
+
+  const renderItem = (item: { id: string; label: string; icon: string }) => {
+    const isActive = activeTab === item.id;
+    return (
+      <button
+        key={item.id}
+        onClick={() => setActiveTab(item.id)}
+        className={`w-full flex items-center gap-md px-md py-sm transition-all duration-200 text-left cursor-pointer ${
+          isActive
+            ? 'bg-primary/10 text-primary border-l-4 border-primary translate-x-1 font-bold'
+            : 'text-on-surface-variant hover:bg-secondary/5 hover:text-secondary border-l-4 border-transparent'
+        }`}
+      >
+        <span className="material-symbols-outlined text-[18px]" data-icon={item.icon}>
+          {item.icon}
+        </span>
+        <span className="font-label-caps text-label-caps">{item.label}</span>
+      </button>
+    );
+  };
 
   return (
     <>
-      <nav className="lg:hidden w-full shrink-0 overflow-x-auto custom-scrollbar border-b border-[#44483a] bg-[#1f201a]">
+      {/* Mobile Top Scrollable Navigation */}
+      <nav className="lg:hidden w-full shrink-0 overflow-x-auto custom-scrollbar border-b border-outline-variant/40 bg-surface-container">
         <div className="flex min-w-max p-2 gap-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
+          {primaryItems.concat(advancedItems).map((item) => {
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-2 border px-3 py-2 font-mono text-[10px] uppercase ${isActive ? 'border-[#9ddf2e] bg-[#9ddf2e]/10 text-[#9ddf2e]' : 'border-[#44483a] text-[#c5c8b6]'}`}
+                className={`flex items-center gap-2 border px-3 py-2 font-mono text-[10px] uppercase transition-all duration-150 ${
+                  isActive 
+                    ? 'border-primary bg-primary/10 text-primary font-bold' 
+                    : 'border-outline-variant/40 text-on-surface-variant hover:border-secondary/60'
+                }`}
               >
-                <Icon className="h-3.5 w-3.5" />
+                <span className="material-symbols-outlined text-[14px]">{item.icon}</span>
                 {item.label}
               </button>
             );
@@ -56,98 +81,100 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
         </div>
       </nav>
 
-      <aside className="hidden lg:flex bg-[#1f201a] border-r border-[#44483a] h-full w-80 flex-col select-none py-6 z-40">
-      {/* Brand Identity / Profile area */}
-      <div className="px-6 mb-8 border-b border-[#44483a]/40 pb-6">
-        <div className="flex items-center space-x-3 bg-[#12140e] border border-[#44483a] p-3.5 shadow-[0_0_12px_rgba(0,0,0,0.2)]">
-          <div className="w-11 h-11 border border-[#8f9282] bg-[#1b1c16] flex items-center justify-center relative overflow-hidden">
-            {gitHubUser?.isLoggedIn ? (
-              <img src={gitHubUser.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-            ) : (
-              <Cpu className="w-5 h-5 text-[#8f9282]" />
-            )}
-            {gitHubUser?.isLoggedIn && (
-              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#9ddf2e] border border-[#12140e]" />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="font-mono text-[13px] font-bold text-[#9ddf2e] truncate">
-              {gitHubUser?.isLoggedIn ? gitHubUser.username : 'OP_CELESTIAL'}
-            </div>
-            <div className="font-mono text-[9px] text-[#c5c8b6] uppercase tracking-wider mt-0.5">
-              {gitHubUser?.isLoggedIn ? 'PENTACLES_OPERATOR' : 'OP_GUEST'}
-            </div>
-            <div className="font-mono text-[9px] text-[#8f9282] uppercase mt-0.5">
-              SPACETIMEDB // MAINCLOUD
-            </div>
-          </div>
-        </div>
-
-        {/* GitHub Bind button / Logout */}
-        <div className="mt-4">
-          {gitHubUser?.isLoggedIn ? (
-            <button
-              onClick={onLogoutClick}
-              className="w-full flex items-center justify-between border border-[#ffb4ab]/30 text-[#ffb4ab] bg-[#ffb4ab]/5 hover:bg-[#ffb4ab]/10 px-3 py-1.5 font-mono text-[10px] uppercase transition-all duration-150 cursor-pointer"
-            >
-              <span className="flex items-center space-x-1">
-                <Key className="w-3 h-3" />
-                <span>DISCONNECT SESSION</span>
-              </span>
-              <LogOut className="w-3 h-3" />
-            </button>
-          ) : (
-            <button
-              onClick={onLoginClick}
-              className="w-full flex items-center justify-center space-x-1.5 border border-[#9ddf2e]/60 text-[#9ddf2e] bg-[#9ddf2e]/5 hover:bg-[#9ddf2e]/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider font-bold transition-all duration-150 cursor-pointer active:scale-[0.98]"
-            >
-              <Key className="w-3.5 h-3.5" />
-              <span>CONNECT GITHUB</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Nav links */}
-      <nav className="flex-1 min-h-0 overflow-y-auto custom-scrollbar flex flex-col space-y-1">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full px-6 py-3 flex items-center space-x-3 font-mono text-[12px] transition-all relative border-r-4 text-left cursor-pointer ${
-                isActive
-                  ? 'bg-[#83c300]/10 text-[#9ddf2e] border-[#9ddf2e] font-bold shadow-[inset_-6px_0_12px_rgba(157,223,46,0.02)]'
-                  : 'text-[#c5c8b6] hover:bg-[#1b1c16] hover:text-[#9ddf2e] border-transparent'
-              }`}
-            >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-[#9ddf2e]' : 'text-[#8f9282]'}`} />
-              <span className="flex-1">{item.label}</span>
-              {isActive && (
-                <span className="w-1.5 h-1.5 bg-[#9ddf2e] rounded-full animate-pulse shadow-[0_0_8px_#9ddf2e]" />
+      {/* Desktop Navigation Drawer */}
+      <aside className="hidden lg:flex bg-surface-container border-r border-outline-variant/40 h-full w-[280px] flex-col py-lg z-40 shrink-0">
+        
+        {/* User profile / Git status section */}
+        <div className="px-md mb-md">
+          <div className="p-md glass-panel rounded-lg flex items-center gap-md border border-outline-variant/20">
+            <div className="w-10 h-10 border border-outline bg-surface-dim flex items-center justify-center relative overflow-hidden rounded">
+              {gitHubUser?.isLoggedIn ? (
+                <img src={gitHubUser.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <span className="material-symbols-outlined text-[20px] text-on-surface-variant">person</span>
               )}
-            </button>
-          );
-        })}
-      </nav>
+              {gitHubUser?.isLoggedIn && (
+                <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-primary border border-surface-container" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-label-caps text-[12px] text-primary truncate leading-tight">
+                {gitHubUser?.isLoggedIn ? gitHubUser.username : 'OP_GUEST'}
+              </div>
+              <div className="font-label-caps text-[9px] text-on-surface-variant uppercase mt-0.5 tracking-wider">
+                {gitHubUser?.isLoggedIn ? 'CONNECTED_OP' : 'STANDBY_MODE'}
+              </div>
+            </div>
+          </div>
 
-      {/* Footer system details */}
-      <div className="px-6 border-t border-[#44483a]/40 pt-4 font-mono text-[10px] text-[#8f9282] space-y-1">
-        <div className="flex justify-between">
-          <span>DEPLOY WINDOW:</span>
-          <span className="text-[#9ddf2e] font-bold">OPEN</span>
+          <div className="mt-3">
+            {gitHubUser?.isLoggedIn ? (
+              <button
+                onClick={onLogoutClick}
+                className="w-full flex items-center justify-between border border-error/30 text-error bg-error/5 hover:bg-error/10 px-3 py-1.5 font-mono text-[9px] uppercase transition-all duration-150 cursor-pointer"
+              >
+                <span className="flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[12px]">logout</span>
+                  <span>DISCONNECT SESSION</span>
+                </span>
+              </button>
+            ) : (
+              <button
+                onClick={onLoginClick}
+                className="w-full flex items-center justify-center gap-1.5 border border-primary/40 text-primary bg-primary/5 hover:bg-primary/10 px-3 py-1.5 font-mono text-[9px] uppercase font-bold transition-all duration-150 cursor-pointer active:scale-[0.98]"
+              >
+                <span className="material-symbols-outlined text-[13px]">vpn_key</span>
+                <span>CONNECT GITHUB</span>
+              </button>
+            )}
+          </div>
         </div>
-        <div className="flex justify-between">
-          <span>LAST SYNC:</span>
-          <span className="text-[#c5c8b6]">2026-06-14</span>
+
+        {/* System Menu Header */}
+        <div className="px-md mb-sm">
+          <h2 className="font-label-caps text-label-caps text-primary uppercase">SYSTEM_MENU</h2>
+          <div className="h-[1px] bg-outline-variant/20 w-full mt-xs"></div>
         </div>
-        <div className="flex justify-between">
-          <span>STDB MODULE:</span>
-          <span className="text-[#7dd3fc]">ACTIVE</span>
+
+        {/* Primary Navigation Items */}
+        <nav className="space-y-xs">
+          {primaryItems.map(renderItem)}
+        </nav>
+
+        {/* Advanced Telemetry Divider */}
+        <div className="px-md mt-md mb-xs">
+          <button 
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="w-full flex justify-between items-center font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors py-1 cursor-pointer"
+          >
+            <span>ADVANCED_TELEMETRY</span>
+            <span className="material-symbols-outlined text-[16px]">
+              {showAdvanced ? 'expand_less' : 'expand_more'}
+            </span>
+          </button>
+          <div className="h-[1px] bg-outline-variant/10 w-full mt-xs"></div>
         </div>
-      </div>
+
+        {/* Advanced Navigation Items (Collapsible) */}
+        {showAdvanced && (
+          <nav className="space-y-xs max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
+            {advancedItems.map(renderItem)}
+          </nav>
+        )}
+
+        {/* Active Session telemetry indicators at bottom */}
+        <div className="mt-auto px-md pt-lg border-t border-outline-variant/20">
+          <div className="p-md glass-panel rounded-lg border border-primary/20 bg-primary/5">
+            <div className="flex items-center justify-between mb-sm">
+              <span className="font-label-caps text-[9px] text-primary">SESSION_HEARTBEAT</span>
+              <span className="font-code-sm text-[10px] text-primary">ONLINE</span>
+            </div>
+            <div className="w-full bg-surface-container-highest h-[2px]">
+              <div className="bg-primary h-full w-[85%] progress-glow transition-all duration-1000"></div>
+            </div>
+          </div>
+        </div>
+
       </aside>
     </>
   );

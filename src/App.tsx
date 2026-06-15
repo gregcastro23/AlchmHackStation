@@ -29,6 +29,9 @@ import { Web3HackathonHub } from './components/Web3HackathonHub';
 import type { HackathonTrack } from './components/HackathonSpace';
 import { WorkstationLockOverlay } from './components/WorkstationLockOverlay';
 import { decomposeIdea, LANGUAGE_NAMES, LANGUAGES } from './lib/swarmEngine';
+import { HistoryView } from './components/HistoryView';
+import { DEFAULT_COMPLETED_HACKS } from './lib/completedHacks';
+import type { CompletedHackathon } from './lib/completedHacks';
 import {
   clearPlatformBiometric,
   enrollPlatformBiometric,
@@ -77,6 +80,14 @@ function App() {
 
   // Combined V2 states
   const [activeTab, setActiveTab] = useState<string>('web3-hub');
+  const [completedHacks, setCompletedHacks] = useState<CompletedHackathon[]>(() => {
+    try {
+      const val = window.localStorage.getItem('hackstation-completed-history');
+      return val ? JSON.parse(val) : DEFAULT_COMPLETED_HACKS;
+    } catch {
+      return DEFAULT_COMPLETED_HACKS;
+    }
+  });
   const [missionReadiness, setMissionReadiness] = useState(86);
   const [budgetUtilization, setBudgetUtilization] = useState(42);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -502,6 +513,15 @@ function App() {
     handleRunBuild();
   };
 
+  const handleArchiveHackathon = (record: CompletedHackathon) => {
+    setCompletedHacks((prev) => {
+      const updated = [record, ...prev];
+      window.localStorage.setItem('hackstation-completed-history', JSON.stringify(updated));
+      return updated;
+    });
+    setActiveTab('history');
+  };
+
   const handleExportToAntigravity = () => {
     const stateExport = {
       timestamp: new Date().toISOString(),
@@ -664,12 +684,15 @@ You are running as Claude Code in the terminal workspace. Review the developer c
   };
 
   return (
-    <div className="min-h-screen bg-[#0d0f09] text-[#c5c8b6] antialiased flex flex-col relative font-sans">
+    <div className="min-h-screen bg-[#0a0a0a] text-on-surface antialiased flex flex-col relative font-sans">
       {/* Background Subtle Radial Lighting Grid */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_10%,rgba(157,223,46,0.02),transparent_45%)] pointer-events-none z-0" />
+      <div className="fixed inset-0 pointer-events-none z-0 opacity-20">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[160px]"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/20 rounded-full blur-[160px]"></div>
+      </div>
       
       {/* Main Container Shell */}
-      <div className="flex-1 flex flex-col bg-[#12140e] border border-[#44483a]/60 shadow-2xl shadow-black/90 z-10 m-0 md:m-3 overflow-hidden">
+      <div className="flex-1 flex flex-col bg-surface border border-outline-variant/40 shadow-2xl shadow-black/90 z-10 m-0 md:m-3 overflow-hidden relative">
         
         {/* Top Header System Bar */}
         <TopStatusBar
@@ -717,7 +740,17 @@ You are running as Claude Code in the terminal workspace. Review the developer c
                 onNavigate={setActiveTab}
                 onCommitLog={addLog}
                 onStartBuild={handleStartHackathonBuild}
+                onArchiveHackathon={handleArchiveHackathon}
+                activeLanguage={language}
+                activeFramework={framework}
+                activeCssEngine={cssEngine}
+                activeDatabase={database}
+                securityReady={Boolean(securityCredentialId)}
               />
+            )}
+
+            {activeTab === 'history' && (
+              <HistoryView completedHacks={completedHacks} />
             )}
 
             {/* Persistent modules — stay mounted so the swarm sim and Overmind's

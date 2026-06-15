@@ -433,7 +433,7 @@ export const Web3HackathonHub: React.FC<Web3HackathonHubProps> = ({ onCommitLog 
             return (
               <button
                 key={tab.id}
-                onClick={() => setActivePanel(tab.id as any)}
+                onClick={() => setActivePanel(tab.id as 'vaults' | 'ens' | 'a2a' | 'walrus' | 'leaderboard' | 'onramp')}
                 className={`flex items-center gap-2 border px-4 py-2.5 font-mono text-xs uppercase transition cursor-pointer select-none shrink-0 ${
                   active ? 'border-[#9ddf2e] bg-[#9ddf2e]/10 text-[#9ddf2e] font-bold' : 'border-transparent text-[#8f9282] hover:text-[#c5c8b6]'
                 }`}
