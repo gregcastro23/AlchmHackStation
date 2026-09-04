@@ -16,6 +16,14 @@ import type {
   Phase,
   PlanTask,
 } from '../lib/swarmEngine';
+import {
+  spacetimedbSocket,
+  ELEMENTAL_COLORS,
+} from '../lib/spacetimedbSocket';
+import type {
+  ReducerEvent,
+  SpacetimeTelemetry,
+} from '../lib/spacetimedbSocket';
 
 interface SwarmNexusProps {
   onCommitLog?: (text: string, type?: 'default' | 'info' | 'success' | 'warning') => void;
@@ -180,6 +188,64 @@ export const SwarmNexus: React.FC<SwarmNexusProps> = ({ onCommitLog, onReadiness
   const [editTaskRole, setEditTaskRole] = useState<AgentRole>('builder');
   const [editTaskPhase, setEditTaskPhase] = useState<Phase>('Build');
   const [editTaskComplexity, setEditTaskComplexity] = useState<number>(3);
+
+  // SpacetimeDB WebSocket & Particle Dynamics State
+  const [stdbTelemetry, setStdbTelemetry] = useState<SpacetimeTelemetry>(spacetimedbSocket.getTelemetry());
+  const [lastReducerEvent, setLastReducerEvent] = useState<ReducerEvent | null>(null);
+
+  useEffect(() => {
+    spacetimedbSocket.connect();
+    const unsubTelemetry = spacetimedbSocket.onTelemetry(setStdbTelemetry);
+    const unsubEvent = spacetimedbSocket.onReducerEvent((event) => {
+      setLastReducerEvent(event);
+      const sim = simRef.current;
+      if (sim) {
+        const color = ELEMENTAL_COLORS[event.element] || '#DEFF9A';
+
+        // 1. Core pulse acceleration
+        sim.core.pulse = Math.min(2.5, sim.core.pulse + 0.9 * event.energy);
+        sim.core.charge = 1.0;
+
+        // 2. Elemental Ripple
+        sim.ripples.push({
+          x: sim.core.x,
+          y: sim.core.y,
+          r: 12,
+          max: sim.orbit * 1.6,
+          color,
+        });
+
+        // 3. Sparks Burst
+        for (let i = 0; i < 16; i++) {
+          const angle = (Math.PI * 2 * i) / 16 + (Math.random() - 0.5) * 0.5;
+          const speed = 100 + Math.random() * 220;
+          sim.sparks.push({
+            x: sim.core.x,
+            y: sim.core.y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 1.2,
+            color,
+          });
+        }
+
+        // 4. Particle impulse to random agent
+        if (sim.agents.length > 0) {
+          const targetIdx = Math.floor(Math.random() * sim.agents.length);
+          const ag = sim.agents[targetIdx];
+          ag.load = Math.min(1.0, ag.load + 0.35);
+          ag.pulse = 1.4;
+          ag.vx += (Math.random() - 0.5) * 60;
+          ag.vy += (Math.random() - 0.5) * 60;
+        }
+      }
+    });
+
+    return () => {
+      unsubTelemetry();
+      unsubEvent();
+    };
+  }, []);
 
   const log = useCallback(
     (text: string, type: 'default' | 'info' | 'success' | 'warning' = 'info') => {
@@ -1065,22 +1131,52 @@ export const SwarmNexus: React.FC<SwarmNexusProps> = ({ onCommitLog, onReadiness
         </div>
         {/* overlay HUD corners */}
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute left-3 top-3 flex items-center gap-2 border border-[#9ddf2e]/30 bg-black/40 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[#9ddf2e] backdrop-blur-sm">
+          <div className="absolute left-3 top-3 flex items-center gap-2 border border-[#9ddf2e]/30 bg-black/50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[#9ddf2e] backdrop-blur-sm">
             <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#9ddf2e] opacity-75" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#9ddf2e]" />
+              <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                stdbTelemetry.status === 'LIVE' ? 'animate-ping bg-[#9ddf2e]' : 'bg-[#7dd3fc]'
+              }`} />
+              <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${
+                stdbTelemetry.status === 'LIVE' ? 'bg-[#9ddf2e]' : 'bg-[#7dd3fc]'
+              }`} />
             </span>
             Swarm Nexus // {pattern}
+            <span className="text-[#8f9282]">·</span>
+            <span className={stdbTelemetry.status === 'LIVE' ? 'text-[#DEFF9A] font-bold' : 'text-[#7dd3fc]'}>
+              STDB: {stdbTelemetry.status} ({stdbTelemetry.pingMs}ms)
+            </span>
           </div>
-          <div className="absolute right-3 top-3 border border-[#44483a] bg-black/40 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-[#c5c8b6] backdrop-blur-sm">
-            {hud.phase === 'forging'
-              ? `forging · ${hud.elapsed.toFixed(1)}s`
-              : hud.phase === 'shipped'
-                ? 'shipped ✓'
-                : 'awaiting idea'}
+
+          <div className="absolute right-3 top-3 flex items-center gap-2 pointer-events-auto">
+            {lastReducerEvent && (
+              <div className="border border-[#44483a] bg-black/60 px-2 py-1 font-mono text-[9px] uppercase tracking-wider backdrop-blur-sm flex items-center gap-1.5 hidden sm:flex">
+                <span
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ backgroundColor: ELEMENTAL_COLORS[lastReducerEvent.element] || '#DEFF9A' }}
+                />
+                <span className="text-[#e3e3d8]">{lastReducerEvent.reducerName}</span>
+                <span className="text-[#7DD3FC]">({lastReducerEvent.latencyMs}ms)</span>
+              </div>
+            )}
+            <button
+              onClick={() => spacetimedbSocket.triggerMockMutation()}
+              title="Validate 60fps canvas particle dynamics & mutex response (<50ms)"
+              className="border border-[#9ddf2e] bg-[#9ddf2e]/20 hover:bg-[#9ddf2e] text-[#9ddf2e] hover:text-[#0d0f09] px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 cursor-pointer backdrop-blur-sm flex items-center gap-1"
+            >
+              <Zap className="h-3 w-3 fill-current" />
+              <span>Mutex Test</span>
+            </button>
+            <div className="border border-[#44483a] bg-black/40 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-[#c5c8b6] backdrop-blur-sm">
+              {hud.phase === 'forging'
+                ? `forging · ${hud.elapsed.toFixed(1)}s`
+                : hud.phase === 'shipped'
+                  ? 'shipped ✓'
+                  : 'awaiting idea'}
+            </div>
           </div>
+
           <div className="absolute bottom-3 left-3 border border-[#44483a] bg-black/40 px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.14em] text-[#8f9282] backdrop-blur-sm">
-            drag agents · click core to ignite · ⌘+enter to forge
+            drag agents · click core to ignite · 60fps live reducer telemetry
           </div>
         </div>
         {/* scanline + vignette */}
