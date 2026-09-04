@@ -10,6 +10,8 @@
     "preflight": "bun scripts/preflight.ts",
     "auth:check": "bun scripts/check_cli_auth.ts",
     "auth:watch": "bun scripts/watch_cli_auth.ts",
+    "generate": "bun scripts/generate_types.ts",
+    "sync:idl": "bun scripts/generate_types.ts --sync",
     "lint": "eslint .",
     "preview": "vite preview"
   },

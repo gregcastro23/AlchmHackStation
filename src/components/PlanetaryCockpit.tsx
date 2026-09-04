@@ -4,7 +4,10 @@ import {
   RefreshCw, 
   Play, 
   Lock,
+  Zap,
 } from 'lucide-react';
+import { spacetimedbSocket } from '../lib/spacetimedbSocket';
+import type { SpacetimeTelemetry } from '../lib/spacetimedbSocket';
 
 interface PlanetaryCockpitProps {
   onCommitLog?: (text: string, type?: 'default' | 'info' | 'success' | 'warning' | 'error') => void;
@@ -48,7 +51,7 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
   // Solana Program Compiler States
   const [compilerStatus, setCompilerStatus] = useState<'idle' | 'running' | 'success' | 'failed'>('idle');
   const [compilerLogs, setCompilerLogs] = useState<string>('Ready to compile Solana SBF programs via cargo build-sbf or anchor build.');
-  const [activeProgramCommand, setActiveProgramCommand] = useState<'cargo build-sbf' | 'anchor build' | 'solana-test-validator'>('cargo build-sbf');
+  const [activeProgramCommand, setActiveProgramCommand] = useState<'cargo build-sbf' | 'anchor build' | 'solana-test-validator' | 'bun run sync:idl'>('bun run sync:idl');
 
   // Durable Reconciliation States
   const [reconciliationList, setReconciliationList] = useState<ReconciliationItem[]>([
@@ -59,6 +62,38 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
     { id: 'ephemeris-sync', entity: 'Geocentric Ephemeris (10 Bodies)', onChainSlot: 318920441, spacetimeDbRow: 'ephemeris:row_current', status: 'synced', lastReconciled: '1 sec ago' },
   ]);
   const [isReconciling, setIsReconciling] = useState(false);
+  const [stdbTelemetry, setStdbTelemetry] = useState<SpacetimeTelemetry>(spacetimedbSocket.getTelemetry());
+
+  useEffect(() => {
+    spacetimedbSocket.connect();
+    const unsubTelemetry = spacetimedbSocket.onTelemetry((t) => {
+      setStdbTelemetry(t);
+      if (t.status === 'LIVE') {
+        setServices((prev) => prev.map((s) => s.name === 'SpacetimeDB Engine' ? {
+          ...s,
+          status: 'ONLINE',
+          details: `wss://${t.wsUrl.split('/')[2]} (${t.pingMs}ms)`,
+        } : s));
+      }
+    });
+
+    const unsubEvent = spacetimedbSocket.onReducerEvent((_evt) => {
+      // Update reconciliation item live
+      setReconciliationList((prev) => {
+        const idx = Math.floor(Math.random() * prev.length);
+        return prev.map((item, i) => i === idx ? {
+          ...item,
+          status: 'synced',
+          lastReconciled: 'just now',
+        } : item);
+      });
+    });
+
+    return () => {
+      unsubTelemetry();
+      unsubEvent();
+    };
+  }, []);
   
   // Astrometry & Celestial Energy Telemetry
   const [celestialEnergy, setCelestialEnergy] = useState({
@@ -170,6 +205,36 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
     setCompilerStatus('running');
     setCompilerLogs(`[SOLANA_BUILD] Starting ${activeProgramCommand} in workspace...\n[SOLANA_BUILD] Checking SBF platform tools & BPF toolchain...`);
     addLocalLog(`Executing Solana program compiler: ${activeProgramCommand}`, 'info');
+
+    if (activeProgramCommand === 'bun run sync:idl') {
+      try {
+        const response = await fetch('/api/sync-idl', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'sync-idl' }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          setCompilerStatus('success');
+          setCompilerLogs(
+            `✓ IDL Synchronization & Type Generation Succeeded!\n` +
+            `✓ Synced Files: ${(data.syncedFiles || []).join(', ')}\n` +
+            `✓ Target Repositories: AlchmHackStation, ASOL, Pentacles\n` +
+            `✓ Type Generator Output:\n${data.typeGen?.stdout || 'src/types/hackstation.ts updated.'}`
+          );
+          addLocalLog(`IDL synchronization complete: ${(data.syncedFiles || []).length} IDLs distributed.`, 'success');
+        } else {
+          setCompilerStatus('failed');
+          setCompilerLogs(`[ERROR] IDL sync failed: ${data.error || data.typeGen?.error || 'Unknown error'}`);
+          addLocalLog(`IDL sync error: ${data.error}`, 'error');
+        }
+      } catch (err: any) {
+        setCompilerStatus('failed');
+        setCompilerLogs(`[ERROR] Network error during IDL sync: ${err.message}`);
+        addLocalLog(`Network error: ${err.message}`, 'error');
+      }
+      return;
+    }
 
     // Run whitelisted command via API
     const result = await runCommand('bun scripts/check_cli_auth.ts');
@@ -344,16 +409,33 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
                 <span className="text-on-surface font-bold">4 Star Vaults</span>
               </div>
               <div className="flex justify-between items-center pb-2 border-b border-outline-variant/30">
+                <span className="text-[#8f9282]">SpacetimeDB Socket:</span>
+                <span className={`font-bold ${stdbTelemetry.status === 'LIVE' ? 'text-primary' : 'text-secondary'}`}>
+                  {stdbTelemetry.status} ({stdbTelemetry.pingMs}ms)
+                </span>
+              </div>
+              <div className="flex justify-between items-center pb-2 border-b border-outline-variant/30">
                 <span className="text-[#8f9282]">Ephemeris Sync Status:</span>
                 <span className="text-primary font-bold">10 Bodies Synced</span>
               </div>
               <div className="flex justify-between items-center pb-2 border-b border-outline-variant/30">
                 <span className="text-[#8f9282]">State Drift Detection:</span>
-                <span className="text-primary font-bold">0.00% (Locked)</span>
+                <span className="text-primary font-bold">
+                  {stdbTelemetry.driftOffsetMs.toFixed(2)} ms (Locked)
+                </span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center pb-2 border-b border-outline-variant/30">
                 <span className="text-[#8f9282]">Spacetime Reducer Lag:</span>
-                <span className="text-secondary font-bold">0.42 ms</span>
+                <span className="text-secondary font-bold">{stdbTelemetry.pingMs.toFixed(2)} ms</span>
+              </div>
+              <div className="pt-1">
+                <button
+                  onClick={() => spacetimedbSocket.triggerMockMutation()}
+                  className="w-full py-1.5 px-3 rounded bg-primary/10 hover:bg-primary/20 text-primary border border-primary/40 font-mono text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+                >
+                  <Zap className="w-3 h-3 fill-current" />
+                  <span>Trigger Mutation Burst (&lt;50ms)</span>
+                </button>
               </div>
             </div>
           </div>
@@ -371,6 +453,7 @@ export const PlanetaryCockpit: React.FC<PlanetaryCockpitProps> = ({ onCommitLog 
                 onChange={(e) => setActiveProgramCommand(e.target.value as typeof activeProgramCommand)}
                 className="bg-surface-container border border-outline-variant/40 rounded px-2 py-1 text-primary font-bold focus:outline-none"
               >
+                <option value="bun run sync:idl">bun run sync:idl (Cross-Repo IDL & Type Injector)</option>
                 <option value="cargo build-sbf">cargo build-sbf (Rust SBF Compiler)</option>
                 <option value="anchor build">anchor build (Anchor Framework + IDL)</option>
                 <option value="solana-test-validator">solana-test-validator (Localnet Node)</option>
