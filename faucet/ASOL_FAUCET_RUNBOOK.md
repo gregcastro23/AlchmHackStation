@@ -2,7 +2,7 @@
 
 > **Target Directory:** `/Users/GregCastro/ASOL/alchm-agents-solana`  
 > **Protocol Standard:** ADR-014 (Discriminant Astrological Faucet & Reconciled Elemental Sinks)  
-> **Authority Specification:** [`faucet/FAUCET_ASOL.md`](file:///Users/GregCastro/Desktop/AlchmHackStation/AlchmHackStation/faucet/FAUCET_ASOL.md)  
+> **Authority Specification:** [`faucet/FAUCET.md`](file:///Users/GregCastro/Desktop/AlchmHackStation/AlchmHackStation/faucet/FAUCET.md)  
 > **Scope:** Autonomous agent daily claim calibration across the 72 historical agents.  
 
 ---

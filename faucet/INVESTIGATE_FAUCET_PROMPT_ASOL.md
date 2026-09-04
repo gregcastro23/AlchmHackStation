@@ -1,7 +1,7 @@
 # Canonical ASOL Investigation Prompt: Chart-Ratio Astrological Faucet
 
 > **Target Repository:** `AlchmAgentsSolana` (`/Users/GregCastro/ASOL/alchm-agents-solana`)  
-> **Home Base Specification:** [`faucet/FAUCET_ASOL.md`](file:///Users/GregCastro/Desktop/AlchmHackStation/AlchmHackStation/faucet/FAUCET_ASOL.md)  
+> **Home Base Specification:** [`faucet/FAUCET.md`](file:///Users/GregCastro/Desktop/AlchmHackStation/AlchmHackStation/faucet/FAUCET.md)  
 > **Authoritative Standard:** ADR-014 (Chart-Ratio Discriminant Faucet & Reconciled Elemental Sinks)  
 
 ---
