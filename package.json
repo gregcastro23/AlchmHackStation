@@ -1,9 +1,13 @@
 {
   "name": "alchmhackstation",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "bin": {
+    "alchm": "./bin/alchm.ts"
+  },
   "scripts": {
+    "alchm": "bun ./bin/alchm.ts",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "package": "bun run build && bun scripts/package_deploy.ts",

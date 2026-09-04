@@ -60,7 +60,31 @@ bun run build
 ```
 *Builds in ~195ms with Rolldown manual chunk splitting (`solana-core`, `icons`, `index`).*
 
-### 2. Local CLI & Multisig Auth Probe
+### 2. Official Alchm CLI Tool (`alchm`)
+The repository includes the official `alchm` CLI, registered globally via `bun link`:
+```bash
+# Global help & version
+alchm --help
+alchm --version
+
+# Audit ecosystem toolchains (Solana, Anchor, Spacetime, Vercel, Claude)
+alchm auth check
+
+# Faucet status & ADR-014 test harness
+alchm faucet status
+alchm faucet test
+alchm faucet calc --fire 5 --water 2 --earth 1 --air 2
+
+# Anchor IDL synchronization
+alchm idl list
+alchm idl sync
+
+# Token-2022 & Devnet master test suite
+alchm token2022 info
+alchm devnet test
+```
+
+### 3. Local CLI & Multisig Auth Probe
 ```bash
 bun run auth:check
 ```

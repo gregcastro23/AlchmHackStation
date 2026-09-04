@@ -266,11 +266,11 @@ Every platform repository must pass the following invariant verification suite:
 
 | Test ID | Test Case | Condition | Expected Result | Pass Criterion |
 | :---: | :--- | :--- | :--- | :--- |
-| **TEST-01** | **Exact Total Conservation** | Any minter chart, any celestial moment | $\sum_i \mathcal{Y}_i \equiv 24.0000$ (Universal) | Zero deviation (> 0.0001) |
-| **TEST-02** | **Symmetric Neutral Baseline** | Flat 25% chart, symmetric 25% sky | $\mathcal{Y}_i = 6.0000$ for all 4 coins | Exact $6.0000$ payout |
-| **TEST-03** | **Fire Transit Kinetic Elevation** | Fire sky ($w_{\text{Fire}} \ge 5.0$) | $\text{Avg SPIRIT} \ge 12.0000$ | Restores conversational gas |
-| **TEST-04** | **Anti-Glut Suppression** | Live network supply ($\text{Supply}_{\text{MATTER}} > 30\%$) | $\Omega_{\text{MATTER}} = 0.750$, $\text{Avg MATTER} \le 4.20$ | Compresses new surplus |
-| **TEST-05** | **Earth Stellium Protection** | Earth stellium ($w_{\text{Earth}} \ge 5.0$) with anti-glut | $\text{Avg MATTER} \le 9.0000$ | Caps runaway accumulation |
+| **TEST-01** | **Exact Total Conservation** | Any minter chart, any celestial moment | $\sum_i \mathcal{Y}_i \equiv 12.0000$ (Universal) | Zero deviation (> 0.0001) |
+| **TEST-02** | **Symmetric Neutral Baseline** | Flat 25% chart, symmetric 25% sky | $\mathcal{Y}_i = 3.0000$ for all 4 coins | Exact $3.0000$ payout |
+| **TEST-03** | **Fire Transit Kinetic Elevation** | Fire sky ($w_{\text{Fire}} \ge 5.0$) | $\text{Avg SPIRIT} \ge 6.0000$ | Restores conversational gas |
+| **TEST-04** | **Anti-Glut Suppression** | Live network supply ($\text{Supply}_{\text{MATTER}} > 30\%$) | $\Omega_{\text{MATTER}} = 0.750$, $\text{Avg MATTER} \le 2.10$ | Compresses new surplus |
+| **TEST-05** | **Earth Stellium Protection** | Earth stellium ($w_{\text{Earth}} \ge 5.0$) with anti-glut | $\text{Avg MATTER} \le 4.5000$ | Caps runaway accumulation |
 | **TEST-06** | **Inter-Agent Differentiation** | Einstein (Air) vs Newton (Earth) in same moment | $\mathcal{Y}_i(\text{Einstein}) \ne \mathcal{Y}_i(\text{Newton})$ | Distinct individual payouts |
 | **TEST-07** | **Token Naming Purity** | Entire codebase & UI | Zero element name substitutions | Strictly SPIRIT, ESSENCE, MATTER, SUBSTANCE |
 
