@@ -120,14 +120,14 @@ export const ModelAccountsView: React.FC<ModelAccountsViewProps> = ({ onCommitLo
 
   const instructionCuEstimate = {
     'transfer-hook': {
-      label: 'Token-2022 Transfer Hook (Ignis)',
+      label: 'Token-2022 Transfer Hook (SPIRIT)',
       baseCu: 4200,
       extraMetasCu: 14800,
       hookCpiCu: 68500,
       totalCu: 87500,
     },
     'token-mint': {
-      label: 'Confidential Token Mint (Aqua)',
+      label: 'Confidential Token Mint (ESSENCE)',
       baseCu: 12500,
       extraMetasCu: 0,
       hookCpiCu: 45000,
@@ -308,8 +308,8 @@ export const ModelAccountsView: React.FC<ModelAccountsViewProps> = ({ onCommitLo
                 onChange={(e) => setSelectedInstruction(e.target.value as typeof selectedInstruction)}
                 className="bg-surface border border-outline-variant/40 rounded px-2.5 py-1 text-primary font-bold focus:outline-none"
               >
-                <option value="transfer-hook">Token-2022 Transfer Hook (Ignis)</option>
-                <option value="token-mint">Confidential Token Mint (Aqua)</option>
+                <option value="transfer-hook">Token-2022 Transfer Hook (SPIRIT)</option>
+                <option value="token-mint">Confidential Token Mint (ESSENCE)</option>
                 <option value="reconcile">SpacetimeDB Staking Reconcile</option>
               </select>
             </div>

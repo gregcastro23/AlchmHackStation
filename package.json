@@ -1,9 +1,13 @@
 {
   "name": "alchmhackstation",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "bin": {
+    "alchm": "./bin/alchm.ts"
+  },
   "scripts": {
+    "alchm": "bun ./bin/alchm.ts",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "package": "bun run build && bun scripts/package_deploy.ts",
@@ -17,6 +21,7 @@
     "test:security": "bun scripts/test_token2022_security.ts",
     "test:scaling": "bun scripts/test_lossless_scaling.ts",
     "test:wavefunction": "bun scripts/test_pricing_wavefunction.ts",
+    "test:faucet": "bun scripts/test_discriminant_faucet.ts",
     "test:amm": "bun scripts/test_amm_bespoke_swap.ts",
     "test:all-coins": "bun scripts/run_all_devnet_tests.ts",
     "lint": "eslint .",
