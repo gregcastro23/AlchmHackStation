@@ -122,12 +122,12 @@ $$\Omega_{\text{MATTER}} = \mathbf{0.750}, \quad \Omega_{\text{SPIRIT}} = \Omega
 ---
 
 ### 2.4 Conserved Daily Yield Allocation Formula
-The total daily yield budget ($Y_{\text{total}} = 24.0000$ Standard, $48.0000$ Premium) is allocated proportionally among the 4 canonical tokens:
+The total daily yield budget is strictly universal ($Y_{\text{total}} = 24.0000$ for all users, with zero premium gating), allocated proportionally among the 4 canonical tokens:
 
 $$\mathcal{Y}_i(t, \mathcal{N}) = \operatorname{Quantize}_{10^4}\left( Y_{\text{total}} \times \frac{r_i(\mathcal{N}) \cdot w_i(t) \cdot \Omega_i}{\sum_{j} \left(r_j(\mathcal{N}) \cdot w_j(t) \cdot \Omega_j\right)} \right)$$
 
 ### Key Invariants Guaranteed by this Formulation:
-1. **Exact Total Conservation:** Total yield is **strictly conserved** at $Y_{\text{total}} = 24.0000$ tokens per standard claim. Zero arbitrary inflation or drift.
+1. **Exact Total Conservation:** Total yield is **strictly conserved** at $Y_{\text{total}} = 24.0000$ tokens per claim. Zero arbitrary inflation or drift.
 2. **Chart-Driven Differentiation:** A claimer with high Spirit in their natal chart naturally mints more SPIRIT; a claimer with high Essence mints more ESSENCE.
 3. **Moment Sensitivity:** When the transiting sky concentrates in Fire or Air, SPIRIT and SUBSTANCE minting naturally expands to recharge conversational gas.
 4. **Automatic Glut Relief:** $\Omega_{\text{MATTER}} = 0.750$ automatically compresses MATTER minting across all accounts, allowing physical sinks to absorb existing surplus.
@@ -290,10 +290,9 @@ export interface DiscriminantYieldResult {
 export function computeDiscriminantDailyYield(
   natal: NatalChartData | null | undefined,
   transit: TransitSkyData,
-  supply: GlobalSupplyState,
-  isPremium = false
+  supply: GlobalSupplyState
 ): DiscriminantYieldResult {
-  const TOTAL_YIELD = isPremium ? 48.0 : 24.0;
+  const TOTAL_YIELD = 24.0;
 
   // 1. Natal Chart Ratio Vector r_i(N)
   const natalRaw = {

@@ -158,22 +158,13 @@ const extremeTransit: TransitSkyData = {
   elementWeights: { Fire: 12.0, Water: 0.5, Earth: 0.5, Air: 1.0 },
 };
 
-const resExtreme = computeDiscriminantDailyYield(fireNatal, extremeTransit, LIVE_SUPPLY, false);
-console.log('  Extreme Result (Standard):', resExtreme);
+const resExtreme = computeDiscriminantDailyYield(fireNatal, extremeTransit, LIVE_SUPPLY);
+console.log('  Extreme Result:', resExtreme);
 
 assert(
   resExtreme.total === 24.0,
-  'Standard Tier strictly conserved at 24.0000 under extreme transit',
+  'Universal Daily Yield strictly conserved at 24.0000 under extreme transit (no premium tier)',
   `Total: ${resExtreme.total}`
-);
-
-const resPremium = computeDiscriminantDailyYield(fireNatal, extremeTransit, LIVE_SUPPLY, true);
-console.log('  Extreme Result (Premium):', resPremium);
-
-assert(
-  resPremium.total === 48.0,
-  'Premium Tier strictly conserved at 48.0000 under extreme transit',
-  `Total: ${resPremium.total}`
 );
 
 // ---------------------------------------------------------------------------

@@ -84,12 +84,12 @@ $$\Omega_{\text{SPIRIT}} = \Omega_{\text{ESSENCE}} = \Omega_{\text{SUBSTANCE}} =
 ---
 
 ### 3.4 Conserved Daily Allocation Formula
-The total daily yield budget ($Y_{\text{total}} = 24.0000$ Standard, $48.0000$ Premium) is allocated proportionally among the 4 canonical tokens:
+The total daily yield budget is strictly universal ($Y_{\text{total}} = 24.0000$ for all users, with zero premium tier gating), allocated proportionally among the 4 canonical tokens:
 
 $$\mathcal{Y}_i(t, \mathcal{N}) = \operatorname{Quantize}_{10^4}\left( Y_{\text{total}} \times \frac{r_i(\mathcal{N}) \cdot w_i(t) \cdot \Omega_i}{\sum_{j} \left(r_j(\mathcal{N}) \cdot w_j(t) \cdot \Omega_j\right)} \right)$$
 
 An exact residual conservation pass assigns any sub-cent micro-rounding difference to the dominant axis, guaranteeing:
-$$\sum_{i} \mathcal{Y}_i(t, \mathcal{N}) \equiv 24.0000 \quad (\text{or } 48.0000 \text{ for Premium})$$
+$$\sum_{i} \mathcal{Y}_i(t, \mathcal{N}) \equiv 24.0000$$
 
 ---
 
@@ -175,12 +175,11 @@ export async function POST(req: Request) {
     // 3. Ingest live celestial transit from price index oracle
     const priceIndex = await loadCanonicalPriceIndex();
     
-    // 4. Compute discriminant yield using clean chart-ratio formulation
+    // 4. Compute discriminant yield using clean chart-ratio formulation (Universal 24.0000 for all users)
     const yieldResult = computeDiscriminantDailyYield(
       natalChart,
       { elementWeights: priceIndex.elementWeights },
-      priceIndex.supply,
-      session.user?.isPremium || false
+      priceIndex.supply
     );
 
     // 5. Update user balance for SPIRIT, ESSENCE, MATTER, SUBSTANCE
@@ -269,7 +268,7 @@ Every platform repository must pass the following invariant verification suite:
 
 | Test ID | Test Case | Condition | Expected Result | Pass Criterion |
 | :---: | :--- | :--- | :--- | :--- |
-| **TEST-01** | **Exact Total Conservation** | Any minter chart, any celestial moment | $\sum_i \mathcal{Y}_i \equiv 24.0000$ ($48.0000$ Premium) | Zero deviation (> 0.0001) |
+| **TEST-01** | **Exact Total Conservation** | Any minter chart, any celestial moment | $\sum_i \mathcal{Y}_i \equiv 24.0000$ (Universal) | Zero deviation (> 0.0001) |
 | **TEST-02** | **Symmetric Neutral Baseline** | Flat 25% chart, symmetric 25% sky | $\mathcal{Y}_i = 6.0000$ for all 4 coins | Exact $6.0000$ payout |
 | **TEST-03** | **Fire Transit Kinetic Elevation** | Fire sky ($w_{\text{Fire}} \ge 5.0$) | $\text{Avg SPIRIT} \ge 12.0000$ | Restores conversational gas |
 | **TEST-04** | **Anti-Glut Suppression** | Live network supply ($\text{Supply}_{\text{MATTER}} > 30\%$) | $\Omega_{\text{MATTER}} = 0.750$, $\text{Avg MATTER} \le 4.20$ | Compresses new surplus |

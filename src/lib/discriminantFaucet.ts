@@ -65,10 +65,9 @@ export interface DiscriminantYieldResult {
 export function computeDiscriminantDailyYield(
   natal: NatalChartData | null | undefined,
   transit: TransitSkyData,
-  supply: GlobalSupplyState,
-  isPremium = false
+  supply: GlobalSupplyState
 ): DiscriminantYieldResult {
-  const TOTAL_YIELD = isPremium ? 48.0 : 24.0;
+  const TOTAL_YIELD = 24.0;
 
   // 1. Natal Chart Ratio Vector r_i(N)
   const natalRaw = {
