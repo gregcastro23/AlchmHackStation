@@ -1,9 +1,9 @@
 # Process Documentation Check: Canonical ESMS Web3 Infrastructure & Devnet Operations
 
-**Document Revision:** 1.0.0  
-**Target Repository:** `AlchmHackStation`  
-**Related Repositories:** `AlchmAgentsSolana` (ASOL), `Pentacles` (SpacetimeDB Cloud Client)  
-**System Profile:** 16GB RAM / Apple Silicon (M5) / macOS / Bun Runtime  
+**Document Revision:** 1.0.1  
+**Target Repository:** `AlchmHackStation` (`/Users/GregCastro/Desktop/AlchmHackStation/AlchmHackStation`)  
+**Related Repositories:** `AlchmAgentsSolana` (`/Users/GregCastro/ASOL/alchm-agents-solana`), `Pentacles` (`/Users/GregCastro/Pentacles`)  
+**System Profile:** 16GB RAM / Apple Silicon (M1) / macOS 26.6.2 (Darwin arm64) / Bun Runtime (v1.4.0)  
 
 ---
 
@@ -41,13 +41,13 @@ Every production coin must satisfy these 5 criteria:
 - **Constraint**: All calculations are executed strictly in integer atoms using `bigint` scaled at $10^4$ (`ESMS_RAW_SCALE = 10_000n`).
 - **Invariant Monotonicity**: Constant-product AMM invariant $k = R_A \cdot R_B$ satisfies $k_{\text{after}} \ge k_{\text{before}}$ for every swap.
 - **Truncation Direction**: Integer division strictly floors output amounts and ceilings protocol fees, guaranteeing zero leakage from virtual pools.
-- **Audit Script**: `bun run test:scaling` (verifies 10,000 randomized Monte Carlo swaps).
+- **Audit Script**: `bun run test:scaling` (verified 10,000 randomized Monte Carlo swaps — 5 / 5 PASSED in 0.01s).
 
 ### [x] Pillar 2: Runtime Extension Security & Anti-Exploit
 - **Zero-Transferability Lock**: `MATTER` (and soulbound credentials) cannot be transferred peer-to-peer; direct `spl-token transfer` instructions are hard-rejected by the Token-2022 runtime.
 - **Restricted Permanent Delegate**: Only the verified `ProgramConfig` PDA has delegate authority to rebalance or burn assets.
 - **Permissioned Burn**: Unauthorized third-party burn attempts fail with `OwnerMismatch` or `InvalidAuthority`.
-- **Audit Script**: `bun run test:security`.
+- **Audit Script**: `bun run test:security` (3 / 3 CHECKS PASSED on Solana Devnet).
 
 ### [x] Pillar 3: Bespoke Zero-Escrow AMM Liquidity Routing
 - **Architecture**: Because soulbound assets cannot be escrowed, the protocol routes liquidity virtually.
@@ -55,16 +55,16 @@ Every production coin must satisfy these 5 criteria:
   - Output token is minted to user ATA via Program Authority PDA signer seeds.
 - **Attestation Preimage**: 170-byte canonical `ASOL_AMM_VISIBILITY_V1` payload signed by protocol Ed25519 attestor.
 - **Replay Protection**: Enforced via on-chain per-trader sequence nonces (`['amm_nonce', poolId, trader]`).
-- **Audit Script**: `bun run test:amm`.
+- **Audit Script**: `bun run test:amm` (3 / 3 TESTS PASSED on Solana Devnet).
 
 ### [x] Pillar 4: Universal Wallet & Metadata Pointer Resolution
 - **Self-Referential Metadata**: `MetadataPointer` resolves to the mint's own account data, storing TLV metadata (name, symbol, Arweave URI).
 - **Arweave Integrity**: Production JSON schemas resolve HTTP 200 OK with verified SHA-256 digests matching on-chain commitments.
-- **Audit Script**: `bun run test:token2022`.
+- **Audit Script**: `bun run test:token2022` (4 / 4 MILESTONES PASSED on Solana Devnet).
 
 ### [x] Pillar 5: Real-Time Observability & Visual Telemetry
-- **Live Ticker Ribbon**: [src/components/TokenTickerRibbon.tsx](file:///Users/cookingwithcastro/Desktop/AlchmHackStation/src/components/TokenTickerRibbon.tsx) mounts real-time USD/SOL pricing, 24h change indicators, and live SVG sparklines across the mission control header.
-- **Orbital Liquidity Graph**: [src/components/TokenLiquidityVisualizer.tsx](file:///Users/cookingwithcastro/Desktop/AlchmHackStation/src/components/TokenLiquidityVisualizer.tsx) renders the 4-node constellation topology across the 6 trading pools, featuring an interactive lossless swap simulator and extension health matrix.
+- **Live Ticker Ribbon**: [src/components/TokenTickerRibbon.tsx](file:///Users/GregCastro/Desktop/AlchmHackStation/AlchmHackStation/src/components/TokenTickerRibbon.tsx) mounts real-time USD/SOL pricing, 24h change indicators, and live SVG sparklines across the mission control header.
+- **Orbital Liquidity Graph**: [src/components/TokenLiquidityVisualizer.tsx](file:///Users/GregCastro/Desktop/AlchmHackStation/AlchmHackStation/src/components/TokenLiquidityVisualizer.tsx) renders the 4-node constellation topology across the 6 trading pools, featuring an interactive lossless swap simulator and extension health matrix.
 
 ---
 
@@ -88,16 +88,16 @@ lsof -ti:5173 | xargs kill -9 2>/dev/null
 bun run test:all-coins
 
 # Or execute individual test suites:
-bun run test:security       # Token-2022 security locks & metadata pointers
-bun run test:scaling        # Lossless 10^4 scaling & invariant proofs (10k swaps)
-bun run test:wavefunction   # Astrometry dignity curves & volatility corridor
-bun run test:amm            # Bespoke AMM router simulation & Ed25519 attestation
-bun run test:token2022      # Milestones M1-M4 pipeline & SpacetimeDB bridge
+bun run test:security       # Token-2022 security locks & metadata pointers (3/3 PASSED)
+bun run test:scaling        # Lossless 10^4 scaling & invariant proofs (10k swaps, 5/5 PASSED)
+bun run test:wavefunction   # Astrometry dignity curves & volatility corridor (4/4 PASSED)
+bun run test:amm            # Bespoke AMM router simulation & Ed25519 attestation (3/3 PASSED)
+bun run test:token2022      # Milestones M1-M4 pipeline & SpacetimeDB bridge (4/4 PASSED)
 
 # ============================================================================
 # STEP 3: Production Build & Lint Verification
 # ============================================================================
-bun run build               # Runs: tsc -b && vite build (target: <250ms)
+bun run build               # Runs: tsc -b && vite build (benchmark: ~400ms)
 
 # ============================================================================
 # STEP 4: Launch Dev Server Under Native Bun
@@ -111,21 +111,22 @@ bun --bun run dev           # Launches Vite server on http://localhost:5173
 
 | File Path | Component Role | Critical Responsibilities |
 |---|---|---|
-| [src/lib/tokenPricingEngine.ts](file:///Users/cookingwithcastro/Desktop/AlchmHackStation/src/lib/tokenPricingEngine.ts) | Math / Pricing Engine | Computes real-time USD/SOL quotes, 24h deltas, and lossless $10^4$ integer swap quotes. |
-| [src/components/TokenTickerRibbon.tsx](file:///Users/cookingwithcastro/Desktop/AlchmHackStation/src/components/TokenTickerRibbon.tsx) | Front-End Ticker Bar | Renders dynamic pricing chips, SVG sparklines, and copy-mint buttons across the top header. |
-| [src/components/TokenLiquidityVisualizer.tsx](file:///Users/cookingwithcastro/Desktop/AlchmHackStation/src/components/TokenLiquidityVisualizer.tsx) | Interactive Topology | Renders orbital constellation liquidity graph, swap simulator, and Token-2022 health matrix. |
-| [src/components/Token2022CommandCenter.tsx](file:///Users/cookingwithcastro/Desktop/AlchmHackStation/src/components/Token2022CommandCenter.tsx) | Mission Control UI | Primary control center featuring the `amm-router` tab, deployment modal, and live balances. |
-| [src/data/arweaveManifests.ts](file:///Users/cookingwithcastro/Desktop/AlchmHackStation/src/data/arweaveManifests.ts) | Permanent Storage | Canonical JSON metadata manifests with SHA-256 digests and vector SVG paths. |
-| [scripts/test_token2022_security.ts](file:///Users/cookingwithcastro/Desktop/AlchmHackStation/scripts/test_token2022_security.ts) | Test Harness | Validates non-transferable locks, metadata pointers, and permissioned burn rejections. |
-| [scripts/test_lossless_scaling.ts](file:///Users/cookingwithcastro/Desktop/AlchmHackStation/scripts/test_lossless_scaling.ts) | Test Harness | 10,000-swap Monte Carlo simulator validating constant-product invariant monotonicity. |
-| [scripts/test_pricing_wavefunction.ts](file:///Users/cookingwithcastro/Desktop/AlchmHackStation/scripts/test_pricing_wavefunction.ts) | Test Harness | Validates $\Psi_a(t)$ dignity curves and volatility bounds across 1,000 hourly steps. |
-| [scripts/test_amm_bespoke_swap.ts](file:///Users/cookingwithcastro/Desktop/AlchmHackStation/scripts/test_amm_bespoke_swap.ts) | Test Harness | Tests bespoke swap instruction assembly, Ed25519 attestations, and permanent delegate routing. |
-| [scripts/run_all_devnet_tests.ts](file:///Users/cookingwithcastro/Desktop/AlchmHackStation/scripts/run_all_devnet_tests.ts) | Master Orchestrator | Executes all test suites and outputs the final executive scorecard. |
+| [src/lib/tokenPricingEngine.ts](file:///Users/GregCastro/Desktop/AlchmHackStation/AlchmHackStation/src/lib/tokenPricingEngine.ts) | Math / Pricing Engine | Computes real-time USD/SOL quotes, 24h deltas, and lossless $10^4$ integer swap quotes. |
+| [src/components/TokenTickerRibbon.tsx](file:///Users/GregCastro/Desktop/AlchmHackStation/AlchmHackStation/src/components/TokenTickerRibbon.tsx) | Front-End Ticker Bar | Renders dynamic pricing chips, SVG sparklines, and copy-mint buttons across the top header. |
+| [src/components/TokenLiquidityVisualizer.tsx](file:///Users/GregCastro/Desktop/AlchmHackStation/AlchmHackStation/src/components/TokenLiquidityVisualizer.tsx) | Interactive Topology | Renders orbital constellation liquidity graph, swap simulator, and Token-2022 health matrix. |
+| [src/components/Token2022CommandCenter.tsx](file:///Users/GregCastro/Desktop/AlchmHackStation/AlchmHackStation/src/components/Token2022CommandCenter.tsx) | Mission Control UI | Primary control center featuring the `amm-router` tab, deployment modal, and live balances. |
+| [src/data/arweaveManifests.ts](file:///Users/GregCastro/Desktop/AlchmHackStation/AlchmHackStation/src/data/arweaveManifests.ts) | Permanent Storage | Canonical JSON metadata manifests with SHA-256 digests and vector SVG paths. |
+| [scripts/test_token2022_security.ts](file:///Users/GregCastro/Desktop/AlchmHackStation/AlchmHackStation/scripts/test_token2022_security.ts) | Test Harness | Validates non-transferable locks, metadata pointers, and permissioned burn rejections. |
+| [scripts/test_lossless_scaling.ts](file:///Users/GregCastro/Desktop/AlchmHackStation/AlchmHackStation/scripts/test_lossless_scaling.ts) | Test Harness | 10,000-swap Monte Carlo simulator validating constant-product invariant monotonicity. |
+| [scripts/test_pricing_wavefunction.ts](file:///Users/GregCastro/Desktop/AlchmHackStation/AlchmHackStation/scripts/test_pricing_wavefunction.ts) | Test Harness | Validates $\Psi_a(t)$ dignity curves and volatility bounds across 1,000 hourly steps. |
+| [scripts/test_amm_bespoke_swap.ts](file:///Users/GregCastro/Desktop/AlchmHackStation/AlchmHackStation/scripts/test_amm_bespoke_swap.ts) | Test Harness | Tests bespoke swap instruction assembly, Ed25519 attestations, and permanent delegate routing. |
+| [scripts/run_all_devnet_tests.ts](file:///Users/GregCastro/Desktop/AlchmHackStation/AlchmHackStation/scripts/run_all_devnet_tests.ts) | Master Orchestrator | Executes all test suites and outputs the final executive scorecard (5/5 PASSED in 1.61s). |
 
 ---
 
 ## 6. Process Hygiene & Hardware Constraints Compliance
 
-* **Memory Budget**: Evaluated within 16GB unified memory; zero multi-instance Node.js processes; Bun single-thread runtime enforced.
+* **Memory Budget**: Evaluated within 16GB unified memory (Apple M1); zero multi-instance Node.js processes; Bun single-thread runtime enforced.
 * **Port Lifecycle**: Port 5173 is validated prior to server launch (`lsof -ti:5173`) and torn down immediately upon task completion.
-* **Compilation Benchmark**: Clean production build in $\le 210\text{ms}$ with zero TypeScript errors.
+* **Compilation Benchmark**: Clean production build in $\approx 400\text{ms}$ with zero TypeScript errors.
+* **Devnet Audit Scorecard**: 5 / 5 test suites passing with 100% precision fidelity, live Arweave HTTP 200 digests, and verified Token-2022 runtime locks.
