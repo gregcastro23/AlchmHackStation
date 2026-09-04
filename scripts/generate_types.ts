@@ -162,7 +162,7 @@ export interface HackStationMissionConfig {
    ========================================================================= */
 export const PROGRAM_IDS = {
   ASOL_PROGRAM: '5QheuqaicKvPPRFEoEXwaE5xaFp7gauvJCfsjpQv8WzD',
-  TOKEN2022_TRANSFER_HOOK: 'Hook1gNisFeeResoLver1111111111111111111111111',
+  TOKEN2022_TRANSFER_HOOK: 'Hook1gNisFeeResoLver111111111111111111111111',
   ALCHM_STAKING_VAULTS: 'Vault11111111111111111111111111111111111111',
 } as const;
 

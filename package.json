@@ -12,6 +12,13 @@
     "auth:watch": "bun scripts/watch_cli_auth.ts",
     "generate": "bun scripts/generate_types.ts",
     "sync:idl": "bun scripts/generate_types.ts --sync",
+    "deploy:token2022": "bun scripts/deploy_token2022.ts",
+    "test:token2022": "bun scripts/test_token2022_pipeline.ts",
+    "test:security": "bun scripts/test_token2022_security.ts",
+    "test:scaling": "bun scripts/test_lossless_scaling.ts",
+    "test:wavefunction": "bun scripts/test_pricing_wavefunction.ts",
+    "test:amm": "bun scripts/test_amm_bespoke_swap.ts",
+    "test:all-coins": "bun scripts/run_all_devnet_tests.ts",
     "lint": "eslint .",
     "preview": "vite preview"
   },

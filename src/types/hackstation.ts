@@ -18,7 +18,7 @@ export interface HackStationMissionConfig {
    ========================================================================= */
 export const PROGRAM_IDS = {
   ASOL_PROGRAM: '5QheuqaicKvPPRFEoEXwaE5xaFp7gauvJCfsjpQv8WzD',
-  TOKEN2022_TRANSFER_HOOK: 'Hook1gNisFeeResoLver1111111111111111111111111',
+  TOKEN2022_TRANSFER_HOOK: 'Hook1gNisFeeResoLver111111111111111111111111',
   ALCHM_STAKING_VAULTS: 'Vault11111111111111111111111111111111111111',
 } as const;
 
@@ -625,7 +625,7 @@ export interface VaultState {
 /* =========================================================================
    PROGRAM: token2022_transfer_hook (from token2022_transfer_hook.json)
    ========================================================================= */
-export const TOKEN2022TRANSFERHOOK_ADDRESS = 'Hook1gNisFeeResoLver1111111111111111111111111';
+export const TOKEN2022TRANSFERHOOK_ADDRESS = 'Hook1gNisFeeResoLver111111111111111111111111';
 
 // Instructions for Token2022TransferHook
 export type InitializeExtraAccountMetaListArgs = Record<string, never>;

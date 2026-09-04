@@ -246,6 +246,174 @@ const alchmBackendPlugin = (): Plugin => ({
         return;
       }
 
+      // 3. Arweave Metadata Provider (/api/arweave-metadata)
+      if (req.url?.startsWith('/api/arweave-metadata')) {
+        try {
+          const parsedUrl = new URL(req.url, 'http://localhost');
+          const uri = parsedUrl.searchParams.get('uri') || '';
+          const symbol = parsedUrl.searchParams.get('symbol') || '';
+
+          // Check for specific URI matches or extract manifests
+          if (uri.includes('Spirit') || uri.includes('Ignis') || symbol.toUpperCase() === 'SPIRIT' || symbol.toUpperCase() === 'IGNIS' || uri.includes('qR8v7')) {
+            const manifest = {
+              name: 'Spirit',
+              symbol: 'SPIRIT',
+              description: 'Elemental Spirit token of the Alchm protocol representing the Fire axis (Sun / Volatile). Governs projective dynamic energy, creative initiative, and JEPA latent persona drive vectors.',
+              image: '/tokens/spirit.svg',
+              external_url: 'https://alchmagents.com/metadata/spirit.json',
+              attributes: [
+                { trait_type: 'Element', value: 'Fire' },
+                { trait_type: 'Decimals', value: 4 },
+                { trait_type: 'Soulbound', value: 'Non-Transferable' },
+                { trait_type: 'BurnAuthority', value: 'Permissioned' },
+                { trait_type: 'Extension', value: 'TransferHook' },
+                { trait_type: 'Extension', value: 'MetadataPointer' },
+                { trait_type: 'Kinetic Fee Basis Points', value: 150 },
+                { trait_type: 'Kinetic Fee Percent', value: '1.5%' },
+                { trait_type: 'Hook Authority', value: 'Hook1gNisFeeResoLver111111111111111111111111' },
+                { trait_type: 'PDA Derivation Seed', value: 'extra-account-metas' },
+                { trait_type: 'Pinned Devnet PDA', value: 'K5kwwomtWYydxJacA7bC5yUEW9TtEuVqBKBoqAWLmhQ' },
+              ],
+              properties: {
+                category: 'elemental_reagent',
+                files: [{ uri: '/tokens/spirit.svg', type: 'image/svg+xml' }],
+                creators: [{ address: 'AhNRjjyhJ4dR6ZSvWyJNSpbJFbFnxhkRdUNMY31fJ3S5', share: 100 }],
+                extensions: {
+                  types: ['TransferHook', 'MetadataPointer', 'TransferFeeConfig'],
+                  transferFeeBasisPoints: 150,
+                  maxFee: 5000000,
+                  hookProgramId: 'Hook1gNisFeeResoLver111111111111111111111111',
+                },
+              },
+            };
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(manifest, null, 2));
+            return;
+          }
+
+          if (uri.includes('Essence') || uri.includes('Aqua') || symbol.toUpperCase() === 'ESSENCE' || symbol.toUpperCase() === 'AQUA' || uri.includes('wT2x9')) {
+            const manifest = {
+              name: 'Essence',
+              symbol: 'ESSENCE',
+              description: 'Elemental Essence token of the Alchm protocol representing the Water axis (Moon / Dissolution). Governs receptive emotional resonance, subconscious integration, and JEPA latent persona attunement vectors.',
+              image: '/tokens/essence.svg',
+              external_url: 'https://alchmagents.com/metadata/essence.json',
+              attributes: [
+                { trait_type: 'Element', value: 'Water' },
+                { trait_type: 'Decimals', value: 4 },
+                { trait_type: 'Soulbound', value: 'Non-Transferable' },
+                { trait_type: 'BurnAuthority', value: 'Permissioned' },
+                { trait_type: 'Extension', value: 'ConfidentialTransfers' },
+                { trait_type: 'Extension', value: 'MetadataPointer' },
+                { trait_type: 'Encryption Mode', value: 'Twisted ElGamal 64-bit' },
+                { trait_type: 'Proof System', value: 'Bulletproofs ZK Sigma' },
+                { trait_type: 'Pinned Devnet PDA', value: '3FcpToU7bj4sLD687uecbesEjzjxBfqYn2EcBXJKPaCf' },
+              ],
+              properties: {
+                category: 'elemental_reagent',
+                files: [{ uri: '/tokens/essence.svg', type: 'image/svg+xml' }],
+                creators: [{ address: 'AhNRjjyhJ4dR6ZSvWyJNSpbJFbFnxhkRdUNMY31fJ3S5', share: 100 }],
+                extensions: {
+                  types: ['ConfidentialTransfers', 'MetadataPointer'],
+                  autoApproveNewAccounts: false,
+                },
+              },
+            };
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(manifest, null, 2));
+            return;
+          }
+
+          if (uri.includes('Matter') || uri.includes('Terra') || symbol.toUpperCase() === 'MATTER' || symbol.toUpperCase() === 'TERRA' || uri.includes('eM4k1')) {
+            const manifest = {
+              name: 'Matter',
+              symbol: 'MATTER',
+              description: 'Elemental Matter token of the Alchm protocol representing the Earth axis (Saturn / Coagulation). Governs structural stability, systematic execution, and JEPA latent persona discipline vectors.',
+              image: '/tokens/matter.svg',
+              external_url: 'https://alchmagents.com/metadata/matter.json',
+              attributes: [
+                { trait_type: 'Element', value: 'Earth' },
+                { trait_type: 'Decimals', value: 4 },
+                { trait_type: 'Soulbound', value: 'Non-Transferable' },
+                { trait_type: 'BurnAuthority', value: 'Permissioned' },
+                { trait_type: 'Extension', value: 'NonTransferable' },
+                { trait_type: 'Extension', value: 'MetadataPointer' },
+                { trait_type: 'Transferability', value: 'Soulbound (Non-Transferable)' },
+                { trait_type: 'Star Vault Anchor', value: 'star-vault' },
+                { trait_type: 'Pinned Devnet PDA', value: '7naJZozLrknDF3dguAdEWn7Z4MviUkXitjhaAt57Vkb4' },
+              ],
+              properties: {
+                category: 'credential',
+                files: [{ uri: '/tokens/matter.svg', type: 'image/svg+xml' }],
+                creators: [{ address: 'AhNRjjyhJ4dR6ZSvWyJNSpbJFbFnxhkRdUNMY31fJ3S5', share: 100 }],
+                extensions: {
+                  types: ['NonTransferable', 'MetadataPointer'],
+                  soulbound: true,
+                },
+              },
+            };
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(manifest, null, 2));
+            return;
+          }
+
+          if (uri.includes('Substance') || uri.includes('Aether') || symbol.toUpperCase() === 'SUBSTANCE' || symbol.toUpperCase() === 'AETH' || uri.includes('aL9p4')) {
+            const manifest = {
+              name: 'Substance',
+              symbol: 'SUBSTANCE',
+              description: 'Elemental Substance token of the Alchm protocol representing the Air axis (Mercury / Sublimation). Governs dialectic agility, intellectual framing, and JEPA latent persona reasoning vectors.',
+              image: '/tokens/substance.svg',
+              external_url: 'https://alchmagents.com/metadata/substance.json',
+              attributes: [
+                { trait_type: 'Element', value: 'Air' },
+                { trait_type: 'Decimals', value: 4 },
+                { trait_type: 'Soulbound', value: 'Non-Transferable' },
+                { trait_type: 'BurnAuthority', value: 'Permissioned' },
+                { trait_type: 'Extension', value: 'PermanentDelegate' },
+                { trait_type: 'Extension', value: 'InterestBearingConfig' },
+                { trait_type: 'Extension', value: 'MetadataPointer' },
+                { trait_type: 'Base APY', value: '18.2%' },
+                { trait_type: 'Rate Basis Points', value: 1820 },
+                { trait_type: 'State Reconciliation Engine', value: 'SpacetimeDB Cloud (cookingwithcastrollc)' },
+                { trait_type: 'Pinned Devnet PDA', value: '6RY6ZG1eJQ2uEvpyA6XK74WyF1MpTYbw97hdhELqDUsa' },
+              ],
+              properties: {
+                category: 'matrix',
+                files: [{ uri: '/tokens/substance.svg', type: 'image/svg+xml' }],
+                creators: [{ address: 'AhNRjjyhJ4dR6ZSvWyJNSpbJFbFnxhkRdUNMY31fJ3S5', share: 100 }],
+                extensions: {
+                  types: ['PermanentDelegate', 'InterestBearingConfig', 'MetadataPointer'],
+                  rateBasisPoints: 1820,
+                },
+              },
+            };
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(manifest, null, 2));
+            return;
+          }
+
+          // Fallback: return general registry status
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({
+            status: 'ok',
+            availableElements: ['SPIRIT', 'ESSENCE', 'MATTER', 'SUBSTANCE'],
+            uriQuery: uri,
+            symbolQuery: symbol,
+          }));
+          return;
+        } catch (err: any) {
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ error: err?.message || 'Arweave metadata resolution error' }));
+          return;
+        }
+      }
+
       next();
     });
   }
