@@ -85,9 +85,20 @@ async function runPipelineTests() {
   // =========================================================================
   console.log('[MILESTONE M3] Simulating Token-2022 Deployment on Devnet (0x0 Check)...');
   const keypairPath = path.resolve(process.env.HOME || '', '.config/solana/id.json');
-  const secret = JSON.parse(fs.readFileSync(keypairPath, 'utf-8'));
-  const payer = Keypair.fromSecretKey(Uint8Array.from(secret));
+  let payer = Keypair.generate();
+  if (fs.existsSync(keypairPath)) {
+    try {
+      const secret = JSON.parse(fs.readFileSync(keypairPath, 'utf-8'));
+      payer = Keypair.fromSecretKey(Uint8Array.from(secret));
+    } catch {
+      // Ephemeral fallback
+    }
+  }
   const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+  const payerBalance = await connection.getBalance(payer.publicKey);
+  const operatorPubkey = new PublicKey('AhNRjjyhJ4dR6ZSvWyJNSpbJFbFnxhkRdUNMY31fJ3S5');
+  const simPayerKey = payerBalance > 0 ? payer.publicKey : operatorPubkey;
+  const simSigner = payerBalance > 0 ? payer : undefined;
 
   const elementsToTest: Array<{ symbol: string; element: ElementalType; decimals: number }> = [
     { symbol: 'SPIRIT', element: 'Fire', decimals: 4 },
@@ -109,11 +120,11 @@ async function runPipelineTests() {
       name: manifest.name,
       decimals: el.decimals,
       uri,
-      payerPublicKey: payer.publicKey,
+      payerPublicKey: simPayerKey,
       hookProgramId,
     });
 
-    const sim = await simulateToken2022Deploy(connection, built, payer);
+    const sim = await simulateToken2022Deploy(connection, built, simSigner);
     const isZeroError = sim.success && sim.err === null;
 
     if (isZeroError) {

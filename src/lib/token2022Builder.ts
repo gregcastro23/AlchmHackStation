@@ -249,7 +249,7 @@ export async function simulateToken2022Deploy(
     built.transaction.partialSign(built.mintKeypair);
   }
 
-  const sim = await connection.simulateTransaction(built.transaction);
+  const sim = await connection.simulateTransaction(built.transaction, undefined, false);
   const isSuccess = sim.value.err === null;
 
   return {

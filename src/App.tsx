@@ -134,10 +134,10 @@ function App() {
     return () => clearInterval(interval);
   }, [blockHeight]);
 
-  const addLog = (text: string, type: LogLine['type'] = 'default') => {
+  const addLog = useCallback((text: string, type: LogLine['type'] = 'default') => {
     const time = new Date().toLocaleTimeString('en-US', { hour12: false });
     setLogs((prev) => [...prev, { timestamp: time, text, type }]);
-  };
+  }, []);
 
   useEffect(() => () => {
     const recorder = securityRecorderRef.current;
