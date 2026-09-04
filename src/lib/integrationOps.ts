@@ -1,5 +1,5 @@
-export type IntegrationId = 'antigravity' | 'claude' | 'stitch' | 'codex' | 'v0' | 'vercel';
-export type AuthMechanism = 'browser_oauth' | 'cli_oauth' | 'api_key' | 'access_token' | 'local_session';
+export type IntegrationId = 'antigravity' | 'claude' | 'stitch' | 'codex' | 'v0' | 'vercel' | 'solana' | 'anchor' | 'spacetime' | 'multisig-auth';
+export type AuthMechanism = 'browser_oauth' | 'cli_oauth' | 'api_key' | 'access_token' | 'local_session' | 'keypair';
 export type AuthHealth = 'healthy' | 'warning' | 'expired' | 'unavailable' | 'error' | 'manual';
 
 export interface IntegrationAccount {

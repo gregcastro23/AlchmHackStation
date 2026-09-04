@@ -1,258 +1,358 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
+  Activity,
   AlertTriangle,
-  Database,
-  Eye,
-  KeyRound,
-  Plus,
+  CheckCircle2,
+  Cpu,
   RefreshCw,
-  Server,
-  ShieldCheck,
+  Radio,
+  Sliders,
 } from 'lucide-react';
 
 type LogType = 'success' | 'info' | 'warning' | 'error' | 'default';
-type ProviderName = 'OpenAI' | 'Anthropic' | 'Google' | 'OpenRouter' | 'Local';
-type AccountStatus = 'healthy' | 'degraded' | 'local';
 
 interface ModelAccountsViewProps {
   onCommitLog: (text: string, type?: LogType) => void;
 }
 
-interface ProviderAccount {
+export interface RpcEndpoint {
   id: string;
-  provider: ProviderName;
-  label: string;
-  secretRef: string;
-  workspace: string;
-  status: AccountStatus;
-  enabled: boolean;
-  monthlySpend: number;
-  monthlyLimit: number;
-  models: number;
-  rotationDays: number;
-  lastCheck: string;
+  name: string;
+  provider: 'Helius' | 'Triton' | 'QuickNode' | 'Localnet';
+  url: string;
+  wsUrl: string;
+  pingMs: number;
+  status: 'healthy' | 'degraded' | 'local';
+  priorityLevel: 'Primary' | 'Secondary' | 'Fallback' | 'Development';
+  tps: number;
+  cuConsumptionAvg: number;
+  payloadKbPerSec: number;
 }
 
-const initialAccounts: ProviderAccount[] = [
+const INITIAL_ENDPOINTS: RpcEndpoint[] = [
   {
-    id: 'openai-primary',
-    provider: 'OpenAI',
-    label: 'Production project',
-    secretRef: 'vault://providers/openai/production',
-    workspace: 'alchm-production',
+    id: 'helius-dedicated',
+    name: 'Helius Dedicated RPC (Atlas)',
+    provider: 'Helius',
+    url: 'https://mainnet.helius-rpc.com/?api-key=***',
+    wsUrl: 'wss://atlas-mainnet.helius-rpc.com',
+    pingMs: 18,
     status: 'healthy',
-    enabled: true,
-    monthlySpend: 48.2,
-    monthlyLimit: 110,
-    models: 4,
-    rotationDays: 21,
-    lastCheck: '12 sec ago',
+    priorityLevel: 'Primary',
+    tps: 2840,
+    cuConsumptionAvg: 245000,
+    payloadKbPerSec: 342.5,
   },
   {
-    id: 'anthropic-build',
-    provider: 'Anthropic',
-    label: 'Builder workspace',
-    secretRef: 'vault://providers/anthropic/builder',
-    workspace: 'hackstation-builder',
+    id: 'triton-validator',
+    name: 'Triton Sub-Zero RPC Pool',
+    provider: 'Triton',
+    url: 'https://alchm-solana-mainnet.rpcpool.com',
+    wsUrl: 'wss://alchm-solana-mainnet.rpcpool.com',
+    pingMs: 24,
     status: 'healthy',
-    enabled: true,
-    monthlySpend: 37.9,
-    monthlyLimit: 90,
-    models: 3,
-    rotationDays: 34,
-    lastCheck: '18 sec ago',
+    priorityLevel: 'Secondary',
+    tps: 2810,
+    cuConsumptionAvg: 218000,
+    payloadKbPerSec: 310.2,
   },
   {
-    id: 'google-vision',
-    provider: 'Google',
-    label: 'Vision project',
-    secretRef: 'vault://providers/google/vision',
-    workspace: 'alchm-vision-lab',
-    status: 'degraded',
-    enabled: true,
-    monthlySpend: 18.7,
-    monthlyLimit: 55,
-    models: 2,
-    rotationDays: 8,
-    lastCheck: '2 min ago',
+    id: 'quicknode-backup',
+    name: 'QuickNode High-Throughput Gateway',
+    provider: 'QuickNode',
+    url: 'https://solana-mainnet.quiknode.pro/***',
+    wsUrl: 'wss://solana-mainnet.quiknode.pro',
+    pingMs: 38,
+    status: 'healthy',
+    priorityLevel: 'Fallback',
+    tps: 2650,
+    cuConsumptionAvg: 198000,
+    payloadKbPerSec: 180.4,
   },
   {
-    id: 'local-runtime',
-    provider: 'Local',
-    label: 'Bun sidecar runtime',
-    secretRef: 'local://ollama/localhost',
-    workspace: '127.0.0.1:11434',
+    id: 'solana-localnet',
+    name: 'Local Solana Test Validator',
+    provider: 'Localnet',
+    url: 'http://127.0.0.1:8899',
+    wsUrl: 'ws://127.0.0.1:8900',
+    pingMs: 1,
     status: 'local',
-    enabled: true,
-    monthlySpend: 0,
-    monthlyLimit: 0,
-    models: 3,
-    rotationDays: 0,
-    lastCheck: 'live',
+    priorityLevel: 'Development',
+    tps: 4200,
+    cuConsumptionAvg: 120000,
+    payloadKbPerSec: 85.0,
   },
 ];
-
-const modelAliases = [
-  { alias: 'architect-primary', provider: 'OpenAI', account: 'Production project', target: 'primary reasoning', context: 'Large', lane: 'Architecture', status: 'ready' },
-  { alias: 'builder-fast', provider: 'Anthropic', account: 'Builder workspace', target: 'coding fast', context: 'Large', lane: 'Implementation', status: 'ready' },
-  { alias: 'vision-review', provider: 'Google', account: 'Vision project', target: 'multimodal review', context: 'Medium', lane: 'Design QA', status: 'watch' },
-  { alias: 'economy-fallback', provider: 'OpenRouter', account: 'Gateway fallback', target: 'cost optimized', context: 'Medium', lane: 'Overflow', status: 'standby' },
-  { alias: 'offline-fallback', provider: 'Local', account: 'Bun sidecar runtime', target: 'local coding model', context: 'Local', lane: 'Private work', status: 'ready' },
-];
-
-const providerTone: Record<ProviderName, string> = {
-  OpenAI: '#9ddf2e',
-  Anthropic: '#7dd3fc',
-  Google: '#ffb020',
-  OpenRouter: '#e3e3d8',
-  Local: '#c084fc',
-};
 
 export const ModelAccountsView: React.FC<ModelAccountsViewProps> = ({ onCommitLog }) => {
-  const [accounts, setAccounts] = useState(initialAccounts);
-  const [defaultAccountId, setDefaultAccountId] = useState('openai-primary');
-  const [showAccountForm, setShowAccountForm] = useState(false);
-  const [provider, setProvider] = useState<ProviderName>('OpenRouter');
-  const [label, setLabel] = useState('Gateway fallback');
-  const [secretRef, setSecretRef] = useState('vault://providers/openrouter/fallback');
-  const [workspace, setWorkspace] = useState('hackstation-gateway');
+  const [endpoints, setEndpoints] = useState<RpcEndpoint[]>(INITIAL_ENDPOINTS);
+  const [activeEndpointId, setActiveEndpointId] = useState('helius-dedicated');
   const [testingId, setTestingId] = useState<string | null>(null);
 
-  const toggleAccount = (id: string) => {
-    setAccounts((current) => current.map((account) => (
-      account.id === id ? { ...account, enabled: !account.enabled } : account
-    )));
-    const account = accounts.find((item) => item.id === id);
-    if (account) onCommitLog(`${account.provider} account ${account.enabled ? 'disabled' : 'enabled'}: ${account.label}.`, 'info');
-  };
+  // Compute Unit Budget Simulation states
+  const [cuLimit, setCuLimit] = useState<number>(400000);
+  const [priorityFeeMicroLamports, setPriorityFeeMicroLamports] = useState<number>(50000);
+  const [selectedInstruction, setSelectedInstruction] = useState<'transfer-hook' | 'token-mint' | 'reconcile'>('transfer-hook');
 
-  const testConnection = (account: ProviderAccount) => {
-    setTestingId(account.id);
-    onCommitLog(`Testing ${account.provider} connection using ${account.secretRef}.`, 'info');
+  // Ping jitter tick
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setEndpoints((prev) =>
+        prev.map((ep) => {
+          const jitter = Math.floor((Math.random() - 0.5) * 4);
+          const newPing = Math.max(1, ep.pingMs + jitter);
+          return { ...ep, pingMs: newPing };
+        })
+      );
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const testEndpoint = (ep: RpcEndpoint) => {
+    setTestingId(ep.id);
+    onCommitLog(`Probing latency & WebSocket throughput for ${ep.name}...`, 'info');
+
     setTimeout(() => {
       setTestingId(null);
-      setAccounts((current) => current.map((item) => (
-        item.id === account.id ? { ...item, status: item.provider === 'Local' ? 'local' : 'healthy', lastCheck: 'just now' } : item
-      )));
-      onCommitLog(`${account.provider} account health check passed for ${account.workspace}.`, 'success');
-    }, 700);
+      onCommitLog(`Ping confirmed: ${ep.pingMs}ms. Validated slot commitment 'confirmed' on ${ep.provider}.`, 'success');
+    }, 600);
   };
 
-  const rotateCredential = (account: ProviderAccount) => {
-    setAccounts((current) => current.map((item) => (
-      item.id === account.id ? { ...item, rotationDays: 90, lastCheck: 'just now' } : item
-    )));
-    onCommitLog(`Credential rotation requested for ${account.provider}; vault reference retained and audit event recorded.`, 'warning');
-  };
+  const instructionCuEstimate = {
+    'transfer-hook': {
+      label: 'Token-2022 Transfer Hook (Ignis)',
+      baseCu: 4200,
+      extraMetasCu: 14800,
+      hookCpiCu: 68500,
+      totalCu: 87500,
+    },
+    'token-mint': {
+      label: 'Confidential Token Mint (Aqua)',
+      baseCu: 12500,
+      extraMetasCu: 0,
+      hookCpiCu: 45000,
+      totalCu: 57500,
+    },
+    'reconcile': {
+      label: 'SpacetimeDB Staking Reconcile',
+      baseCu: 6800,
+      extraMetasCu: 8200,
+      hookCpiCu: 92000,
+      totalCu: 107000,
+    },
+  }[selectedInstruction];
 
-  const addAccount = () => {
-    const id = `${provider.toLowerCase()}-${Date.now().toString(36)}`;
-    const nextAccount: ProviderAccount = {
-      id,
-      provider,
-      label,
-      secretRef,
-      workspace,
-      status: provider === 'Local' ? 'local' : 'healthy',
-      enabled: true,
-      monthlySpend: 0,
-      monthlyLimit: provider === 'Local' ? 0 : 50,
-      models: 0,
-      rotationDays: provider === 'Local' ? 0 : 90,
-      lastCheck: 'just now',
-    };
-    setAccounts((current) => [...current, nextAccount]);
-    setShowAccountForm(false);
-    onCommitLog(`${provider} account connected as ${label}; secret stored by reference only.`, 'success');
-  };
-
-  const testAll = () => {
-    onCommitLog('Running health checks across all enabled model accounts.', 'info');
-    accounts.filter((account) => account.enabled).forEach((account, index) => {
-      setTimeout(() => onCommitLog(`${account.provider}/${account.workspace}: connection healthy.`, 'success'), (index + 1) * 180);
-    });
-  };
+  const estimatedFeeSol = ((cuLimit * priorityFeeMicroLamports) / 1e15).toFixed(7);
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 pb-2">
-        <section className="xl:col-span-12 border border-[#44483a] bg-[#12140e] p-5">
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-[#7dd3fc]">
-                <KeyRound className="h-4 w-4" />
-                identity and provider vault
-              </div>
-              <h2 className="mt-3 text-2xl font-bold text-[#e3e3d8]">Model Accounts</h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#c5c8b6]">
-                Provider workspaces, secret references, model aliases, rotation posture, and connection health.
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={testAll} className="inline-flex items-center gap-2 border border-[#7dd3fc]/50 bg-[#7dd3fc]/5 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.16em] text-[#7dd3fc] hover:bg-[#7dd3fc]/10"><RefreshCw className="h-3.5 w-3.5" /> Test all</button>
-              <button onClick={() => setShowAccountForm((current) => !current)} className="inline-flex items-center gap-2 border border-[#9ddf2e] bg-[#9ddf2e] px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#0d0f09] hover:bg-[#83c300]"><Plus className="h-3.5 w-3.5" /> Connect account</button>
-            </div>
+    <div className="flex-1 flex flex-col gap-4 min-h-0 overflow-y-auto custom-scrollbar font-mono text-xs">
+      {/* Header Banner */}
+      <div className="p-4 glass-panel rounded-lg border border-primary/30 bg-primary/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <Radio className="w-4 h-4 text-primary animate-pulse" />
+            <h1 className="font-heading text-base font-bold text-on-surface uppercase tracking-wider">
+              RPC Throughput & Compute Unit Budget Monitor
+            </h1>
+            <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-primary/20 text-primary border border-primary/40 font-bold">
+              SOLANA INFRASTRUCTURE
+            </span>
           </div>
+          <p className="text-on-surface-variant text-[11px] mt-1 font-sans">
+            Tracking dedicated RPC cluster latencies, Compute Unit (CU) execution limits, priority fees, and indexing stream payloads.
+          </p>
+        </div>
 
-          <div className="mt-5 grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="border border-[#44483a] bg-[#1b1c16] p-3"><div className="font-mono text-[9px] uppercase text-[#8f9282]">Connected</div><div className="mt-2 text-2xl font-bold text-[#e3e3d8]">{accounts.length}</div><div className="mt-1 font-mono text-[9px] uppercase text-[#9ddf2e]">{accounts.filter((account) => account.enabled).length} enabled</div></div>
-            <div className="border border-[#44483a] bg-[#1b1c16] p-3"><div className="font-mono text-[9px] uppercase text-[#8f9282]">Model aliases</div><div className="mt-2 text-2xl font-bold text-[#e3e3d8]">{modelAliases.length}</div><div className="mt-1 font-mono text-[9px] uppercase text-[#7dd3fc]">provider independent</div></div>
-            <div className="border border-[#44483a] bg-[#1b1c16] p-3"><div className="font-mono text-[9px] uppercase text-[#8f9282]">Vault posture</div><div className="mt-2 text-2xl font-bold text-[#9ddf2e]">Clean</div><div className="mt-1 font-mono text-[9px] uppercase text-[#8f9282]">no raw secrets rendered</div></div>
-            <div className="border border-[#44483a] bg-[#1b1c16] p-3"><div className="font-mono text-[9px] uppercase text-[#8f9282]">Provider spend</div><div className="mt-2 text-2xl font-bold text-[#e3e3d8]">${accounts.reduce((total, account) => total + account.monthlySpend, 0).toFixed(2)}</div><div className="mt-1 font-mono text-[9px] uppercase text-[#ffb020]">current month</div></div>
-          </div>
-        </section>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-[#8f9282]">Cluster Throughput:</span>
+          <span className="text-primary font-bold">~2,840 TPS</span>
+        </div>
+      </div>
 
-        {showAccountForm && (
-          <section className="xl:col-span-12 border border-[#9ddf2e]/50 bg-[#9ddf2e]/5 p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2"><Plus className="h-4 w-4 text-[#9ddf2e]" /><h3 className="font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-[#e3e3d8]">Connect provider account</h3></div>
-              <span className="font-mono text-[9px] uppercase text-[#8f9282]">secret reference only</span>
-            </div>
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3">
-              <label><span className="font-mono text-[9px] uppercase text-[#8f9282]">Provider</span><select value={provider} onChange={(event) => setProvider(event.target.value as ProviderName)} className="mt-1 w-full border border-[#44483a] bg-[#0d0f09] px-3 py-2 text-sm text-[#e3e3d8] outline-none"><option>OpenAI</option><option>Anthropic</option><option>Google</option><option>OpenRouter</option><option>Local</option></select></label>
-              <label><span className="font-mono text-[9px] uppercase text-[#8f9282]">Account label</span><input value={label} onChange={(event) => setLabel(event.target.value)} className="mt-1 w-full border border-[#44483a] bg-[#0d0f09] px-3 py-2 text-sm text-[#e3e3d8] outline-none" /></label>
-              <label><span className="font-mono text-[9px] uppercase text-[#8f9282]">Vault reference</span><input value={secretRef} onChange={(event) => setSecretRef(event.target.value)} className="mt-1 w-full border border-[#44483a] bg-[#0d0f09] px-3 py-2 font-mono text-xs text-[#7dd3fc] outline-none" /></label>
-              <label><span className="font-mono text-[9px] uppercase text-[#8f9282]">Workspace / project</span><input value={workspace} onChange={(event) => setWorkspace(event.target.value)} className="mt-1 w-full border border-[#44483a] bg-[#0d0f09] px-3 py-2 text-sm text-[#e3e3d8] outline-none" /></label>
-            </div>
-            <div className="mt-4 flex justify-end gap-2"><button onClick={() => setShowAccountForm(false)} className="border border-[#44483a] px-3 py-2 font-mono text-[10px] uppercase text-[#c5c8b6]">Cancel</button><button onClick={addAccount} disabled={!label.trim() || !secretRef.trim()} className="border border-[#9ddf2e] bg-[#9ddf2e] px-3 py-2 font-mono text-[10px] font-bold uppercase text-[#0d0f09] disabled:opacity-40">Store reference</button></div>
-          </section>
-        )}
-
-        <section className="xl:col-span-8 border border-[#44483a] bg-[#12140e] p-4">
-          <div className="flex items-center justify-between"><div className="flex items-center gap-2"><Database className="h-4 w-4 text-[#9ddf2e]" /><h3 className="font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-[#e3e3d8]">Provider accounts</h3></div><span className="font-mono text-[9px] uppercase text-[#8f9282]">workspace scoped</span></div>
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-            {accounts.map((account) => {
-              const tone = providerTone[account.provider];
-              const spendUse = account.monthlyLimit > 0 ? Math.round((account.monthlySpend / account.monthlyLimit) * 100) : 0;
-              return (
-                <div key={account.id} className="border border-[#44483a] bg-[#1b1c16] p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div><div className="flex items-center gap-2"><span className="h-2 w-2" style={{ backgroundColor: tone }} /><span className="font-semibold text-[#e3e3d8]">{account.provider}</span>{defaultAccountId === account.id && <span className="border border-[#9ddf2e]/40 bg-[#9ddf2e]/5 px-1.5 py-0.5 font-mono text-[8px] uppercase text-[#9ddf2e]">default</span>}</div><div className="mt-1 text-xs text-[#c5c8b6]">{account.label}</div></div>
-                    <button aria-label={`${account.enabled ? 'Disable' : 'Enable'} ${account.label}`} onClick={() => toggleAccount(account.id)} className={`h-5 w-9 border p-0.5 ${account.enabled ? 'border-[#9ddf2e] bg-[#9ddf2e]/20' : 'border-[#44483a]'}`}><span className={`block h-3.5 w-3.5 transition-transform ${account.enabled ? 'translate-x-3.5 bg-[#9ddf2e]' : 'bg-[#8f9282]'}`} /></button>
-                  </div>
-                  <div className="mt-4 border border-[#44483a] bg-[#0d0f09] p-2 font-mono text-[10px] text-[#7dd3fc]"><div className="flex items-center gap-2"><ShieldCheck className="h-3.5 w-3.5" /><span className="truncate">{account.secretRef}</span></div></div>
-                  <div className="mt-3 grid grid-cols-2 gap-2 font-mono text-[9px] uppercase"><div><span className="text-[#8f9282]">Workspace</span><div className="mt-1 truncate text-[#e3e3d8]">{account.workspace}</div></div><div><span className="text-[#8f9282]">Health</span><div className={`mt-1 ${account.status === 'degraded' ? 'text-[#ffb020]' : 'text-[#9ddf2e]'}`}>{account.status} / {account.lastCheck}</div></div><div><span className="text-[#8f9282]">Models</span><div className="mt-1 text-[#e3e3d8]">{account.models} mapped</div></div><div><span className="text-[#8f9282]">Rotation</span><div className={`mt-1 ${account.rotationDays > 0 && account.rotationDays < 14 ? 'text-[#ffb020]' : 'text-[#e3e3d8]'}`}>{account.rotationDays === 0 ? 'local auth' : `${account.rotationDays} days`}</div></div></div>
-                  {account.monthlyLimit > 0 && <div className="mt-3"><div className="flex justify-between font-mono text-[9px] text-[#8f9282]"><span>${account.monthlySpend.toFixed(2)} spend</span><span>${account.monthlyLimit} cap</span></div><div className="mt-1 h-1 bg-[#0d0f09]"><div className={spendUse >= 75 ? 'h-full bg-[#ffb020]' : 'h-full bg-[#7dd3fc]'} style={{ width: `${Math.min(100, spendUse)}%` }} /></div></div>}
-                  <div className="mt-4 grid grid-cols-3 gap-2"><button onClick={() => testConnection(account)} className="border border-[#7dd3fc]/40 px-2 py-1.5 font-mono text-[9px] uppercase text-[#7dd3fc] hover:bg-[#7dd3fc]/10">{testingId === account.id ? 'Testing...' : 'Test'}</button><button onClick={() => setDefaultAccountId(account.id)} className="border border-[#44483a] px-2 py-1.5 font-mono text-[9px] uppercase text-[#c5c8b6] hover:border-[#9ddf2e]">Default</button><button onClick={() => rotateCredential(account)} disabled={account.provider === 'Local'} className="border border-[#ffb020]/40 px-2 py-1.5 font-mono text-[9px] uppercase text-[#ffb020] disabled:opacity-30">Rotate</button></div>
+      {/* Grid: RPC Endpoints (Top) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        {endpoints.map((ep) => {
+          const isActive = activeEndpointId === ep.id;
+          return (
+            <div
+              key={ep.id}
+              onClick={() => {
+                setActiveEndpointId(ep.id);
+                onCommitLog(`Switched primary monitoring endpoint to ${ep.name}.`, 'info');
+              }}
+              className={`p-3.5 glass-panel rounded-lg border transition-all cursor-pointer flex flex-col justify-between gap-2.5 ${
+                isActive
+                  ? 'border-primary bg-primary/10 shadow-lg shadow-primary/5'
+                  : 'border-outline-variant/30 bg-surface-container hover:border-outline-variant/70'
+              }`}
+            >
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-on-surface text-xs">{ep.provider}</span>
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-surface border border-outline-variant/30 text-secondary">
+                    {ep.priorityLevel}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
-        </section>
+                <div className="text-[11px] text-primary font-semibold truncate mt-1">{ep.name}</div>
+                <div className="text-[10px] text-[#8f9282] font-mono truncate mt-0.5">{ep.url}</div>
+              </div>
 
-        <section className="xl:col-span-4 border border-[#44483a] bg-[#1b1c16] p-4">
-          <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-[#9ddf2e]" /><h3 className="font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-[#e3e3d8]">Vault policy</h3></div>
-          <div className="mt-4 space-y-3">
-            {[{ label: 'Raw keys in UI', value: 'Blocked', tone: '#9ddf2e' }, { label: 'Runtime injection', value: 'Server only', tone: '#7dd3fc' }, { label: 'Rotation warning', value: '< 14 days', tone: '#ffb020' }, { label: 'Audit retention', value: '90 days', tone: '#e3e3d8' }].map((policy) => <div key={policy.label} className="flex items-center justify-between border border-[#44483a] bg-[#0d0f09] p-3 font-mono text-[10px] uppercase"><span className="text-[#8f9282]">{policy.label}</span><span style={{ color: policy.tone }}>{policy.value}</span></div>)}
-          </div>
-          <div className="mt-4 border border-[#ffb020]/40 bg-[#ffb020]/5 p-3"><div className="flex items-center gap-2 font-mono text-[10px] uppercase text-[#ffb020]"><AlertTriangle className="h-4 w-4" /> Rotation watch</div><p className="mt-2 text-xs leading-5 text-[#c5c8b6]">Google Vision reaches its rotation window in 8 days.</p></div>
-          <div className="mt-3 border border-[#9ddf2e]/40 bg-[#9ddf2e]/5 p-3"><div className="flex items-center gap-2 font-mono text-[10px] uppercase text-[#9ddf2e]"><Eye className="h-4 w-4" /> Secret posture</div><p className="mt-2 text-xs leading-5 text-[#c5c8b6]">Only references and account metadata are visible to operators.</p></div>
-        </section>
+              <div className="pt-2 border-t border-outline-variant/20 space-y-1 text-[10px]">
+                <div className="flex justify-between">
+                  <span className="text-[#8f9282]">Ping Latency:</span>
+                  <span className="text-primary font-bold">{ep.pingMs} ms</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#8f9282]">Indexing Stream:</span>
+                  <span className="text-on-surface">{ep.payloadKbPerSec} KB/s</span>
+                </div>
+              </div>
 
-        <section className="xl:col-span-12 border border-[#44483a] bg-[#12140e] p-4">
-          <div className="flex items-center justify-between"><div className="flex items-center gap-2"><Server className="h-4 w-4 text-[#7dd3fc]" /><h3 className="font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-[#e3e3d8]">Model alias registry</h3></div><span className="font-mono text-[9px] uppercase text-[#8f9282]">stable names over provider IDs</span></div>
-          <div className="mt-4 overflow-x-auto custom-scrollbar"><table className="w-full min-w-[760px] border-collapse text-left"><thead className="font-mono text-[9px] uppercase tracking-[0.14em] text-[#8f9282]"><tr className="border-b border-[#44483a]"><th className="pb-2 font-normal">Alias</th><th className="pb-2 font-normal">Provider</th><th className="pb-2 font-normal">Target</th><th className="pb-2 font-normal">Context</th><th className="pb-2 font-normal">Lane</th><th className="pb-2 font-normal">Status</th></tr></thead><tbody>{modelAliases.map((model) => <tr key={model.alias} className="border-b border-[#44483a]/60 text-xs"><td className="py-3 font-mono text-[#9ddf2e]">{model.alias}</td><td className="py-3 text-[#e3e3d8]">{model.provider}<div className="mt-1 font-mono text-[9px] text-[#8f9282]">{model.account}</div></td><td className="py-3 text-[#c5c8b6]">{model.target}</td><td className="py-3 font-mono text-[#7dd3fc]">{model.context}</td><td className="py-3 text-[#c5c8b6]">{model.lane}</td><td className="py-3"><span className={`border px-2 py-1 font-mono text-[9px] uppercase ${model.status === 'ready' ? 'border-[#9ddf2e]/40 text-[#9ddf2e]' : model.status === 'watch' ? 'border-[#ffb020]/40 text-[#ffb020]' : 'border-[#44483a] text-[#c5c8b6]'}`}>{model.status}</span></td></tr>)}</tbody></table></div>
-        </section>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  testEndpoint(ep);
+                }}
+                disabled={testingId === ep.id}
+                className="w-full py-1 rounded bg-surface hover:bg-surface-container-high border border-outline-variant/40 text-[10px] font-bold text-on-surface uppercase flex items-center justify-center gap-1 transition-colors cursor-pointer"
+              >
+                {testingId === ep.id ? (
+                  <>
+                    <RefreshCw className="w-3 h-3 animate-spin text-primary" />
+                    <span>Pinging RPC...</span>
+                  </>
+                ) : (
+                  <>
+                    <Activity className="w-3 h-3 text-secondary" />
+                    <span>Ping Endpoint</span>
+                  </>
+                )}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Bottom Split: Compute Unit Budget Simulation & Instruction Analyzer */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* Left: CU Budget Controls (6 cols) */}
+        <div className="lg:col-span-6 flex flex-col gap-3">
+          <span className="text-xs uppercase text-on-surface-variant font-bold tracking-wider flex items-center gap-1.5">
+            <Sliders className="w-3.5 h-3.5 text-primary" />
+            Compute Unit (CU) Budget Configuration
+          </span>
+
+          <div className="p-4 glass-panel rounded-lg border border-outline-variant/40 bg-surface-container space-y-4">
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="text-[11px] text-[#8f9282] uppercase">Compute Unit Limit</label>
+                <span className="text-primary font-bold">{cuLimit.toLocaleString()} CU</span>
+              </div>
+              <input
+                type="range"
+                min={50000}
+                max={1400000}
+                step={25000}
+                value={cuLimit}
+                onChange={(e) => setCuLimit(Number(e.target.value))}
+                className="w-full accent-primary cursor-pointer"
+              />
+              <div className="flex justify-between text-[9px] text-[#8f9282] mt-1">
+                <span>50k (Base)</span>
+                <span>400k (Token-2022 CPI)</span>
+                <span>1.4M (Tx Max)</span>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="text-[11px] text-[#8f9282] uppercase">Prioritization Fee Rate</label>
+                <span className="text-secondary font-bold">{priorityFeeMicroLamports.toLocaleString()} micro-lamports / CU</span>
+              </div>
+              <input
+                type="range"
+                min={1000}
+                max={250000}
+                step={5000}
+                value={priorityFeeMicroLamports}
+                onChange={(e) => setPriorityFeeMicroLamports(Number(e.target.value))}
+                className="w-full accent-secondary cursor-pointer"
+              />
+            </div>
+
+            <div className="p-3 bg-surface rounded border border-outline-variant/30 space-y-1.5 text-[11px]">
+              <div className="flex justify-between">
+                <span className="text-[#8f9282]">Estimated Priority Fee:</span>
+                <span className="text-primary font-bold">{estimatedFeeSol} SOL</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#8f9282]">Inclusion Probability:</span>
+                <span className="text-primary font-bold">99.4% (Next 1-2 Slots)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Instruction CU Profiler (6 cols) */}
+        <div className="lg:col-span-6 flex flex-col gap-3">
+          <span className="text-xs uppercase text-on-surface-variant font-bold tracking-wider flex items-center gap-1.5">
+            <Cpu className="w-3.5 h-3.5 text-secondary" />
+            Instruction CU Profiler
+          </span>
+
+          <div className="p-4 glass-panel rounded-lg border border-outline-variant/40 bg-surface-container space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-[#8f9282]">Scenario:</span>
+              <select
+                value={selectedInstruction}
+                onChange={(e) => setSelectedInstruction(e.target.value as typeof selectedInstruction)}
+                className="bg-surface border border-outline-variant/40 rounded px-2.5 py-1 text-primary font-bold focus:outline-none"
+              >
+                <option value="transfer-hook">Token-2022 Transfer Hook (Ignis)</option>
+                <option value="token-mint">Confidential Token Mint (Aqua)</option>
+                <option value="reconcile">SpacetimeDB Staking Reconcile</option>
+              </select>
+            </div>
+
+            <div className="p-3 bg-surface rounded border border-outline-variant/30 space-y-1.5 text-[11px]">
+              <div className="font-bold text-on-surface mb-1">{instructionCuEstimate.label}</div>
+              <div className="flex justify-between">
+                <span className="text-[#8f9282]">Base SPL Execution:</span>
+                <span className="text-on-surface">{instructionCuEstimate.baseCu.toLocaleString()} CU</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#8f9282]">ExtraAccountMetas PDA Lookup:</span>
+                <span className="text-on-surface">{instructionCuEstimate.extraMetasCu.toLocaleString()} CU</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#8f9282]">Hook Program CPI Execution:</span>
+                <span className="text-on-surface">{instructionCuEstimate.hookCpiCu.toLocaleString()} CU</span>
+              </div>
+              <div className="flex justify-between pt-1 border-t border-outline-variant/20 font-bold">
+                <span className="text-primary">Total Estimated CU:</span>
+                <span className="text-primary text-sm">{instructionCuEstimate.totalCu.toLocaleString()} CU</span>
+              </div>
+            </div>
+
+            <div className={`p-2.5 rounded text-[11px] flex items-center gap-2 ${
+              cuLimit >= instructionCuEstimate.totalCu
+                ? 'bg-primary/10 border border-primary/30 text-primary'
+                : 'bg-[#ff7b72]/10 border border-[#ff7b72]/30 text-[#ff7b72]'
+            }`}>
+              {cuLimit >= instructionCuEstimate.totalCu ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <span>CU budget is sufficient. Transaction will execute without exceeding compute limits.</span>
+                </>
+              ) : (
+                <>
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span>Insufficient CU limit! Transaction is projected to exhaust compute units.</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

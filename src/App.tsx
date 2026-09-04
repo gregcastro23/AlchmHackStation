@@ -22,11 +22,9 @@ import { RoutingGuardrailsView } from './components/RoutingGuardrailsView';
 import { IntegrationOpsView } from './components/IntegrationOpsView';
 import { SwarmNexus } from './components/SwarmNexus';
 import { OvermindConsole } from './components/OvermindConsole';
-import { HackathonSpace } from './components/HackathonSpace';
 import { DiscordLiveFeed } from './components/DiscordLiveFeed';
 import { PlanetaryCockpit } from './components/PlanetaryCockpit';
-import { Web3HackathonHub } from './components/Web3HackathonHub';
-import type { HackathonTrack } from './components/HackathonSpace';
+import { Token2022CommandCenter } from './components/Token2022CommandCenter';
 import { WorkstationLockOverlay } from './components/WorkstationLockOverlay';
 import { decomposeIdea, LANGUAGE_NAMES, LANGUAGES } from './lib/swarmEngine';
 import { HistoryView } from './components/HistoryView';
@@ -79,8 +77,8 @@ function App() {
   ]);
 
   // Combined V2 states
-  const [activeTab, setActiveTab] = useState<string>('web3-hub');
-  const [completedHacks, setCompletedHacks] = useState<CompletedHackathon[]>(() => {
+  const [activeTab, setActiveTab] = useState<string>('token2022-hub');
+  const [completedHacks] = useState<CompletedHackathon[]>(() => {
     try {
       const val = window.localStorage.getItem('hackstation-completed-history');
       return val ? JSON.parse(val) : DEFAULT_COMPLETED_HACKS;
@@ -487,16 +485,6 @@ function App() {
     });
   }, []);
 
-  const handleStartHackathonBuild = useCallback((idea: string, track: HackathonTrack) => {
-    const trackLabels: Record<HackathonTrack, string> = {
-      'from-scratch': 'Rust Backend',
-      'extend-open-source': 'Web Client',
-      'ship-a-feature': 'Unity Client',
-    };
-    addLog(`[PENTACLES] Building plan for ${trackLabels[track]} module: "${idea}".`, 'success');
-    handleOvermindForge(idea, 'swarm');
-  }, [handleOvermindForge]);
-
   const handleMissionSignal = (signal: string) => {
     addLog(`[MISSION] ${signal}`, 'info');
     if (signal.includes('pitch')) {
@@ -511,15 +499,6 @@ function App() {
     addLog('[MISSION] Sequence: app build -> browser proof -> deploy seal -> pitch packet.', 'info');
     setMissionReadiness((prev) => Math.min(98, prev + 4));
     handleRunBuild();
-  };
-
-  const handleArchiveHackathon = (record: CompletedHackathon) => {
-    setCompletedHacks((prev) => {
-      const updated = [record, ...prev];
-      window.localStorage.setItem('hackstation-completed-history', JSON.stringify(updated));
-      return updated;
-    });
-    setActiveTab('history');
   };
 
   const handleExportToAntigravity = () => {
@@ -661,7 +640,8 @@ You are running as Claude Code in the terminal workspace. Review the developer c
         css: cssEngine,
         database,
       },
-      activeTargetAddress: '0x5FbDB2315678afecb367f032d93F642f64180aa3',
+      activeTargetAddress: 'AhNRjjyhJ4dR6ZSvWyJNSpbJFbFnxhkRdUNMY31fJ3S5',
+      solanaProgramId: 'AlchmAgentsSolana1111111111111111111111111',
       logsCount: logs.length,
     };
 
@@ -728,25 +708,8 @@ You are running as Claude Code in the terminal workspace. Review the developer c
 
           {/* Right Content Panels */}
           <main className="flex-1 p-4 overflow-y-auto custom-scrollbar min-h-0 flex flex-col">
-            {activeTab === 'web3-hub' && (
-              <Web3HackathonHub onCommitLog={addLog} />
-            )}
-
-            {activeTab === 'hackathon-space' && (
-              <HackathonSpace
-                missionReadiness={missionReadiness}
-                foundryState={foundryState}
-                gitHubConnected={Boolean(gitHubUser?.isLoggedIn)}
-                onNavigate={setActiveTab}
-                onCommitLog={addLog}
-                onStartBuild={handleStartHackathonBuild}
-                onArchiveHackathon={handleArchiveHackathon}
-                activeLanguage={language}
-                activeFramework={framework}
-                activeCssEngine={cssEngine}
-                activeDatabase={database}
-                securityReady={Boolean(securityCredentialId)}
-              />
+            {(activeTab === 'token2022-hub' || activeTab === 'web3-hub') && (
+              <Token2022CommandCenter onCommitLog={addLog} />
             )}
 
             {activeTab === 'history' && (

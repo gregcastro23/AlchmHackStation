@@ -4,7 +4,6 @@ import {
   AGENTS,
   AGENT_BY_ROLE,
   PATTERNS,
-  SAMPLE_IDEAS,
   decomposeIdea,
   LANGUAGES,
   LANGUAGE_NAMES,
@@ -154,7 +153,7 @@ export const SwarmNexus: React.FC<SwarmNexusProps> = ({ onCommitLog, onReadiness
   const simRef = useRef<Sim | null>(null);
   const rafRef = useRef<number>(0);
 
-  const [idea, setIdea] = useState('Launch of Alchm Token System on Ethereum - deploy ERC-20 contract, coordinate planetary agent nodes, and establish on-chain secure verification gates.');
+  const [idea, setIdea] = useState('Solana Event Sync: route dedicated Helius RPC WebSocket subscriptions (LogsSubscribe, AccountSubscribe) into SpacetimeDB module cookingwithcastrollc, driving 60fps durable reconciliation for Token-2022 elemental mints.');
   const [pattern, setPattern] = useState<OrchestrationPattern>('swarm');
   const [plan, setPlan] = useState<BuildPlan | null>(null);
   const [taskView, setTaskView] = useState<Array<{ task: PlanTask; status: SimTask['status']; progress: number }>>([]);
@@ -943,10 +942,10 @@ export const SwarmNexus: React.FC<SwarmNexusProps> = ({ onCommitLog, onReadiness
         <div className="border border-[#44483a] bg-[#12140e] p-4">
           <div className="flex items-center gap-2">
             <Atom className="h-4 w-4 text-[#9ddf2e]" />
-            <h2 className="font-mono text-[12px] font-bold uppercase tracking-[0.2em] text-[#e3e3d8]">The Crucible</h2>
+            <h2 className="font-mono text-[12px] font-bold uppercase tracking-[0.2em] text-[#e3e3d8]">Event Sync Feeder</h2>
           </div>
           <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[#8f9282]">
-            idea → swarm → shipped app
+            RPC WebSocket → SpacetimeDB 60fps Reducer Queue
           </p>
           <textarea
             value={idea}
@@ -955,17 +954,21 @@ export const SwarmNexus: React.FC<SwarmNexusProps> = ({ onCommitLog, onReadiness
               if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) forge();
             }}
             rows={3}
-            placeholder="Describe the app you want to build…"
+            placeholder="Describe Solana event sync pipeline or enter subscription parameters…"
             className="mt-3 w-full resize-none border border-[#44483a] bg-[#0d0f09] p-2.5 font-mono text-[12px] leading-5 text-[#e3e3d8] placeholder:text-[#8f9282]/60 focus:border-[#9ddf2e]/60 focus:outline-none"
           />
           <div className="mt-2 flex flex-wrap gap-1.5">
-            {SAMPLE_IDEAS.slice(0, 3).map((s, i) => (
+            {[
+              { label: 'Helius Logs', query: 'Solana RPC: stream logsSubscribe for AlchmAgents program into SpacetimeDB reducer' },
+              { label: 'Token-2022 Account', query: 'AccountSubscribe: monitor Fire/Water/Earth/Air Token-2022 mint accounts and transfer hooks' },
+              { label: 'Star Vault Staking', query: 'Staking Engine: synchronize on-chain Astrometry deposits with SpacetimeDB ephemeris tables' },
+            ].map((preset, i) => (
               <button
                 key={i}
-                onClick={() => setIdea(s)}
-                className="border border-[#44483a] bg-[#1b1c16] px-2 py-1 font-mono text-[9px] uppercase tracking-wider text-[#8f9282] transition hover:border-[#9ddf2e]/50 hover:text-[#9ddf2e]"
+                onClick={() => setIdea(preset.query)}
+                className="border border-[#44483a] bg-[#1b1c16] px-2 py-1 font-mono text-[9px] uppercase tracking-wider text-[#8f9282] transition hover:border-[#9ddf2e]/50 hover:text-[#9ddf2e] cursor-pointer"
               >
-                seed {i + 1}
+                {preset.label}
               </button>
             ))}
           </div>

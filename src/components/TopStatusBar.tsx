@@ -38,9 +38,9 @@ export const TopStatusBar: React.FC<TopStatusBarProps> = ({
       
       {/* Left Logo / Identity */}
       <div className="flex items-center gap-md">
-        <span className="material-symbols-outlined text-primary text-[24px]">terminal</span>
+        <span className="material-symbols-outlined text-primary text-[24px]">token</span>
         <h1 className="font-headline-lg text-headline-lg tracking-tighter text-primary italic uppercase select-none">
-          ALCHMHACKSTATION
+          ALCHM SOLANA MISSION CONTROL
         </h1>
       </div>
 

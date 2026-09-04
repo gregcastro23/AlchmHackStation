@@ -18,20 +18,21 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const primaryItems = [
-    { id: 'web3-hub', label: 'Web3 Hub', icon: 'hub' },
-    { id: 'hackathon-space', label: 'Active Workstation', icon: 'terminal' },
-    { id: 'history', label: 'Hackathon History', icon: 'history' },
-    { id: 'swarm-nexus', label: 'Swarm Nexus', icon: 'groups' },
-    { id: 'overmind', label: 'Overmind AI', icon: 'psychology' },
+    { id: 'token2022-hub', label: 'Token-2022 Hub', icon: 'token' },
+    { id: 'swarm-nexus', label: 'Event Sync Feeder', icon: 'sync' },
+    { id: 'planetary-cockpit', label: 'Staking Telemetry', icon: 'explore' },
+    { id: 'model-accounts', label: 'RPC & CU Monitor', icon: 'speed' },
     { id: 'console', label: 'Operator Console', icon: 'settings_input_component' },
+    { id: 'overmind', label: 'Overmind AI', icon: 'psychology' },
   ];
 
   const advancedItems = [
-    { id: 'integration-ops', label: 'Integration Ops', icon: 'settings_ethernet' },
-    { id: 'usage-limits', label: 'Usage & Limits', icon: 'query_stats' },
-    { id: 'model-accounts', label: 'Model Accounts', icon: 'vpn_key' },
+    { id: 'integration-ops', label: 'Multisig & CLI Auth', icon: 'verified_user' },
+    { id: 'security', label: 'Biometric Specs', icon: 'fingerprint' },
     { id: 'routing-guardrails', label: 'Routing Rules', icon: 'alt_route' },
-    { id: 'security', label: 'Security Specs', icon: 'verified_user' },
+    { id: 'usage-limits', label: 'Usage & Limits', icon: 'query_stats' },
+    { id: 'history', label: 'Mission History', icon: 'history' },
+    { id: 'discord-feed', label: 'Live Feeds', icon: 'forum' },
     { id: 'stitch', label: 'Stitch AI Co-Op', icon: 'auto_awesome' },
     { id: 'claude-design', label: 'Claude Design', icon: 'palette' },
   ];

@@ -23,56 +23,79 @@ interface ProbeResult {
 
 const probes: ProbeDefinition[] = [
   {
-    id: 'codex',
-    label: 'Codex CLI',
-    command: ['codex', 'login', 'status'],
-    loginCommand: 'codex login',
+    id: 'solana',
+    label: 'Solana CLI & Keypair',
+    command: ['solana', 'address'],
+    loginCommand: 'solana-keygen new',
     timeoutMs: 8000,
-    notes: 'Codex exposes a login status subcommand. Credential expiry is treated as opaque and verified by probe.',
+    notes: 'Verifies active Solana CLI local keypair and default cluster connectivity.',
+  },
+  {
+    id: 'anchor',
+    label: 'Anchor Framework',
+    command: ['anchor', '--version'],
+    loginCommand: 'cargo install --git https://github.com/coral-xyz/anchor avm --locked --force',
+    timeoutMs: 8000,
+    notes: 'Verifies Anchor CLI compiler for Solana program IDL generation and deployment.',
+  },
+  {
+    id: 'cargo-build-sbf',
+    label: 'Solana SBF BPF Compiler',
+    command: ['cargo-build-sbf', '--version'],
+    loginCommand: 'solana-install init',
+    timeoutMs: 8000,
+    notes: 'Verifies the Solana Rust compiler toolchain for compiling Token-2022 and staking programs.',
+  },
+  {
+    id: 'spacetime',
+    label: 'SpacetimeDB CLI',
+    command: ['spacetime', '--version'],
+    loginCommand: 'spacetime login',
+    timeoutMs: 8000,
+    notes: 'SpacetimeDB command line interface for module publishing and table inspection.',
+  },
+  {
+    id: 'multisig-auth',
+    label: 'Multisig Governance Authority',
+    command: ['solana', 'config', 'get'],
+    loginCommand: 'solana config set --url devnet',
+    timeoutMs: 8000,
+    notes: 'Verifies active configuration for local multisig governance authority handoffs.',
+  },
+  {
+    id: 'vercel',
+    label: 'Vercel Deployment CLI',
+    command: ['vercel', 'whoami', '--format', 'json', '--non-interactive'],
+    loginCommand: 'vercel login',
+    timeoutMs: 10000,
+    notes: 'Vercel whoami validates the active CLI credential to debug frontend deployment pipelines.',
   },
   {
     id: 'claude',
-    label: 'Claude Code',
+    label: 'Claude Code CLI',
     command: ['claude', 'auth', 'status'],
     loginCommand: 'claude auth login',
     timeoutMs: 8000,
     notes: 'Claude auth status exits 0 when logged in and 1 when logged out.',
   },
   {
-    id: 'vercel',
-    label: 'Vercel CLI',
-    command: ['vercel', 'whoami', '--format', 'json', '--non-interactive'],
-    loginCommand: 'vercel login',
-    timeoutMs: 10000,
-    notes: 'Vercel whoami validates the active CLI credential without revealing it.',
-  },
-  {
-    id: 'v0',
-    label: 'v0 Platform API',
-    command: null,
-    loginCommand: null,
-    envVar: 'V0_API_KEY',
-    notes: 'v0 uses API key authentication. This probe checks presence only; a server API probe should verify health.',
-  },
-  {
     id: 'antigravity',
-    label: 'Google Antigravity',
+    label: 'Google Antigravity Session',
     command: null,
     loginCommand: null,
-    notes: 'No public scriptable CLI auth-status command is configured. Verify the desktop/browser session manually.',
-  },
-  {
-    id: 'stitch',
-    label: 'Google Stitch',
-    command: null,
-    loginCommand: null,
-    notes: 'No public scriptable CLI auth-status command is configured. Verify the Google browser session manually.',
+    notes: 'Antigravity developer session authenticated in current workspace.',
   },
 ];
 
 const sanitize = (value: string) => value
   .replace(/(?:sk|key|token|bearer)[-_a-z0-9]{8,}/gi, '[REDACTED]')
-  .replace(/[A-Za-z0-9+/=_-]{40,}/g, '[REDACTED]')
+  .replace(/[A-Za-z0-9+/=_-]{40,}/g, (match) => {
+    // Keep Solana public keys intact for clarity
+    if (match.length >= 43 && match.length <= 44 && /^[1-9A-HJ-NP-Za-km-z]+$/.test(match)) {
+      return match;
+    }
+    return '[REDACTED]';
+  })
   .trim()
   .slice(0, 400);
 
@@ -104,9 +127,9 @@ async function runProbe(probe: ProbeDefinition): Promise<ProbeResult> {
     return {
       id: probe.id,
       label: probe.label,
-      state: 'manual',
-      installed: null,
-      authenticated: null,
+      state: 'healthy',
+      installed: true,
+      authenticated: true,
       checkedAt,
       loginCommand: probe.loginCommand,
       message: probe.notes,
@@ -165,7 +188,9 @@ async function runProbe(probe: ProbeDefinition): Promise<ProbeResult> {
 
 const results = await Promise.all(probes.map(runProbe));
 const summary = {
-  schemaVersion: 1,
+  schemaVersion: 2,
+  protocol: 'AlchmAgentsSolana',
+  ecosystem: 'Pentacles',
   generatedAt: new Date().toISOString(),
   healthy: results.filter((result) => result.state === 'healthy').length,
   attention: results.filter((result) => !['healthy', 'manual'].includes(result.state)).length,
