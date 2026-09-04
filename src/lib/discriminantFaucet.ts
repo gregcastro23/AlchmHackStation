@@ -6,7 +6,7 @@
  * modulated by current celestial moment transit weights w_i(t)
  * and counter-cyclical anti-glut damping Omega_i.
  * 
- * Strictly conserved at 24.0000 tokens (Standard) or 48.0000 tokens (Premium).
+ * Strictly conserved at 12.0000 tokens universally for all users.
  * No artificial sect hacks or wave functions.
  */
 
@@ -67,7 +67,7 @@ export function computeDiscriminantDailyYield(
   transit: TransitSkyData,
   supply: GlobalSupplyState
 ): DiscriminantYieldResult {
-  const TOTAL_YIELD = 24.0;
+  const TOTAL_YIELD = 12.0;
 
   // 1. Natal Chart Ratio Vector r_i(N)
   const natalRaw = {

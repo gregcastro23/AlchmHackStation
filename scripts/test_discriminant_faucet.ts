@@ -10,10 +10,10 @@
  * TOKEN NAMES NEVER VARY.
  * 
  * Verifies:
- * 1. TEST-01: Neutral minter without birth chart under neutral sky (flat 6.0000 each, exactly 24.0000).
+ * 1. TEST-01: Neutral minter without birth chart under neutral sky (flat 3.0000 each, exactly 12.0000).
  * 2. TEST-02: Fire-dominant minter with high Spirit claiming during Fire transit sky (yielding high SPIRIT).
  * 3. TEST-03: Counter-cyclical anti-glut damping when MATTER exceeds 30% global supply (0.750 damping).
- * 4. TEST-04: Strict conservation: total yield is strictly conserved at 24.0000 (Standard) and 48.0000 (Premium).
+ * 4. TEST-04: Strict conservation: total yield is strictly conserved at 12.0000 universally.
  * 5. TEST-05: Chart ratio differentiation: higher natal ratio directly increases coin yield.
  */
 
@@ -63,22 +63,22 @@ console.log('-------------------------------------------------------------------
 console.log('TEST 1: Neutral Minter (No Birth Chart) under Neutral Sky');
 console.log('-----------------------------------------------------------------------------');
 
-const resNeutral = computeDiscriminantDailyYield(null, neutralTransit, neutralSupply, false);
+const resNeutral = computeDiscriminantDailyYield(null, neutralTransit, neutralSupply);
 console.log('  Result:', resNeutral);
 
 assert(
-  resNeutral.spirit === 6.0,
-  'Neutral Spirit Yield exactly 6.0000',
+  resNeutral.spirit === 3.0,
+  'Neutral Spirit Yield exactly 3.0000',
   `Spirit: ${resNeutral.spirit}`
 );
 assert(
-  resNeutral.matter === 6.0,
-  'Neutral Matter Yield exactly 6.0000',
+  resNeutral.matter === 3.0,
+  'Neutral Matter Yield exactly 3.0000',
   `Matter: ${resNeutral.matter}`
 );
 assert(
-  resNeutral.total === 24.0,
-  'Neutral Total Yield strictly conserved at 24.0000',
+  resNeutral.total === 12.0,
+  'Neutral Total Yield strictly conserved at 12.0000',
   `Total: ${resNeutral.total}`
 );
 
@@ -101,7 +101,7 @@ const fireTransit: TransitSkyData = {
   elementWeights: { Fire: 5.0, Water: 1.5, Earth: 1.5, Air: 2.0 },
 };
 
-const resFire = computeDiscriminantDailyYield(fireNatal, fireTransit, neutralSupply, false);
+const resFire = computeDiscriminantDailyYield(fireNatal, fireTransit, neutralSupply);
 console.log('  Result:', resFire);
 
 assert(
@@ -110,13 +110,13 @@ assert(
   `Spirit: ${resFire.spirit} > Matter: ${resFire.matter}`
 );
 assert(
-  resFire.spirit >= 10.0,
+  resFire.spirit >= 5.0,
   'Spirit Yield reflects Fire prominence',
   `Spirit: ${resFire.spirit}`
 );
 assert(
-  resFire.total === 24.0,
-  'Total Yield strictly conserved at 24.0000',
+  resFire.total === 12.0,
+  'Total Yield strictly conserved at 12.0000',
   `Total: ${resFire.total}`
 );
 
@@ -127,7 +127,7 @@ console.log('\n-----------------------------------------------------------------
 console.log('TEST 3: Counter-Cyclical Anti-Glut Damping on Matter (Live Supply > 30%)');
 console.log('-----------------------------------------------------------------------------');
 
-const resLive = computeDiscriminantDailyYield(null, neutralTransit, LIVE_SUPPLY, false);
+const resLive = computeDiscriminantDailyYield(null, neutralTransit, LIVE_SUPPLY);
 console.log('  Live State Result:', resLive);
 console.log('  Matter Breakdown:', resLive.breakdown.matter);
 
@@ -142,8 +142,8 @@ assert(
   `Live Matter: ${resLive.matter} < Neutral: ${resNeutral.matter}`
 );
 assert(
-  resLive.total === 24.0,
-  'Total Yield strictly conserved at 24.0000 under live anti-glut damping',
+  resLive.total === 12.0,
+  'Total Yield strictly conserved at 12.0000 under live anti-glut damping',
   `Total: ${resLive.total}`
 );
 
@@ -162,8 +162,8 @@ const resExtreme = computeDiscriminantDailyYield(fireNatal, extremeTransit, LIVE
 console.log('  Extreme Result:', resExtreme);
 
 assert(
-  resExtreme.total === 24.0,
-  'Universal Daily Yield strictly conserved at 24.0000 under extreme transit (no premium tier)',
+  resExtreme.total === 12.0,
+  'Universal Daily Yield strictly conserved at 12.0000 under extreme transit (no premium tier)',
   `Total: ${resExtreme.total}`
 );
 

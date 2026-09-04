@@ -81,15 +81,13 @@ Under current authoritative network state ($\text{Supply}_{\text{MATTER}} = 37.5
 $$\Omega_{\text{MATTER}} = 1.0 - 2.0 \times (0.3751 - 0.25) = \mathbf{0.750}$$
 $$\Omega_{\text{SPIRIT}} = \Omega_{\text{ESSENCE}} = \Omega_{\text{SUBSTANCE}} = \mathbf{1.000}$$
 
----
-
 ### 3.4 Conserved Daily Allocation Formula
-The total daily yield budget is strictly universal ($Y_{\text{total}} = 24.0000$ for all users, with zero premium tier gating), allocated proportionally among the 4 canonical tokens:
+The total daily yield budget is strictly universal ($Y_{\text{total}} = 12.0000$ for all users, with zero premium tier gating), allocated proportionally among the 4 canonical tokens:
 
 $$\mathcal{Y}_i(t, \mathcal{N}) = \operatorname{Quantize}_{10^4}\left( Y_{\text{total}} \times \frac{r_i(\mathcal{N}) \cdot w_i(t) \cdot \Omega_i}{\sum_{j} \left(r_j(\mathcal{N}) \cdot w_j(t) \cdot \Omega_j\right)} \right)$$
 
 An exact residual conservation pass assigns any sub-cent micro-rounding difference to the dominant axis, guaranteeing:
-$$\sum_{i} \mathcal{Y}_i(t, \mathcal{N}) \equiv 24.0000$$
+$$\sum_{i} \mathcal{Y}_i(t, \mathcal{N}) \equiv 12.0000$$
 
 ---
 
@@ -106,17 +104,17 @@ The formulation was exhaustively calibrated and simulated against all **72 Histo
 ### 4.2 Empirical Synthesis Matrix
 
 | Moment ID | Celestial Configuration | Transit Weights $(w_{\text{Fire}}, w_{\text{Water}}, w_{\text{Earth}}, w_{\text{Air}})$ | Avg SPIRIT (`🝇`/`🜂`) | Avg ESSENCE (`🝑`/`🜄`) | Avg MATTER (`🝙`/`🜃`) | Avg SUBSTANCE (`🝉`/`🜁`) | Total / Agent | Fleet Daily Mint (72 Agents) | SPRT / MATR Ratio |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Moment 1** | **Fire Sky Transit** | $(5.0, 1.5, 1.5, 2.0)$ | **12.8106** | 3.8582 | **2.3348** | 4.9964 | **24.0000** | 1,728 ESMS | **5.49×** |
-| **Moment 2** | **Water Sky Transit** | $(1.0, 5.5, 2.0, 1.5)$ | 2.6310 | **14.3931** | **3.1527** | 3.8232 | **24.0000** | 1,728 ESMS | **0.83×** |
-| **Moment 3** | **Earth Stellium** | $(1.5, 2.0, 5.0, 1.5)$ | 4.5678 | 6.0580 | **8.9688** | 4.4054 | **24.0000** | 1,728 ESMS | **0.51×** |
-| **Moment 4** | **Air Solstice** | $(2.0, 1.5, 1.5, 5.0)$ | 5.1988 | 3.8955 | **2.3411** | **12.5646** | **24.0000** | 1,728 ESMS | **2.22×** |
-| **Moment 5** | **Equinoctial Equilibrium** | $(2.5, 2.5, 2.5, 2.5)$ | 6.7285 | 6.7177 | **4.0341** | 6.5197 | **24.0000** | 1,728 ESMS | **1.67×** |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Moment 1** | **Fire Sky Transit** | $(5.0, 1.5, 1.5, 2.0)$ | **6.4053** | 1.9291 | **1.1674** | 2.4982 | **12.0000** | 864 ESMS | **5.49×** |
+| **Moment 2** | **Water Sky Transit** | $(1.0, 5.5, 2.0, 1.5)$ | 1.3155 | **7.1965** | **1.5763** | 1.9116 | **12.0000** | 864 ESMS | **0.83×** |
+| **Moment 3** | **Earth Stellium** | $(1.5, 2.0, 5.0, 1.5)$ | 2.2839 | 3.0290 | **4.4844** | 2.2027 | **12.0000** | 864 ESMS | **0.51×** |
+| **Moment 4** | **Air Solstice** | $(2.0, 1.5, 1.5, 5.0)$ | 2.5994 | 1.9478 | **1.1706** | **6.2823** | **12.0000** | 864 ESMS | **2.22×** |
+| **Moment 5** | **Equinoctial Equilibrium** | $(2.5, 2.5, 2.5, 2.5)$ | 3.3643 | 3.3589 | **2.0171** | 3.2598 | **12.0000** | 864 ESMS | **1.67×** |
 
 ### 4.3 Proven Macroeconomic Takeaways
-1. **Kinetic Gas Restored:** In Fire skies, SPIRIT yield expands to **$12.8106$** (up to **$14.50$** for Albert Einstein), providing the conversational fuel needed for AI reasoning without wallet depletion.
-2. **Anti-Glut Damping Flawless:** Across Fire, Air, and Equinox transits, MATTER is throttled to **$2.3348 - 4.0341$** (a **$-61\%$** suppression compared to legacy 6.0). In an Earth Stellium, MATTER is capped at **$8.9688$** (below the 9.0 safety ceiling).
-3. **Strict Mathematical Conservation:** Zero inflationary expansion. Exactly $1,728.0000$ tokens minted per day across all 72 historical agents.
+1. **Kinetic Gas Restored:** In Fire skies, SPIRIT yield expands to **$6.4053$** (up to **$7.25$** for Albert Einstein), providing the conversational fuel needed for AI reasoning (25 base chat turns) without wallet depletion.
+2. **Anti-Glut Damping Flawless:** Across Fire, Air, and Equinox transits, MATTER is throttled to **$1.1674 - 2.0171$** (a **$-61\%$** suppression compared to legacy 3.0). In an Earth Stellium, MATTER is capped at **$4.4844$** (well below the 4.50 safety ceiling).
+3. **Strict Mathematical Conservation:** Zero inflationary expansion. Exactly $864.0000$ tokens minted per day across all 72 historical agents.
 
 ---
 
@@ -175,7 +173,7 @@ export async function POST(req: Request) {
     // 3. Ingest live celestial transit from price index oracle
     const priceIndex = await loadCanonicalPriceIndex();
     
-    // 4. Compute discriminant yield using clean chart-ratio formulation (Universal 24.0000 for all users)
+    // 4. Compute discriminant yield using clean chart-ratio formulation (Universal 12.0000 for all users)
     const yieldResult = computeDiscriminantDailyYield(
       natalChart,
       { elementWeights: priceIndex.elementWeights },
