@@ -10,11 +10,11 @@ By eliminating legacy EVM/Circle dependencies and the monolithic hackathon track
 ## Core Systems & Repurposed Architecture
 
 ### 1. Token-2022 Command Center (`Token2022CommandCenter.tsx`)
-- **Four Elemental ESMS Assets**:
-  - **Fire ($IGNIS)**: Governed by the **Transfer Hook** extension (`ExtensionType.TransferHook`). Requires strict on-chain `ExtraAccountMetaList` PDA derivation before CPI execution. Enforces kinetic friction combat fees burned to the celestial pool.
-  - **Water ($AQUA)**: Privacy-shielded transactions using the **Confidential Transfer** extension (`ExtensionType.ConfidentialTransferMint`) with ElGamal encryption.
-  - **Earth ($TERRA)**: **Non-Transferable / Soulbound** badges (`ExtensionType.NonTransferable`) cryptographically locked to agent identities.
-  - **Air ($AETH)**: Yield-bearing dynamic staking token with the **Permanent Delegate** extension (`ExtensionType.PermanentDelegate`) for automated SpacetimeDB balance reconciliation.
+- **Four Canonical ESMS Protocol Tokens**:
+  - **SPIRIT ($SPIRIT)**: Governed by the **Transfer Hook** extension (`ExtensionType.TransferHook`). Requires strict on-chain `ExtraAccountMetaList` PDA derivation before CPI execution. Enforces kinetic friction combat fees burned to the celestial pool. (Cosmological element: Fire).
+  - **ESSENCE ($ESSENCE)**: Privacy-shielded transactions using the **Confidential Transfer** extension (`ExtensionType.ConfidentialTransferMint`) with ElGamal encryption. (Cosmological element: Water).
+  - **MATTER ($MATTER)**: **Non-Transferable / Soulbound** badges (`ExtensionType.NonTransferable`) cryptographically locked to agent identities. (Cosmological element: Earth).
+  - **SUBSTANCE ($SUBSTANCE)**: Yield-bearing dynamic staking token with the **Permanent Delegate** extension (`ExtensionType.PermanentDelegate`) for automated SpacetimeDB balance reconciliation. (Cosmological element: Air).
 - **Permanent Arweave Metadata**: Inspects permanent Arweave transaction manifests (`https://arweave.net/...`), immutability digests, and Metaplex metadata pointers.
 - **Star Vault Staking Engine**: Connects Hipparcos star catalog astrometry (Polaris, Sirius, Vega, Rigel, Arcturus, Betelgeuse, Antares, Aldebaran) to calculate dynamic elemental APY multipliers.
 

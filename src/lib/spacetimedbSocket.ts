@@ -35,10 +35,10 @@ export interface SpacetimeTelemetry {
 }
 
 export const ELEMENTAL_COLORS: Record<ReducerDomain, string> = {
-  Fire: '#EF4444',   // Ignis combat reagent / friction burn fee
-  Water: '#38BDF8',  // Aqua confidential stream / liquidity
-  Earth: '#4ADE80',  // Terra soulbound badge / star vault
-  Air: '#FACC15',    // Zephyr ephemeris / staking reconciliation
+  Fire: '#EF4444',   // SPIRIT combat reagent / friction burn fee
+  Water: '#38BDF8',  // ESSENCE confidential stream / liquidity
+  Earth: '#4ADE80',  // MATTER soulbound badge / star vault
+  Air: '#FACC15',    // SUBSTANCE dynamic staking / ephemeris reconciliation
 };
 
 // Map reducer names to elemental domains & particle physics
