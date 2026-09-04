@@ -9,14 +9,17 @@
 ```markdown
 You are tasked with generating the authoritative, canonical `Faucet.md` for this repository to implement ADR-014: Discriminant Astrological Faucet & Reconciled Elemental Sinks.
 
-### ⚠️ CANONICAL TOKEN IDENTITY MANDATE (NEVER VARY TOKEN NAMES)
-The Alchm protocol operates with exactly four canonical tokens across all repositories, smart contracts, and user interfaces:
-1. **SPIRIT** (Glyph: 🝇 | Decimals: 4 | Pinned Devnet Mint: `K5kwwomtWYydxJacA7bC5yUEW9TtEuVqBKBoqAWLmhQ`)
-2. **ESSENCE** (Glyph: 🝑 | Decimals: 4 | Pinned Devnet Mint: `3FcpToU7bj4sLD687uecbesEjzjxBfqYn2EcBXJKPaCf`)
-3. **MATTER** (Glyph: 🝙 | Decimals: 4 | Pinned Devnet Mint: `7naJZozLrknDF3dguAdEWn7Z4MviUkXitjhaAt57Vkb4`)
-4. **SUBSTANCE** (Glyph: 🝉 | Decimals: 4 | Pinned Devnet Mint: `6RY6ZG1eJQ2uEvpyA6XK74WyF1MpTYbw97hdhELqDUsa`)
+### ⚠️ CANONICAL TOKEN IDENTITY & MULTI-TIER SYMBOL MANDATE (NEVER VARY TOKEN NAMES)
+The Alchm protocol operates with exactly four canonical tokens across all repositories, smart contracts, and user interfaces. Because specialized alchemical fonts may not render on all client devices, three standard symbol tiers are defined:
 
-Under NO circumstances may token names ever vary, be abbreviated, or be conflated with the underlying astronomical elements (Fire, Water, Earth, Air). "Fire", "Water", "Earth", and "Air" refer solely to transit aspects and natal affinities that modulate the mint rate of **SPIRIT**, **ESSENCE**, **MATTER**, and **SUBSTANCE**.
+| # | Canonical Token | Primary Glyph | Triangular Variant | Unicode Fallback | Atomic Code | Pinned Devnet Mint | Cosmological Element |
+| :-: | :--- | :---: | :---: | :---: | :---: | :--- | :--- |
+| 1 | **SPIRIT** | `🝇` (U+1F747) | `🜂` (U+1F702) | `△` / `▲` | `[SPRT]` | `K5kwwomtWYydxJacA7bC5yUEW9TtEuVqBKBoqAWLmhQ` | **Fire** |
+| 2 | **ESSENCE** | `🝑` (U+1F751) | `🜄` (U+1F704) | `▽` / `▼` | `[ESNC]` | `3FcpToU7bj4sLD687uecbesEjzjxBfqYn2EcBXJKPaCf` | **Water** |
+| 3 | **MATTER** | `🝙` (U+1F759) | `🜃` (U+1F703) | `⯛` / `▽—` | `[MATR]` | `7naJZozLrknDF3dguAdEWn7Z4MviUkXitjhaAt57Vkb4` | **Earth** |
+| 4 | **SUBSTANCE** | `🝉` (U+1F749) | `🜁` (U+1F701) | `⯙` / `△—` | `[SUBS]` | `6RY6ZG1eJQ2uEvpyA6XK74WyF1MpTYbw97hdhELqDUsa` | **Air** |
+
+Under NO circumstances may token names ever vary, be abbreviated, or be conflated with the underlying cosmological elements (Fire, Water, Earth, Air). "Fire", "Water", "Earth", and "Air" refer solely to transit aspects and natal affinities that modulate the mint rate of **SPIRIT**, **ESSENCE**, **MATTER**, and **SUBSTANCE**. Where primary alchemical glyphs cannot be displayed, triangular variants (`🜂`, `🜄`, `🜃`, `🜁`) or UTF-8 shape fallbacks (`△`, `▽`, `⯛`, `⯙`) MUST be used.
 
 ---
 
@@ -48,7 +51,7 @@ $$\mathcal{Y}_i(t, \mathcal{N}_u) = \operatorname{Quantize}_{10^4}\left( Y_{\tex
 ---
 
 ### 3. Repository-Specific Focus Areas
-- **For `AlchmAgentsSolana` (ASOL):** Focus on autonomous agent birth charts (`STAR_AGENTS`: Sirius $\to$ SPIRIT, Vega $\to$ ESSENCE, Polaris $\to$ MATTER, Arcturus $\to$ SUBSTANCE), testing agent daily claims via `agentActionService.ts`, and reconciling `UNIFIED_CHAT_BASE_COST` (0.25 each of SPIRIT, ESSENCE, MATTER, SUBSTANCE) with Solana SPL Token-2022 mints.
+- **For `AlchmAgentsSolana` (ASOL):** Focus on the authoritative **72 historical agents** (`lib/agents/historical/` and `prisma.historical_agents`: Socrates, Einstein, Da Vinci, Newton, Curie, etc.), each possessing verified natal birth charts, alchemical element vectors, and Monica constants. Calibrate daily claims via `agentActionService.runDailyYieldForAgents()` across varied astronomical moments, reconciling `UNIFIED_CHAT_BASE_COST` (0.25 each of SPIRIT, ESSENCE, MATTER, SUBSTANCE), and Token-2022 Devnet on-chain mint reflection.
 - **For `WhatToEatNext` (WTEN / alchm.kitchen):** Focus on human culinary user charts, seasonal ingredient transits, balancing MATTER sinks (nutritional verification 1.50, recipe feasibility 2.00, pantry sync 1.00), and restaurant redemption rails ($0.01/token).
 - **For `Pentacles` (SpacetimeDB Cloud):** Focus on SpacetimeDB reducers (`request_yield_claim`, `confirm_yield_claim`), the 11-zone pentacle sky map, star altitude visibility, and 30 bps constellation AMM liquidity routing fees across the 6 coin pairs.
 
