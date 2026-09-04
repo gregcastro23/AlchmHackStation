@@ -1,6 +1,13 @@
 /**
  * AlchmHackStation: Canonical Discriminant Astrological Faucet Engine (ADR-014)
- * Evaluates current celestial moment (t), minter natal chart (N), and global supply damping
+ * 
+ * Clean Chart-Ratio Formulation:
+ * Evaluates the minter's natal chart ratio (E / Sp / M / Su),
+ * modulated by current celestial moment transit weights w_i(t)
+ * and counter-cyclical anti-glut damping Omega_i.
+ * 
+ * Strictly conserved at 24.0000 tokens (Standard) or 48.0000 tokens (Premium).
+ * No artificial sect hacks or wave functions.
  */
 
 export interface NatalChartData {
@@ -13,10 +20,10 @@ export interface NatalChartData {
 }
 
 export interface TransitSkyData {
-  aNumber: number;
-  multiplier: number;
-  isDiurnal: boolean;
-  dominantElement: 'Fire' | 'Water' | 'Earth' | 'Air' | string;
+  aNumber?: number;
+  multiplier?: number;
+  isDiurnal?: boolean;
+  dominantElement?: 'Fire' | 'Water' | 'Earth' | 'Air' | string;
   elementWeights: Record<'Fire' | 'Water' | 'Earth' | 'Air', number>;
 }
 
@@ -28,10 +35,12 @@ export interface GlobalSupplyState {
 }
 
 export interface DiscriminantYieldBreakdown {
-  skyDominance: number;
-  natalAffinity: number;
+  natalRatio: number;
+  transitRatio: number;
   antiGlutFactor: number;
   finalYield: number;
+  skyDominance?: number;
+  natalAffinity?: number;
 }
 
 export interface DiscriminantYieldResult {
@@ -49,8 +58,9 @@ export interface DiscriminantYieldResult {
 }
 
 /**
- * Computes discriminant daily yield across the 4 elemental axes:
- * Y_i = BASE * D_i(t) * A_i(N) * Omega_i * Tier
+ * Computes discriminant daily yield across the 4 elemental axes using the
+ * proportional chart ratio formulation:
+ * Y_i = Y_total * (r_i(N) * w_i(t) * Omega_i) / sum_j(r_j(N) * w_j(t) * Omega_j)
  */
 export function computeDiscriminantDailyYield(
   natal: NatalChartData | null | undefined,
@@ -58,94 +68,117 @@ export function computeDiscriminantDailyYield(
   supply: GlobalSupplyState,
   isPremium = false
 ): DiscriminantYieldResult {
-  const BASE_AXIS = 6.0;
-  const tierMultiplier = isPremium ? 2.0 : 1.0;
-  const axes = [
-    { key: 'spirit' as const, element: 'Fire' as const, score: natal?.spiritScore },
-    { key: 'essence' as const, element: 'Water' as const, score: natal?.essenceScore },
-    { key: 'matter' as const, element: 'Earth' as const, score: natal?.matterScore },
-    { key: 'substance' as const, element: 'Air' as const, score: natal?.substanceScore },
-  ];
+  const TOTAL_YIELD = isPremium ? 48.0 : 24.0;
 
+  // 1. Natal Chart Ratio Vector r_i(N)
+  const natalRaw = {
+    spirit: typeof natal?.spiritScore === 'number' && natal.spiritScore > 0 ? natal.spiritScore : 0,
+    essence: typeof natal?.essenceScore === 'number' && natal.essenceScore > 0 ? natal.essenceScore : 0,
+    matter: typeof natal?.matterScore === 'number' && natal.matterScore > 0 ? natal.matterScore : 0,
+    substance: typeof natal?.substanceScore === 'number' && natal.substanceScore > 0 ? natal.substanceScore : 0,
+  };
+  const natalSum = natalRaw.spirit + natalRaw.essence + natalRaw.matter + natalRaw.substance;
+  
+  const natalRatio = natalSum > 0 ? {
+    spirit: natalRaw.spirit / natalSum,
+    essence: natalRaw.essence / natalSum,
+    matter: natalRaw.matter / natalSum,
+    substance: natalRaw.substance / natalSum,
+  } : {
+    spirit: 0.25,
+    essence: 0.25,
+    matter: 0.25,
+    substance: 0.25,
+  };
+
+  // 2. Transit Sky Weights w_i(t)
+  const tw = transit.elementWeights;
+  const transitTotal = (tw.Fire || 0) + (tw.Water || 0) + (tw.Earth || 0) + (tw.Air || 0) || 1;
+  const transitRatio = {
+    spirit: (tw.Fire || 0) / transitTotal,
+    essence: (tw.Water || 0) / transitTotal,
+    matter: (tw.Earth || 0) / transitTotal,
+    substance: (tw.Air || 0) / transitTotal,
+  };
+
+  // 3. Counter-Cyclical Anti-Glut Damping Omega_i
   const totalSupply = supply.spirit + supply.essence + supply.matter + supply.substance || 1;
-  const totalWeight = Object.values(transit.elementWeights).reduce((a, b) => a + b, 0) || 1;
-
-  const result: Record<string, number> = {};
-  const breakdown: Record<string, DiscriminantYieldBreakdown> = {};
-
-  for (const axis of axes) {
-    // 1. Transit Sky Dominance (0.60 .. 1.80)
-    const weightShare = (transit.elementWeights[axis.element] || 0) / totalWeight;
-    let skyDominance = 0.60 + weightShare * 1.20;
-    
-    // Diurnal / Nocturnal sect bonus
-    if (transit.isDiurnal && (axis.element === 'Fire' || axis.element === 'Air')) {
-      skyDominance *= 1.10;
-    } else if (!transit.isDiurnal && (axis.element === 'Water' || axis.element === 'Earth')) {
-      skyDominance *= 1.10;
+  const getOmega = (supplyVal: number) => {
+    const share = supplyVal / totalSupply;
+    if (share > 0.30) {
+      return Math.max(0.65, 1.0 - 2.0 * (share - 0.25));
     }
-    skyDominance = Math.max(0.60, Math.min(1.80, skyDominance));
+    return 1.0;
+  };
 
-    // 2. Natal Chart Affinity (0.50 .. 2.00)
-    let natalAffinity = 0.70;
-    if (natal) {
-      if (typeof axis.score === 'number' && Number.isFinite(axis.score)) {
-        natalAffinity += Math.max(0, Math.min(1, axis.score / 100)) * 0.50;
-      }
-      if (natal.dominantElement && natal.dominantElement.toLowerCase() === axis.element.toLowerCase()) {
-        natalAffinity += 0.30;
-      }
-      if (typeof natal.monicaConstant === 'number') {
-        natalAffinity += Math.max(0, Math.min(1, natal.monicaConstant)) * 0.20;
-      }
-    } else {
-      natalAffinity = 1.0; // Neutral default
-    }
-    natalAffinity = Math.max(0.50, Math.min(2.00, natalAffinity));
+  const omega = {
+    spirit: getOmega(supply.spirit),
+    essence: getOmega(supply.essence),
+    matter: getOmega(supply.matter),
+    substance: getOmega(supply.substance),
+  };
 
-    // 3. Counter-Cyclical Anti-Glut Damping (0.65 .. 1.00)
-    const supplyShare = supply[axis.key] / totalSupply;
-    let antiGlutFactor = 1.0;
-    if (supplyShare > 0.30) {
-      antiGlutFactor = Math.max(0.65, 1.0 - 2.0 * (supplyShare - 0.25));
-    }
+  // 4. Combined Weighting Share & Normalization
+  const weighted = {
+    spirit: natalRatio.spirit * transitRatio.spirit * omega.spirit,
+    essence: natalRatio.essence * transitRatio.essence * omega.essence,
+    matter: natalRatio.matter * transitRatio.matter * omega.matter,
+    substance: natalRatio.substance * transitRatio.substance * omega.substance,
+  };
+  const totalWeighted = weighted.spirit + weighted.essence + weighted.matter + weighted.substance || 1;
 
-    // Combine & Clamp to Safety Corridors
-    let computedYield = BASE_AXIS * skyDominance * natalAffinity * antiGlutFactor * tierMultiplier;
-    
-    // Bounds: 1.5 to 12.0 for standard tier (3.0 to 24.0 for premium)
-    const minBound = 1.5 * tierMultiplier;
-    const maxBound = 12.0 * tierMultiplier;
-    computedYield = Math.max(minBound, Math.min(maxBound, computedYield));
-    
-    // Quantize to 4 decimal places (10^4 integer atoms)
-    const finalYield = Math.floor(computedYield * 10000) / 10000;
-    result[axis.key] = finalYield;
+  // 5. Conserved Daily Allocation (Quantized to 4 decimal places)
+  let spirit = Math.round((TOTAL_YIELD * (weighted.spirit / totalWeighted)) * 10000) / 10000;
+  let essence = Math.round((TOTAL_YIELD * (weighted.essence / totalWeighted)) * 10000) / 10000;
+  let matter = Math.round((TOTAL_YIELD * (weighted.matter / totalWeighted)) * 10000) / 10000;
+  let substance = Math.round((TOTAL_YIELD * (weighted.substance / totalWeighted)) * 10000) / 10000;
 
-    breakdown[axis.key] = {
-      skyDominance: Math.round(skyDominance * 1000) / 1000,
-      natalAffinity: Math.round(natalAffinity * 1000) / 1000,
-      antiGlutFactor: Math.round(antiGlutFactor * 1000) / 1000,
-      finalYield,
-    };
+  // Exact residual conservation adjustment
+  const unroundedTotal = spirit + essence + matter + substance;
+  const diff = Math.round((TOTAL_YIELD - unroundedTotal) * 10000) / 10000;
+  if (Math.abs(diff) > 0 && Math.abs(diff) < 0.01) {
+    spirit = Math.round((spirit + diff) * 10000) / 10000;
   }
-
-  const spirit = result.spirit ?? 6.0;
-  const essence = result.essence ?? 6.0;
-  const matter = result.matter ?? 6.0;
-  const substance = result.substance ?? 6.0;
 
   return {
     spirit,
     essence,
     matter,
     substance,
-    total: Math.round((spirit + essence + matter + substance) * 10000) / 10000,
+    total: TOTAL_YIELD,
     breakdown: {
-      spirit: breakdown.spirit!,
-      essence: breakdown.essence!,
-      matter: breakdown.matter!,
-      substance: breakdown.substance!,
+      spirit: {
+        natalRatio: Math.round(natalRatio.spirit * 10000) / 10000,
+        transitRatio: Math.round(transitRatio.spirit * 10000) / 10000,
+        antiGlutFactor: Math.round(omega.spirit * 1000) / 1000,
+        finalYield: spirit,
+        skyDominance: Math.round(transitRatio.spirit * 10000) / 10000,
+        natalAffinity: Math.round(natalRatio.spirit * 10000) / 10000,
+      },
+      essence: {
+        natalRatio: Math.round(natalRatio.essence * 10000) / 10000,
+        transitRatio: Math.round(transitRatio.essence * 10000) / 10000,
+        antiGlutFactor: Math.round(omega.essence * 1000) / 1000,
+        finalYield: essence,
+        skyDominance: Math.round(transitRatio.essence * 10000) / 10000,
+        natalAffinity: Math.round(natalRatio.essence * 10000) / 10000,
+      },
+      matter: {
+        natalRatio: Math.round(natalRatio.matter * 10000) / 10000,
+        transitRatio: Math.round(transitRatio.matter * 10000) / 10000,
+        antiGlutFactor: Math.round(omega.matter * 1000) / 1000,
+        finalYield: matter,
+        skyDominance: Math.round(transitRatio.matter * 10000) / 10000,
+        natalAffinity: Math.round(natalRatio.matter * 10000) / 10000,
+      },
+      substance: {
+        natalRatio: Math.round(natalRatio.substance * 10000) / 10000,
+        transitRatio: Math.round(transitRatio.substance * 10000) / 10000,
+        antiGlutFactor: Math.round(omega.substance * 1000) / 1000,
+        finalYield: substance,
+        skyDominance: Math.round(transitRatio.substance * 10000) / 10000,
+        natalAffinity: Math.round(natalRatio.substance * 10000) / 10000,
+      },
     },
   };
 }

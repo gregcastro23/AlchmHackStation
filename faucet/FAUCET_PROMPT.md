@@ -27,26 +27,23 @@ Under NO circumstances may token names ever vary, be abbreviated, or be conflate
 The legacy ESMS faucet dispensed a flat, symmetrical yield of 6.0 tokens per coin (`DAILY_ESMS_YIELD = 24`, 6 SPIRIT, 6 ESSENCE, 6 MATTER, 6 SUBSTANCE) to every account. Coupled with asymmetric operational burn rates (where conversational AI aggressively vaporizes SPIRIT at +50% markup while MATTER has near-zero computational sinks), this resulted in a severe 2.75x macroeconomic distortion (MATTER: 29.1k vs SPIRIT: 10.6k).
 
 This repository must replace the blind symmetrical faucet with a **Discriminant Astrological Faucet** where daily claim yields are a continuous mathematical function of:
-1. **The Current Moment ($t$):** Live celestial transit dignity, planetary hour, diurnal/nocturnal sect, and zodiac sign distribution from the canonical ephemeris.
-2. **The Claimer's Birth Chart ($\mathcal{N}$):** The minter's verified natal dominant element, elemental scores (`spiritScore`, `essenceScore`, `matterScore`, `substanceScore`), and Monica constant ($\kappa$).
-3. **Counter-Cyclical Anti-Glut Damping ($\Omega_i$):** Suppressing minting by up to 35% when an elemental coin's circulating supply exceeds 30% of total supply (currently damping MATTER at 0.75x).
+1. **The Claimer's Birth Chart ($\mathcal{N}$):** The proportional ratio of the 4 alchemical quantities ($E / Sp / M / Su$) in the minter's verified natal chart:
+   $$r_i(\mathcal{N}) = \frac{\text{Score}_i(\mathcal{N})}{E + Sp + M + Su} \quad \text{where } \sum_i r_i(\mathcal{N}) = 1.0$$
+2. **The Current Celestial Moment ($t$):** Live transit distribution $w_i(t)$ across Fire (SPIRIT), Water (ESSENCE), Earth (MATTER), and Air (SUBSTANCE), where $\sum_i w_i(t) = 1.0$.
+3. **Counter-Cyclical Anti-Glut Damping ($\Omega_i$):** Suppressing minting by up to 35% when an elemental coin's circulating supply exceeds 30% of total supply (currently damping MATTER at $\Omega_{\text{MATTER}} = 0.750$).
 
 ---
 
 ### 2. Unilateral Mathematical Contract
 The document must specify and adhere to the exact canonical formula for each coin $i \in \{\text{SPIRIT}, \text{ESSENCE}, \text{MATTER}, \text{SUBSTANCE}\}$:
 
-$$\mathcal{Y}_i(t, \mathcal{N}_u) = \operatorname{Quantize}_{10^4}\left( Y_{\text{base}} \times \mathcal{D}_i(t) \times \mathcal{A}_i(\mathcal{N}_u) \times \mathcal{R}_i(t, \mathcal{N}_u) \times \Omega_i \times \mathcal{M}_{\text{tier}} \right)$$
+$$\mathcal{Y}_i(t, \mathcal{N}_u) = \operatorname{Quantize}_{10^4}\left( Y_{\text{total}} \times \frac{r_i(\mathcal{N}_u) \cdot w_i(t) \cdot \Omega_i}{\sum_{j} \left(r_j(\mathcal{N}_u) \cdot w_j(t) \cdot \Omega_j\right)} \right)$$
 
-- $Y_{\text{base}} = 6.0000$ tokens per coin ($24.0000$ baseline total).
-- $\mathcal{D}_i(t) \in [0.60, 1.80]$: Transit Sky Dominance based on 10 planetary bodies, essential dignities $d_p \in [-3, +3]$, and Diurnal/Nocturnal sect ($+10\%$ to SPIRIT/SUBSTANCE by day, $+10\%$ to ESSENCE/MATTER by night).
-- $\mathcal{A}_i(\mathcal{N}_u) \in [0.50, 2.00]$: Natal Affinity ($0.70 + 0.50 \cdot (\text{Score}_i/100) + 0.30 \cdot \mathbf{1}_{\{\text{dominantElement}=i\}} + 0.20 \cdot \kappa$). Neutral default without birth chart = $1.0000$.
-- $\mathcal{R}_i(t, \mathcal{N}_u) \in [0.75, 1.35]$: Celestial-Natal Waveform Resonance (trines/sextiles $+20..+35\%$, squares/oppositions $0.75..0.85\times$).
-- $\Omega_i \in [0.65, 1.00]$: Anti-Glut Damping: $\max(0.65, 1.0 - 2.0 \times (\text{SupplyShare}_i - 0.25))$ when $\text{SupplyShare}_i > 0.30$.
-- $\mathcal{M}_{\text{tier}} \in \{1.0, 2.0\}$: Standard (1.0) vs Premium (2.0) account tier.
-- Bounded Safety Corridors:
-  - Standard Tier: $[1.5000, 12.0000]$ tokens per coin; $[18.0000, 36.0000]$ total per claim.
-  - Premium Tier: $[3.0000, 24.0000]$ tokens per coin; $[36.0000, 72.0000]$ total per claim.
+- $Y_{\text{total}} = 24.0000$ (Standard) or $48.0000$ (Premium) tokens total per claim.
+- $r_i(\mathcal{N}_u) = \text{Score}_i / (E + Sp + M + Su)$: Intrinsic chart ratio vector. (Neutral default without birth chart = $0.2500$).
+- $w_i(t)$: Live celestial transit weights across the 4 axes ($\sum w_i = 1.0$).
+- $\Omega_{\text{MATTER}} = 0.750$: Anti-glut damping when global MATTER share > 30% (currently 37.51%).
+- **Strict Conservation Guarantee:** The sum across all 4 coins is **strictly conserved at 24.0000** (Standard) or **48.0000** (Premium). Zero arbitrary inflation or drift.
 
 ---
 

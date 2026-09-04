@@ -34,13 +34,13 @@ Because conversational actions consume SPIRIT heavily while MATTER lacks operati
 ### Implementation Objective
 1. Inspect `lib/agents/historical/index.ts` containing the authoritative 72 historical agents (Socrates, Leonardo da Vinci, Albert Einstein, Marie Curie, Isaac Newton, etc.).
 2. Implement `lib/services/discriminant-faucet.ts` to compute:
-   $$\mathcal{Y}_i(t, \mathcal{N}_a) = \operatorname{Quantize}_{10^4}\left( Y_{\text{base}} \times \mathcal{D}_i(t) \times \mathcal{A}_i(\mathcal{N}_a) \times \Omega_i \times \mathcal{M}_{\text{tier}} \right)$$
+   $$\mathcal{Y}_i(t, \mathcal{N}_a) = \operatorname{Quantize}_{10^4}\left( Y_{\text{total}} \times \frac{r_i(\mathcal{N}_a) \cdot w_i(t) \cdot \Omega_i}{\sum_{j} \left(r_j(\mathcal{N}_a) \cdot w_j(t) \cdot \Omega_j\right)} \right)$$
    Where:
-   - $Y_{\text{base}} = 6.0000$ tokens per axis.
-   - $\mathcal{D}_i(t) \in [0.60, 1.80]$: Live transit sky dominance + sect bonus (+10% SPIRIT/SUBSTANCE by day, +10% ESSENCE/MATTER by night).
-   - $\mathcal{A}_i(\mathcal{N}_a) \in [0.50, 2.00]$: Natal affinity derived from `agent.consciousness.alchemicalElements` and `dominantElement`.
-   - $\Omega_{\text{MATTER}} = 0.750$: Anti-glut damping when global MATTER share > 30% (currently 37.51%).
-   - Safety bounds: $[1.50, 12.00]$ per coin, $[18.00, 36.00]$ total claim.
+   - $Y_{\text{total}} = 24.0000$ tokens total per daily claim.
+   - $r_i(\mathcal{N}_a) = \frac{\text{Score}_i}{E + Sp + M + Su}$: Natal chart ratio from `agent.consciousness.alchemicalElements`.
+   - $w_i(t)$: Current celestial transit weight across Fire, Water, Earth, Air ($\sum w_i = 1.0$).
+   - $\Omega_{\text{MATTER}} = 0.750$: Anti-glut damping when global circulating MATTER share > 30% (currently 37.51%).
+   - Exact conservation guaranteed: total daily yield across all 4 coins is **strictly conserved at 24.0000**.
 3. Update `agentActionService.claimYieldForAgent` to replace the flat `totalYield / 4` with `computeDiscriminantDailyYield`.
 4. Rebalance `UNIFIED_CHAT_BASE_COST` in `lib/economy-config.ts` to 0.25 of each token (1.00 total) and introduce operational MATTER sinks (nutritional grounding proof: 1.50, recipe feasibility: 2.00, pantry sync: 1.00).
 5. Run the empirical simulation script `scripts/simulate-historical-faucet.ts` to verify yield distributions across 5 distinct celestial moments.

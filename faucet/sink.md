@@ -78,99 +78,59 @@ The **~2.75× supply ratio** between **MATTER** ($29,116.87$) and **SPIRIT** ($1
 
 ## 2. Mathematical Specification of the Discriminant Faucet
 
-### 2.1 Core Formula
-For minter $u$ claiming at UTC timestamp $t$, with verified birth chart $\mathcal{N}_u$, the daily mint yield for canonical token $i \in \{\text{SPIRIT}, \text{ESSENCE}, \text{MATTER}, \text{SUBSTANCE}\}$ is defined as:
+### 2.1 The Natal Chart Elemental Ratio ($r_i(\mathcal{N})$)
+Every claimer's verified birth chart contains the 4 alchemical quantities:
+- **Essence** ($E_{\text{natal}}$)
+- **Spirit** ($Sp_{\text{natal}}$)
+- **Matter** ($M_{\text{natal}}$)
+- **Substance** ($Su_{\text{natal}}$)
 
-$$\mathcal{Y}_i(t, \mathcal{N}_u) = \operatorname{Quantize}_{10^4}\left( Y_{\text{base}} \times \mathcal{D}_i(t) \times \mathcal{A}_i(\mathcal{N}_u) \times \mathcal{R}_i(t, \mathcal{N}_u) \times \mathcal{M}_{\text{tier}} \right)$$
+Let the total natal score be:
+$$S_{\text{natal}} = E_{\text{natal}} + Sp_{\text{natal}} + M_{\text{natal}} + Su_{\text{natal}}$$
 
-Where:
-- $Y_{\text{base}} = 6.0000$ tokens per axis ($24.0000$ total baseline).
-- $\mathcal{D}_i(t)$ is the **Transit Sky Dominance & Dignity Factor**.
-- $\mathcal{A}_i(\mathcal{N}_u)$ is the **Natal Chart Elemental Affinity Factor**.
-- $\mathcal{R}_i(t, \mathcal{N}_u)$ is the **Celestial-Natal Waveform Resonance**.
-- $\mathcal{M}_{\text{tier}}$ is the **Account Tier Multiplier** ($1.0$ standard, $2.0$ premium).
-- $\operatorname{Quantize}_{10^4}$ rounds to 4 decimal places ($10^4$ integer atoms) with strict floor conservation.
+The normalized natal ratio vector is:
+$$r_i(\mathcal{N}) = \frac{\text{Score}_i(\mathcal{N})}{S_{\text{natal}}} \quad \text{for } i \in \{\text{SPIRIT}, \text{ESSENCE}, \text{MATTER}, \text{SUBSTANCE}\}$$
 
----
+Where $\sum_i r_i(\mathcal{N}) = 1.0$.
 
-### 2.2 Factor 1: Transit Sky Dominance & Dignity $\mathcal{D}_i(t)$
-
-Sky dominance evaluates the live distribution of the 10 astrological bodies (Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto) across the four alchemical axes.
-
-Let $\mathcal{P}$ be the set of 10 live planetary bodies. For body $p \in \mathcal{P}$, let:
-- $\operatorname{Sign}(p, t) \in \{\text{Aries}, \dots, \text{Pisces}\}$
-- $\operatorname{Element}(\operatorname{Sign}(p, t)) \in \{\text{Fire}, \text{Water}, \text{Earth}, \text{Air}\}$
-- $\operatorname{Dignity}(p, \operatorname{Sign}(p, t)) \in [-3, +3]$ (essential dignity: domicile, exaltation, detriment, fall)
-- $w_p$ be the celestial prominence weight:
-  - Sun, Moon: $w_p = 2.0$
-  - Mercury, Venus, Mars: $w_p = 1.5$
-  - Jupiter, Saturn: $w_p = 1.2$
-  - Uranus, Neptune, Pluto: $w_p = 0.8$
-
-For each elemental axis $i$:
-
-$$S_i(t) = \sum_{p \in \mathcal{P}} w_p \cdot \mathbf{1}_{\{\operatorname{Element}(\operatorname{Sign}(p, t)) = i\}} \cdot \left(1 + 0.15 \cdot \operatorname{Dignity}(p, \operatorname{Sign}(p, t))\right)$$
-
-The normalized sky dominance $\mathcal{D}_i(t)$ is bounded within $[0.60, 1.80]$:
-
-$$\mathcal{D}_i(t) = 0.60 + 1.20 \times \left( \frac{S_i(t)}{\sum_{j} S_j(t)} \right) \times \Psi_{\text{sect}}(i, t)$$
-
-Where the sect term $\Psi_{\text{sect}}(i, t)$ modulates diurnal (day) vs nocturnal (night) affinity:
-- If $\operatorname{isDiurnal}(t) = \text{true}$ (Sun above horizon): Fire (yielding SPIRIT) and Air (yielding SUBSTANCE) receive a $+10\%$ sect bonus; Water (ESSENCE) and Earth (MATTER) are neutral ($1.00$).
-- If $\operatorname{isDiurnal}(t) = \text{false}$ (Sun below horizon): Water (yielding ESSENCE) and Earth (yielding MATTER) receive a $+10\%$ sect bonus; Fire (SPIRIT) and Air (SUBSTANCE) are neutral ($1.00$).
+*Neutral Fallback:* If a claimer has no birth chart recorded, the system defaults to neutral: $r_i(\mathcal{N}) = 0.2500$ for all four coins.
 
 ---
 
-### 2.3 Factor 2: Natal Chart Elemental Affinity $\mathcal{A}_i(\mathcal{N}_u)$
+### 2.2 The Celestial Moment Transit Distribution ($w_i(t)$)
+The active astrological sky provides the current elemental distribution across the four axes:
+- $w_{\text{Fire}}(t) \to \text{SPIRIT}$
+- $w_{\text{Water}}(t) \to \text{ESSENCE}$
+- $w_{\text{Earth}}(t) \to \text{MATTER}$
+- $w_{\text{Air}}(t) \to \text{SUBSTANCE}$
 
-Read directly from the minter's verified natal chart record (`user_natal_charts` table).
-
-Let the user's natal record contain:
-- `dominantElement` $\in \{\text{Fire}, \text{Water}, \text{Earth}, \text{Air}\}$
-- `spiritScore`, `essenceScore`, `matterScore`, `substanceScore` $\in [0, 100]$
-- `monicaConstant` $\kappa \in [0.0, 1.0]$
-
-The raw affinity $A_i(\mathcal{N}_u)$ is computed as:
-
-$$A_i(\mathcal{N}_u) = 0.70 + 0.50 \times \left(\frac{\text{Score}_i}{100}\right) + 0.30 \cdot \mathbf{1}_{\{\text{dominantElement} = i\}} + 0.20 \cdot \kappa$$
-
-Clamped strictly to the safety corridor:
-
-$$\mathcal{A}_i(\mathcal{N}_u) = \operatorname{clamp}\left(A_i(\mathcal{N}_u), 0.50, 2.00\right)$$
-
-*Note:* If a user does not have a verified birth chart attached to their account, the system defaults to neutral: $\mathcal{A}_i(\mathcal{N}_u) = 1.0000$ for all $i$.
+Normalized such that $\sum_i w_i(t) = 1.0$.
 
 ---
 
-### 2.4 Factor 3: Celestial-Natal Waveform Resonance $\mathcal{R}_i(t, \mathcal{N}_u)$
+### 2.3 Counter-Cyclical Anti-Glut Damping ($\Omega_i$)
+To prevent macroeconomic accumulation without disrupting mathematical conservation:
 
-Waveform resonance evaluates whether the transiting celestial positions form harmonic aspects (conjunction $0^\circ$, sextile $60^\circ$, trine $120^\circ$) or dynamic tension aspects (square $90^\circ$, opposition $180^\circ$) with the minter's natal planetary anchors.
+$$\Omega_i = \begin{cases} 
+1.000 & \text{if } \frac{\text{Supply}_i}{\text{Supply}_{\text{total}}} \le 0.30 \\
+\max\left(0.650, \; 1.0 - 2.0 \times \left(\frac{\text{Supply}_i}{\text{Supply}_{\text{total}}} - 0.25\right)\right) & \text{if } \frac{\text{Supply}_i}{\text{Supply}_{\text{total}}} > 0.30 
+\end{cases}$$
 
-Let $\theta_{\text{natal}, i}$ be the natal longitude of the ruler of token $i$'s cosmological element (Fire/SPIRIT $\to$ Sun/Mars, Water/ESSENCE $\to$ Moon/Venus, Earth/MATTER $\to$ Saturn/Mercury, Air/SUBSTANCE $\to$ Jupiter/Mercury), and let $\theta_{\text{transit}}(t)$ be the live transiting Sun/Moon longitude.
-
-The angular separation $\Delta \theta = |\theta_{\text{transit}}(t) - \theta_{\text{natal}, i}| \pmod{360^\circ}$ maps to:
-
-$$\mathcal{R}_i(t, \mathcal{N}_u) = 1.0 + 0.35 \cdot \cos\left(3 \cdot \Delta \theta\right) \cdot \operatorname{orbDiscount}(\Delta \theta)$$
-
-Where:
-- Trines ($120^\circ$) and Sextiles ($60^\circ$) yield $\mathcal{R}_i \in [1.20, 1.35]$ (**Resonance Boost**).
-- Squares ($90^\circ$) and Oppositions ($180^\circ$) yield $\mathcal{R}_i \in [0.75, 0.85]$ (**Alchemical Friction**).
-- In the absence of angular data, $\mathcal{R}_i = 1.0000$.
+Under current authoritative network state ($\text{Supply}_{\text{MATTER}} = 37.51\%$):
+$$\Omega_{\text{MATTER}} = \mathbf{0.750}, \quad \Omega_{\text{SPIRIT}} = \Omega_{\text{ESSENCE}} = \Omega_{\text{SUBSTANCE}} = \mathbf{1.000}$$
 
 ---
 
-### 2.5 Total Conservation & Bounded Normalization Rules
+### 2.4 Conserved Daily Yield Allocation Formula
+The total daily yield budget ($Y_{\text{total}} = 24.0000$ Standard, $48.0000$ Premium) is allocated proportionally among the 4 canonical tokens:
 
-To prevent runaway inflation while allowing discriminant variance:
-1. **Per-Axis Corridor:** For any axis $i$, the yield must satisfy:
-   $$1.5000 \le \mathcal{Y}_i(t, \mathcal{N}_u) \le 12.0000 \quad (\text{Standard Tier})$$
-   $$3.0000 \le \mathcal{Y}_i(t, \mathcal{N}_u) \le 24.0000 \quad (\text{Premium Tier})$$
-2. **Total Claim Ceiling:** The total yield minted across all 4 axes in a single 24-hour window is constrained:
-   $$18.0000 \le \sum_{i} \mathcal{Y}_i(t, \mathcal{N}_u) \le 36.0000 \quad (\text{Mean Centered at } 24.0000)$$
-3. **Counter-Cyclical Anti-Glut Damping:**
-   If a token's global circulating supply exceeds $35\%$ of total ESMS supply (as MATTER currently does at $37.5\%$), a damping factor $\Omega_i$ is applied:
-   $$\Omega_i = \max\left(0.65, 1.0 - 2.0 \times \left(\frac{\text{Supply}_i}{\text{Supply}_{\text{total}}} - 0.25\right)\right)$$
-   For MATTER ($\text{Supply}_{\text{MATTER}} = 37.5\%$), $\Omega_{\text{MATTER}} = 1.0 - 2.0 \times (0.375 - 0.25) = 0.75$. MATTER minting is automatically suppressed by $25\%$ until global supply equilibrium is restored!
+$$\mathcal{Y}_i(t, \mathcal{N}) = \operatorname{Quantize}_{10^4}\left( Y_{\text{total}} \times \frac{r_i(\mathcal{N}) \cdot w_i(t) \cdot \Omega_i}{\sum_{j} \left(r_j(\mathcal{N}) \cdot w_j(t) \cdot \Omega_j\right)} \right)$$
+
+### Key Invariants Guaranteed by this Formulation:
+1. **Exact Total Conservation:** Total yield is **strictly conserved** at $Y_{\text{total}} = 24.0000$ tokens per standard claim. Zero arbitrary inflation or drift.
+2. **Chart-Driven Differentiation:** A claimer with high Spirit in their natal chart naturally mints more SPIRIT; a claimer with high Essence mints more ESSENCE.
+3. **Moment Sensitivity:** When the transiting sky concentrates in Fire or Air, SPIRIT and SUBSTANCE minting naturally expands to recharge conversational gas.
+4. **Automatic Glut Relief:** $\Omega_{\text{MATTER}} = 0.750$ automatically compresses MATTER minting across all accounts, allowing physical sinks to absorb existing surplus.
 
 ---
 
@@ -333,85 +293,90 @@ export function computeDiscriminantDailyYield(
   supply: GlobalSupplyState,
   isPremium = false
 ): DiscriminantYieldResult {
-  const BASE_AXIS = 6.0;
-  const tierMultiplier = isPremium ? 2.0 : 1.0;
-  const axes = [
-    { key: 'spirit' as const, element: 'Fire' as const, score: natal?.spiritScore },
-    { key: 'essence' as const, element: 'Water' as const, score: natal?.essenceScore },
-    { key: 'matter' as const, element: 'Earth' as const, score: natal?.matterScore },
-    { key: 'substance' as const, element: 'Air' as const, score: natal?.substanceScore },
-  ];
+  const TOTAL_YIELD = isPremium ? 48.0 : 24.0;
 
+  // 1. Natal Chart Ratio Vector r_i(N)
+  const natalRaw = {
+    spirit: typeof natal?.spiritScore === 'number' && natal.spiritScore > 0 ? natal.spiritScore : 0,
+    essence: typeof natal?.essenceScore === 'number' && natal.essenceScore > 0 ? natal.essenceScore : 0,
+    matter: typeof natal?.matterScore === 'number' && natal.matterScore > 0 ? natal.matterScore : 0,
+    substance: typeof natal?.substanceScore === 'number' && natal.substanceScore > 0 ? natal.substanceScore : 0,
+  };
+  const natalSum = natalRaw.spirit + natalRaw.essence + natalRaw.matter + natalRaw.substance;
+  
+  const natalRatio = natalSum > 0 ? {
+    spirit: natalRaw.spirit / natalSum,
+    essence: natalRaw.essence / natalSum,
+    matter: natalRaw.matter / natalSum,
+    substance: natalRaw.substance / natalSum,
+  } : {
+    spirit: 0.25,
+    essence: 0.25,
+    matter: 0.25,
+    substance: 0.25,
+  };
+
+  // 2. Transit Sky Weights w_i(t)
+  const tw = transit.elementWeights;
+  const transitTotal = (tw.Fire || 0) + (tw.Water || 0) + (tw.Earth || 0) + (tw.Air || 0) || 1;
+  const transitRatio = {
+    spirit: (tw.Fire || 0) / transitTotal,
+    essence: (tw.Water || 0) / transitTotal,
+    matter: (tw.Earth || 0) / transitTotal,
+    substance: (tw.Air || 0) / transitTotal,
+  };
+
+  // 3. Counter-Cyclical Anti-Glut Damping Omega_i
   const totalSupply = supply.spirit + supply.essence + supply.matter + supply.substance || 1;
-  const totalWeight = Object.values(transit.elementWeights).reduce((a, b) => a + b, 0) || 1;
-
-  const result: Record<string, number> = {};
-  const breakdown: any = {};
-
-  for (const axis of axes) {
-    // 1. Transit Sky Dominance (0.60 .. 1.80)
-    const weightShare = (transit.elementWeights[axis.element] || 0) / totalWeight;
-    let skyDominance = 0.60 + weightShare * 1.20;
-    
-    // Sect bonus
-    if (transit.isDiurnal && (axis.element === 'Fire' || axis.element === 'Air')) {
-      skyDominance *= 1.10;
-    } else if (!transit.isDiurnal && (axis.element === 'Water' || axis.element === 'Earth')) {
-      skyDominance *= 1.10;
+  const getOmega = (supplyVal: number) => {
+    const share = supplyVal / totalSupply;
+    if (share > 0.30) {
+      return Math.max(0.65, 1.0 - 2.0 * (share - 0.25));
     }
-    skyDominance = Math.max(0.60, Math.min(1.80, skyDominance));
+    return 1.0;
+  };
 
-    // 2. Natal Chart Affinity (0.50 .. 2.00)
-    let natalAffinity = 0.70;
-    if (natal) {
-      if (typeof axis.score === 'number' && Number.isFinite(axis.score)) {
-        natalAffinity += Math.max(0, Math.min(1, axis.score / 100)) * 0.50;
-      }
-      if (natal.dominantElement && natal.dominantElement.toLowerCase() === axis.element.toLowerCase()) {
-        natalAffinity += 0.30;
-      }
-      if (typeof natal.monicaConstant === 'number') {
-        natalAffinity += Math.max(0, Math.min(1, natal.monicaConstant)) * 0.20;
-      }
-    } else {
-      natalAffinity = 1.0; // Neutral default
-    }
-    natalAffinity = Math.max(0.50, Math.min(2.00, natalAffinity));
+  const omega = {
+    spirit: getOmega(supply.spirit),
+    essence: getOmega(supply.essence),
+    matter: getOmega(supply.matter),
+    substance: getOmega(supply.substance),
+  };
 
-    // 3. Counter-Cyclical Anti-Glut Damping (0.65 .. 1.00)
-    const supplyShare = supply[axis.key] / totalSupply;
-    let antiGlutFactor = 1.0;
-    if (supplyShare > 0.30) {
-      antiGlutFactor = Math.max(0.65, 1.0 - 2.0 * (supplyShare - 0.25));
-    }
+  // 4. Combined Weighting Share & Normalization
+  const weighted = {
+    spirit: natalRatio.spirit * transitRatio.spirit * omega.spirit,
+    essence: natalRatio.essence * transitRatio.essence * omega.essence,
+    matter: natalRatio.matter * transitRatio.matter * omega.matter,
+    substance: natalRatio.substance * transitRatio.substance * omega.substance,
+  };
+  const totalWeighted = weighted.spirit + weighted.essence + weighted.matter + weighted.substance || 1;
 
-    // Combine & Clamp
-    let computedYield = BASE_AXIS * skyDominance * natalAffinity * antiGlutFactor * tierMultiplier;
-    
-    // Bounds: 1.5 to 12.0 for standard, 3.0 to 24.0 for premium
-    const minBound = 1.5 * tierMultiplier;
-    const maxBound = 12.0 * tierMultiplier;
-    computedYield = Math.max(minBound, Math.min(maxBound, computedYield));
-    
-    // Quantize to 4 decimals
-    const finalYield = Math.floor(computedYield * 10000) / 10000;
-    result[axis.key] = finalYield;
+  // 5. Conserved Daily Allocation
+  let spirit = Math.round((TOTAL_YIELD * (weighted.spirit / totalWeighted)) * 10000) / 10000;
+  let essence = Math.round((TOTAL_YIELD * (weighted.essence / totalWeighted)) * 10000) / 10000;
+  let matter = Math.round((TOTAL_YIELD * (weighted.matter / totalWeighted)) * 10000) / 10000;
+  let substance = Math.round((TOTAL_YIELD * (weighted.substance / totalWeighted)) * 10000) / 10000;
 
-    breakdown[axis.key] = {
-      skyDominance: Math.round(skyDominance * 1000) / 1000,
-      natalAffinity: Math.round(natalAffinity * 1000) / 1000,
-      antiGlutFactor: Math.round(antiGlutFactor * 1000) / 1000,
-      finalYield,
-    };
+  // Micro-adjustment for exact float quantization conservation
+  const unroundedTotal = spirit + essence + matter + substance;
+  const diff = Math.round((TOTAL_YIELD - unroundedTotal) * 10000) / 10000;
+  if (Math.abs(diff) > 0 && Math.abs(diff) < 0.01) {
+    spirit = Math.round((spirit + diff) * 10000) / 10000;
   }
 
   return {
-    spirit: result.spirit,
-    essence: result.essence,
-    matter: result.matter,
-    substance: result.substance,
-    total: Math.round((result.spirit + result.essence + result.matter + result.substance) * 10000) / 10000,
-    breakdown,
+    spirit,
+    essence,
+    matter,
+    substance,
+    total: TOTAL_YIELD,
+    breakdown: {
+      spirit: { natalRatio: natalRatio.spirit, transitRatio: transitRatio.spirit, antiGlutFactor: omega.spirit, finalYield: spirit },
+      essence: { natalRatio: natalRatio.essence, transitRatio: transitRatio.essence, antiGlutFactor: omega.essence, finalYield: essence },
+      matter: { natalRatio: natalRatio.matter, transitRatio: transitRatio.matter, antiGlutFactor: omega.matter, finalYield: matter },
+      substance: { natalRatio: natalRatio.substance, transitRatio: transitRatio.substance, antiGlutFactor: omega.substance, finalYield: substance },
+    },
   };
 }
 ```

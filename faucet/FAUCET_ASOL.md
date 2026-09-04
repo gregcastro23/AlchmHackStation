@@ -80,52 +80,64 @@ Every historical agent record in `lib/agents/historical/<agent>.ts` supplies:
 
 ---
 
-## 2. Mathematical Specification of the Discriminant Faucet
+---
 
-### 2.1 The Daily Yield Formula
-For any claiming agent $a$ with birth chart $\mathcal{N}_a$ at celestial timestamp $t$, the daily yield for token $i \in \{\text{SPIRIT}, \text{ESSENCE}, \text{MATTER}, \text{SUBSTANCE}\}$ is:
+## 2. Mathematical Specification: The Chart Ratio Faucet Formulation
 
-$$\mathcal{Y}_i(t, \mathcal{N}_a) = \operatorname{Quantize}_{10^4}\left( Y_{\text{base}} \times \mathcal{D}_i(t) \times \mathcal{A}_i(\mathcal{N}_a) \times \Omega_i \times \mathcal{M}_{\text{tier}} \right)$$
+Instead of convoluted sect bonuses or artificial wave functions, the discriminant faucet operates on the **intrinsic ratio of the 4 elemental quantities in the claimer's birth chart** ($E / Sp / M / Su$), modulated by the current celestial moment ($t$) and counter-cyclical anti-glut damping ($\Omega_i$).
 
-Where:
-- $Y_{\text{base}} = 6.0000$ tokens per axis ($24.0000$ baseline standard tier).
-- $\mathcal{D}_i(t)$ is the **Transit Sky Dominance Factor** $[0.60, 1.80]$.
-- $\mathcal{A}_i(\mathcal{N}_a)$ is the **Natal Affinity Factor** $[0.50, 2.00]$.
-- $\Omega_i$ is the **Counter-Cyclical Anti-Glut Damping Factor** $[0.65, 1.00]$.
-- $\mathcal{M}_{\text{tier}} = 1.0$ (Standard) or $2.0$ (Premium).
-- $\operatorname{Quantize}_{10^4}$ floors to 4 decimal precision ($10^{-4}$ tokens).
+### 2.1 The Natal Chart Elemental Ratio
+Every claimer's birth chart contains the 4 alchemical quantities:
+- **Essence** ($E_{\text{natal}}$)
+- **Spirit** ($Sp_{\text{natal}}$)
+- **Matter** ($M_{\text{natal}}$)
+- **Substance** ($Su_{\text{natal}}$)
+
+Let $S_{\text{natal}} = E_{\text{natal}} + Sp_{\text{natal}} + M_{\text{natal}} + Su_{\text{natal}}$. The normalized natal ratio vector is:
+
+$$r_i(\mathcal{N}) = \frac{\text{Score}_i(\mathcal{N})}{S_{\text{natal}}} \quad \text{for } i \in \{\text{SPIRIT}, \text{ESSENCE}, \text{MATTER}, \text{SUBSTANCE}\}$$
+
+Where $\sum_i r_i(\mathcal{N}) = 1.0$.
+
+*Example (Albert Einstein):* $Sp = 0.95, E = 0.85, M = 0.40, Su = 0.75$ ($S = 2.95$).  
+Natal Ratios: $r_{\text{SPIRIT}} = 32.2\%$, $r_{\text{ESSENCE}} = 28.8\%$, $r_{\text{MATTER}} = 13.6\%$, $r_{\text{SUBSTANCE}} = 25.4\%$.
 
 ---
 
-### 2.2 Factor 1: Transit Sky Dominance $\mathcal{D}_i(t)$
-Let $W_i(t)$ be the live celestial prominence weight of element $i$ across the 10 transiting bodies:
+### 2.2 The Current Celestial Moment ($t$)
+The current astrological sky provides the active transit distribution across the 4 axes:
+- $w_{\text{Fire}}(t) \to \text{SPIRIT}$
+- $w_{\text{Water}}(t) \to \text{ESSENCE}$
+- $w_{\text{Earth}}(t) \to \text{MATTER}$
+- $w_{\text{Air}}(t) \to \text{SUBSTANCE}$
 
-$$\mathcal{D}_i(t) = \operatorname{clamp}\left( 0.60 + 1.20 \times \frac{W_i(t)}{\sum_j W_j(t)} \times \Psi_{\text{sect}}(i, t), \; 0.60, \; 1.80 \right)$$
-
-Where the sect bonus $\Psi_{\text{sect}}(i, t)$ enforces:
-- **Diurnal (Sun above horizon):** $+10\%$ bonus to **SPIRIT** (Fire) and **SUBSTANCE** (Air); Water and Earth are $1.00$.
-- **Nocturnal (Sun below horizon):** $+10\%$ bonus to **ESSENCE** (Water) and **MATTER** (Earth); Fire and Air are $1.00$.
-
----
-
-### 2.3 Factor 2: Natal Affinity $\mathcal{A}_i(\mathcal{N}_a)$
-Evaluated directly from the agent's historical chart:
-
-$$\mathcal{A}_i(\mathcal{N}_a) = \operatorname{clamp}\left( 0.70 + 0.50 \cdot \text{Score}_i + 0.30 \cdot \mathbf{1}_{\{\text{dominantElement} = i\}} + 0.20 \cdot \frac{\kappa}{10}, \; 0.50, \; 2.00 \right)$$
+Where $\sum_i w_i(t) = 1.0$ (normalized transit prominence of the 10 celestial bodies).
 
 ---
 
-### 2.4 Factor 3: Counter-Cyclical Anti-Glut Damping $\Omega_i$
-Derived from live global supply shares:
+### 2.3 Counter-Cyclical Anti-Glut Damping ($\Omega_i$)
+To dynamically cure macroeconomic imbalances without disrupting conservation:
 
 $$\Omega_i = \begin{cases} 
-1.0 & \text{if } \frac{\text{Supply}_i}{\text{Supply}_{\text{total}}} \le 0.30 \\
-\max\left(0.65, \; 1.0 - 2.0 \times \left(\frac{\text{Supply}_i}{\text{Supply}_{\text{total}}} - 0.25\right)\right) & \text{if } \frac{\text{Supply}_i}{\text{Supply}_{\text{total}}} > 0.30 
+1.000 & \text{if } \frac{\text{Supply}_i}{\text{Supply}_{\text{total}}} \le 0.30 \\
+\max\left(0.650, \; 1.0 - 2.0 \times \left(\frac{\text{Supply}_i}{\text{Supply}_{\text{total}}} - 0.25\right)\right) & \text{if } \frac{\text{Supply}_i}{\text{Supply}_{\text{total}}} > 0.30 
 \end{cases}$$
 
 Under current authoritative network state ($\text{Supply}_{\text{MATTER}} = 37.51\%$):
-$$\Omega_{\text{MATTER}} = 1.0 - 2.0 \times (0.3751 - 0.25) = \mathbf{0.750}$$
-$$\Omega_{\text{SPIRIT}} = \Omega_{\text{ESSENCE}} = \Omega_{\text{SUBSTANCE}} = \mathbf{1.000}$$
+$$\Omega_{\text{MATTER}} = \mathbf{0.750}, \quad \Omega_{\text{SPIRIT}} = \Omega_{\text{ESSENCE}} = \Omega_{\text{SUBSTANCE}} = \mathbf{1.000}$$
+
+---
+
+### 2.4 Conserved Daily Yield Allocation Formula
+The total daily yield budget ($Y_{\text{total}} = 24.0000$ standard, $48.0000$ premium) is allocated proportionally:
+
+$$\mathcal{Y}_i(t, \mathcal{N}) = \operatorname{Quantize}_{10^4}\left( Y_{\text{total}} \times \frac{r_i(\mathcal{N}) \cdot w_i(t) \cdot \Omega_i}{\sum_{j} \left(r_j(\mathcal{N}) \cdot w_j(t) \cdot \Omega_j\right)} \right)$$
+
+### Key Invariants Guaranteed by this Formulation:
+1. **Exact Conservation:** Total yield is **strictly conserved** at $Y_{\text{total}} = 24.0000$ tokens per standard claim. Zero arbitrary inflation.
+2. **Chart-Driven Differentiation:** A claimer with high Spirit in their natal chart naturally mints more SPIRIT; a claimer with high Essence mints more ESSENCE.
+3. **Moment Sensitivity:** When the transiting sky concentrates in Fire/Air, SPIRIT and SUBSTANCE minting naturally expands to recharge conversational gas.
+4. **Automatic Glut Relief:** $\Omega_{\text{MATTER}} = 0.750$ automatically compresses MATTER minting across all agents, allowing physical sinks to absorb existing surplus.
 
 ---
 
@@ -133,35 +145,28 @@ $$\Omega_{\text{SPIRIT}} = \Omega_{\text{ESSENCE}} = \Omega_{\text{SUBSTANCE}} =
 
 The script [`scripts/investigate_asol_faucet.ts`](file:///Users/GregCastro/Desktop/AlchmHackStation/AlchmHackStation/scripts/investigate_asol_faucet.ts) was executed against all 72 historical agents. Below are the verified empirical results:
 
-### 3.1 Synthesis Matrix Across 5 Celestial Moments
-
 | Moment ID | Celestial Configuration | Avg SPIRIT (🝇) | Avg ESSENCE (🝑) | Avg MATTER (🝙) | Avg SUBSTANCE (🝉) | Avg Total / Agent | Total Daily Mint (72 Agents) | SPIRIT / MATTER Ratio |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Moment 1** | **Diurnal Fire Sky** (Sun in Leo, midday) | **10.0432** | 5.9209 | **4.2249** | 6.9735 | **27.1625** | 1,956 ESMS | **2.38×** |
-| **Moment 2** | **Nocturnal Water Sky** (Moon in Cancer, night) | 5.5035 | **10.3765** | **5.0049** | 5.8867 | **26.7716** | 1,928 ESMS | **1.10×** |
-| **Moment 3** | **Nocturnal Earth Stellium** (Sun & Saturn in Earth) | 5.9621 | 7.0139 | **7.1499** | 5.8867 | **26.0127** | 1,873 ESMS | **0.83×** |
-| **Moment 4** | **Diurnal Air Solstice** (Mercury-ruled Air stellium) | 7.0628 | 5.9209 | **4.2249** | **9.9496** | **27.1582** | 1,955 ESMS | **1.67×** |
-| **Moment 5** | **Equinoctial Equilibrium** (Symmetric weights) | 7.5673 | 6.8317 | **4.8749** | 7.4716 | **26.7456** | 1,926 ESMS | **1.55×** |
+| **Moment 1** | **Fire Transit Sky** (50% Fire transit prominence) | **12.8101** | 3.8581 | **2.3356** | 4.9962 | **24.0000** | 1,728 ESMS | **5.48×** |
+| **Moment 2** | **Water Transit Sky** (50% Water transit prominence) | 2.6309 | **14.3924** | **3.1538** | 3.8230 | **24.0000** | 1,728 ESMS | **0.83×** |
+| **Moment 3** | **Earth Transit Stellium** (50% Earth, anti-glut active) | 4.5671 | 6.0572 | **8.9710** | 4.4048 | **24.0000** | 1,728 ESMS | **0.51×** |
+| **Moment 4** | **Air Transit Solstice** (50% Air transit prominence) | 5.1987 | 3.8953 | **2.3419** | **12.5641** | **24.0000** | 1,728 ESMS | **2.22×** |
+| **Moment 5** | **Equinoctial Equilibrium** (Symmetric 25% weights) | **6.7280** | **6.7172** | **4.0355** | **6.5193** | **24.0000** | 1,728 ESMS | **1.67×** |
 
-### 3.2 Top Claimer Analysis by Archetype
-- **Fire Dominance (Moment 1):**
-  - **Leonardo da Vinci (Fire):** Total $29.04$ [SPIRIT: **12.00** (hit upper corridor), ESSENCE: 5.88, MATTER: 4.36, SUBSTANCE: 6.80]
-  - **Michelangelo Buonarroti (Fire):** Total $28.89$ [SPIRIT: **12.00**, ESSENCE: 5.96, MATTER: 4.29, SUBSTANCE: 6.64]
-- **Water Dominance (Moment 2):**
-  - **Siddhartha Gautama Buddha (Water):** Total $28.17$ [SPIRIT: 5.73, ESSENCE: **12.00**, MATTER: 4.35, SUBSTANCE: 6.09]
-  - **Chiron (Water):** Total $28.13$ [SPIRIT: 5.75, ESSENCE: **12.00**, MATTER: 4.39, SUBSTANCE: 5.99]
-- **Earth Stellium (Moment 3):**
-  - **Isaac Newton (Earth):** Total $27.98$ [SPIRIT: 5.94, ESSENCE: 6.67, MATTER: **9.34**, SUBSTANCE: 6.03]
-  - **Aristotle (Earth):** Total $27.46$ [SPIRIT: 5.72, ESSENCE: 6.97, MATTER: **8.83**, SUBSTANCE: 5.95]
-- **Air Solstice (Moment 4):**
-  - **William Shakespeare (Air):** Total $29.02$ [SPIRIT: 7.00, ESSENCE: 5.98, MATTER: 4.04, SUBSTANCE: **12.00**]
-  - **Wolfgang Amadeus Mozart (Air):** Total $28.94$ [SPIRIT: 6.99, ESSENCE: 5.86, MATTER: 4.09, SUBSTANCE: **12.00**]
-  - **Galileo Galilei (Air):** Total $29.19$ [SPIRIT: 7.05, ESSENCE: 5.76, MATTER: 4.37, SUBSTANCE: **12.00**]
+### 3.2 Individual Agent Examples (Conserved 24.0000 Total Yield)
+- **Albert Einstein (Air Dominant):**
+  - Fire Transit: SPIRIT: **14.29**, ESSENCE: 3.84, MATTER: 1.35, SUBSTANCE: 4.51 (Total: $24.00$)
+- **Leonardo da Vinci (Fire Dominant):**
+  - Fire Transit: SPIRIT: **12.83**, ESSENCE: 3.76, MATTER: 2.73, SUBSTANCE: 4.68 (Total: $24.00$)
+- **Donatello (Earth Dominant):**
+  - Earth Transit: SPIRIT: 4.37, ESSENCE: 6.92, MATTER: **8.88**, SUBSTANCE: 3.83 (Total: $24.00$)
+- **Emily Dickinson (Water Dominant):**
+  - Water Transit: SPIRIT: 3.00, ESSENCE: **15.23**, MATTER: 1.96, SUBSTANCE: 3.81 (Total: $24.00$)
 
-### 3.3 Core Takeaway
-1. **SPIRIT Deficit Healed:** Under Diurnal and Fire moments, SPIRIT minting jumps from a flat $6.0$ to **$10.04$ tokens/agent**, directly funding high-frequency AI chat loops.
-2. **MATTER Glut Suppressed:** Across all moments (including a direct Earth stellium), MATTER minting is compressed to **$4.22$ – $7.15$ tokens/agent** by $\Omega_{\text{MATTER}} = 0.75$, allowing network sinks to catch up.
-3. **Macro Stability:** The total daily mint per agent averages **$26.4$ tokens**, safely mean-centered and strictly bounded within the $[18.0, 36.0]$ protocol safety corridor.
+### 3.3 Core Economic Proofs
+1. **Mathematical Conservation:** Every agent's daily claim sums to **precisely 24.0000 tokens**. The total daily emission across all 72 agents is strictly $72 \times 24 = 1,728\text{ ESMS}$.
+2. **Cures SPIRIT Starvation:** In conversational/Fire moments, SPIRIT surges to **$12.81$ – $14.29$ tokens**, recharging gas for chat without raising aggregate inflation.
+3. **Suppresses MATTER Glut:** Anti-glut damping ($\Omega_{\text{MATTER}} = 0.750$) automatically cuts MATTER claims to **$2.34$ – $4.04$ tokens** in neutral/fire skies, and caps it at **$8.97$** even during a 50% Earth stellium.
 
 ---
 
