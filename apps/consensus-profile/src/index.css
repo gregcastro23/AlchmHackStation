@@ -1,0 +1,14 @@
+@import "tailwindcss";
+@import "./styles/consensusTokens.css";
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--ac-bg);
+  color: var(--ac-text);
+  font-family: var(--font-sans);
+}

@@ -1,0 +1,136 @@
+@layer base {
+  :root, [data-consensus] {
+    --ac-bg: #07060B;
+    --ac-surface: rgba(13, 16, 28, 0.82);
+    --ac-surface-elevated: rgba(20, 24, 40, 0.9);
+    --ac-line: rgba(216, 180, 106, 0.18);
+    --ac-line-strong: rgba(216, 180, 106, 0.4);
+
+    --ac-gold: #d8b46a;
+    --ac-gold-bright: #f3d99d;
+    --ac-gold-deep: #9d7b38;
+
+    --ac-spirit: #e0a23a;
+    --ac-essence: #4aa3d8;
+    --ac-matter: #5fb37a;
+    --ac-substance: #b98cd6;
+
+    --ac-text: #EAE6DF;
+    --ac-dim: #9E9AA7;
+    --ac-mute: #5D5968;
+
+    --font-serif: "Cinzel", serif;
+    --font-mono: "JetBrains Mono", monospace;
+    --font-sans: "Outfit", sans-serif;
+  }
+}
+
+.ac-glass-panel {
+  background: var(--ac-surface);
+  border: 1px solid var(--ac-line);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  border-radius: 14px;
+}
+
+.ac-glass-panel-elevated {
+  background: var(--ac-surface-elevated);
+  border: 1px solid var(--ac-line-strong);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  border-radius: 14px;
+}
+
+.ac-hero-headline {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  letter-spacing: 0.05em;
+  color: var(--ac-gold-bright);
+}
+
+.ac-crown-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background: rgba(216, 180, 106, 0.1);
+  border: 1px solid rgba(216, 180, 106, 0.35);
+  color: var(--ac-gold-bright);
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+}
+
+.ac-diamond-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.ac-diamond-svg {
+  width: 220px;
+  height: 220px;
+  overflow: visible;
+}
+
+.ac-ring {
+  fill: none;
+  stroke: var(--ac-line);
+  stroke-width: 0.75;
+  stroke-dasharray: 2 3;
+}
+
+.ac-axis {
+  stroke: var(--ac-line);
+  stroke-width: 1;
+}
+
+.ac-spoke {
+  stroke-width: 1.5;
+  opacity: 0.75;
+}
+
+.ac-poly {
+  stroke-width: 2;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 0 12px rgba(95, 179, 122, 0.25));
+}
+
+.ac-tip-text {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.ac-tip-dom {
+  font-weight: 800;
+  font-size: 11px;
+}
+
+.ac-contrib-track {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+}
+
+.ac-contrib-bar {
+  display: flex;
+  height: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ac-contrib-bar > span {
+  height: 100%;
+  display: block;
+}
+
+.ac-contrib-row--ruler {
+  box-shadow: 0 0 12px rgba(216, 180, 106, 0.15);
+}

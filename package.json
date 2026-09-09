@@ -25,7 +25,10 @@
     "test:amm": "bun scripts/test_amm_bespoke_swap.ts",
     "test:all-coins": "bun scripts/run_all_devnet_tests.ts",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:consensus": "bun run --cwd apps/consensus-profile dev",
+    "build:consensus": "bun run --cwd apps/consensus-profile build",
+    "deploy:consensus": "bun run build:consensus && bun x wrangler@3 pages deploy apps/consensus-profile/dist --project-name alchm-consensus"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.1",
