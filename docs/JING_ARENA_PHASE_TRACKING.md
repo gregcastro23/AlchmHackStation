@@ -65,7 +65,7 @@ graph TD
 | **Phase 0** | **Fourteen Pillars Spec & Parity** | ASOL, Pentacles, WhatToEatNext | **COMPLETED** | ASOL [#32](https://github.com/gregcastro23/alchm-agents-solana/pull/32)<br>Pentacles [#61](https://github.com/gregcastro23/Pentacles/pull/61)<br>WTEN [#849](https://github.com/gregcastro23/WhatToEatNext/pull/849) | 7/7 Cargo parity tests; 10/10 WTEN tests; 100/100 ASOL kinetics tests |
 | **Phase 0.5** | **Jing Duels Security Hardening** | ASOL | **COMPLETED** | ASOL [#35](https://github.com/gregcastro23/alchm-agents-solana/pull/35) (Merged) | 17/17 Vitest tests (red-proof + mutation-proof); 0 tsc errors; 0 lint errors; CI 100% green |
 | **Phase 1** | **Game Engine & Rules Hardening** | Pentacles, ASOL | **COMPLETED** | ASOL [#36](https://github.com/gregcastro23/alchm-agents-solana/pull/36)<br>Pentacles [#62](https://github.com/gregcastro23/Pentacles/pull/62), [#63](https://github.com/gregcastro23/Pentacles/pull/63), [#64](https://github.com/gregcastro23/Pentacles/pull/64), [#65](https://github.com/gregcastro23/Pentacles/pull/65), [#66](https://github.com/gregcastro23/Pentacles/pull/66), [#67](https://github.com/gregcastro23/Pentacles/pull/67) (Merged) | SpacetimeDB build clean; 112/112 Cargo tests; pure `compute_faucet_pool_credit` enforces pre-grant seeding order (100% order-independent); Option 1 ratified & landed in PR #67 (Jing and Pillar pools unified at tenths of an ESMS, faucet credits $10\times$ grant, Solana atoms mapped directly, PR #58 closed as superseded); CI 100% Green. |
-| **Phase 2** | **Live Matchmaking & Arena Real-Time** | Pentacles, HackStation | **IN PROGRESS / PROTOTYPE VERIFIED** | HackStation: `main`<br>Pentacles: `main` | SpacetimeDB subscription isolation (Core vs Pillar extension); `JingArenaDeck` simulator with `[SIMULATED ARENA SANDBOX]` tag; server enum parity (`Open`, `Resolved`, `Cancelled`); sub-500ms build |
+| **Phase 2** | **Live Matchmaking & Arena Real-Time** | Pentacles, HackStation | **IN PROGRESS / PROTOTYPE VERIFIED** | HackStation: `feat/vessel-arena-deck`<br>Pentacles: `main` | SpacetimeDB subscription isolation (Core vs Pillar extension); `JingArenaDeck` simulator with `[SIMULATED ARENA SANDBOX]` tag; server enum parity (`Open`, `Resolved`, `Cancelled`); sub-500ms build |
 | **Phase 3** | **Economic Circuit & Solana Attestation** | ASOL, HackStation | **READY / QUEUED** | ASOL: `feat/esms-attestation`<br>HackStation: `feat/amm-sync` | Token-2022 Bespoke AMM router; Ed25519 duel attestation; 5/5 Devnet test suites |
 | **Phase 4** | **Telemetry, Astrometry & Full Release** | All 4 Repos | **QUEUED** | Cross-ecosystem tag `v1.0-jing` | Astrometry reconciliation drift engine (<1500ms); CU profiling; clean desktop build |
 
@@ -130,7 +130,7 @@ graph TD
   - Dual radar visualization of natal/transit ESMS pools.
 - [x] **Desktop Integration**:
   - Mounted `JingArenaDeck` in `SidebarDrawer.tsx` (swappable with `JingArenaView`).
-  - Active in `AlchmHackStation` application layout; builds cleanly in 481ms; 5/5 Devnet test suites passing.
+  - Active in `AlchmHackStation` application layout; `bun run build` passes (the deck is client-only, so the Devnet suites don't exercise it).
 - [ ] **Live SpacetimeDB Cloud Matchmaking Activation**:
   - Switch `JingArenaDeck` from client simulation to live SpacetimeDB reducer calls (`call_reducer('cast_pillar', ...)`) once server module is deployed to `maincloud.spacetimedb.com`.
 
