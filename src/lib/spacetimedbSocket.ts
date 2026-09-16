@@ -117,8 +117,9 @@ class SpacetimeDBSocketClient {
   private tableListeners: Map<string, Set<(rows: unknown[]) => void>> = new Map();
 
   constructor() {
-    this.host = (import.meta as any).env?.VITE_STDB_HOST?.replace(/^https?:\/\//, '') || 'maincloud.spacetimedb.com';
-    this.database = (import.meta as any).env?.VITE_STDB_DB || 'cookingwithcastrollc';
+    const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env;
+    this.host = env?.VITE_STDB_HOST?.replace(/^https?:\/\//, '') || 'maincloud.spacetimedb.com';
+    this.database = env?.VITE_STDB_DB || 'cookingwithcastrollc';
   }
 
   public getWsUrl(): string {
@@ -161,12 +162,12 @@ class SpacetimeDBSocketClient {
     try {
       // Connect with SpacetimeDB text subprotocol
       this.socket = new WebSocket(wsUrl, ['v1.text.spacetimedb']);
-    } catch (err: any) {
+    } catch {
       // Fallback to standard ws if custom subprotocol rejected
       try {
         this.socket = new WebSocket(wsUrl);
-      } catch (innerErr: any) {
-        this.lastError = innerErr?.message || 'WebSocket creation failed';
+      } catch (innerErr: unknown) {
+        this.lastError = innerErr instanceof Error ? innerErr.message : 'WebSocket creation failed';
         this.setStatus('ERROR');
         this.scheduleReconnect();
         return;
@@ -285,25 +286,26 @@ class SpacetimeDBSocketClient {
     }, delay);
   }
 
-  private handleIncomingMessage(raw: any): void {
+  private handleIncomingMessage(raw: unknown): void {
     if (this.pingSentAt > 0) {
       this.pingMs = Math.max(12, Math.round(performance.now() - this.pingSentAt));
       this.pingSentAt = 0;
     }
 
     try {
-      const text = typeof raw === 'string' ? raw : new TextDecoder().decode(raw);
-      const parsed = JSON.parse(text);
+      const text = typeof raw === 'string' ? raw : raw instanceof ArrayBuffer || ArrayBuffer.isView(raw) ? new TextDecoder().decode(raw) : String(raw);
+      const parsed = JSON.parse(text) as Record<string, unknown>;
 
       // Handle Pong
       if (parsed.Pong) return;
 
       // Handle TransactionUpdate or ReducerCall
-      if (parsed.TransactionUpdate || parsed.event?.reducer_call || parsed.ReducerCall) {
-        const tx = parsed.TransactionUpdate || parsed;
-        const call = tx.event?.reducer_call || tx.reducer_call || tx;
-        const reducerName = call.reducer_name || call.name || 'on_spacetime_event';
-        const caller = call.caller_identity || '0x' + Math.random().toString(16).slice(2, 10);
+      if (parsed.TransactionUpdate || (parsed.event && typeof parsed.event === 'object' && 'reducer_call' in (parsed.event as Record<string, unknown>)) || parsed.ReducerCall) {
+        const tx = (parsed.TransactionUpdate || parsed) as Record<string, unknown>;
+        const eventObj = tx.event && typeof tx.event === 'object' ? (tx.event as Record<string, unknown>) : undefined;
+        const call = (eventObj?.reducer_call || tx.reducer_call || tx) as Record<string, unknown>;
+        const reducerName = typeof call.reducer_name === 'string' ? call.reducer_name : typeof call.name === 'string' ? call.name : 'on_spacetime_event';
+        const caller = typeof call.caller_identity === 'string' ? call.caller_identity : '0x' + Math.random().toString(16).slice(2, 10);
         const status = (tx.status === 'failed' || tx.status === 'committed') ? tx.status : 'committed';
 
         const { element, energy } = categorizeReducer(reducerName);
@@ -315,7 +317,7 @@ class SpacetimeDBSocketClient {
           callerIdentity: typeof caller === 'string' ? caller.slice(0, 10) + '...' : '0xanon',
           status,
           element,
-          mutatedRows: tx.mutated_rows || Math.floor(Math.random() * 3) + 1,
+          mutatedRows: typeof tx.mutated_rows === 'number' ? tx.mutated_rows : Math.floor(Math.random() * 3) + 1,
           latencyMs: this.pingMs,
           hash: '0x' + Math.random().toString(16).slice(2, 10),
           energy,
@@ -326,9 +328,11 @@ class SpacetimeDBSocketClient {
 
       // Handle SubscriptionUpdate (Initial table dump)
       if (parsed.SubscriptionUpdate || parsed.TableUpdate) {
-        const update = parsed.SubscriptionUpdate || parsed.TableUpdate;
-        if (update.table_name && this.tableListeners.has(update.table_name)) {
-          this.tableListeners.get(update.table_name)?.forEach((cb) => cb(update.rows || []));
+        const update = (parsed.SubscriptionUpdate || parsed.TableUpdate) as Record<string, unknown>;
+        const tableName = typeof update.table_name === 'string' ? update.table_name : undefined;
+        if (tableName && this.tableListeners.has(tableName)) {
+          const rows = Array.isArray(update.rows) ? update.rows : [];
+          this.tableListeners.get(tableName)?.forEach((cb) => cb(rows));
         }
       }
     } catch {
