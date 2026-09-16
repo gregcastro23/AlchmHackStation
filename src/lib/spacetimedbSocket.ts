@@ -12,6 +12,8 @@ export interface ReducerEvent {
   reducerName: string;
   callerIdentity: string;
   status: 'committed' | 'failed' | 'simulated';
+  isSimulated?: boolean;
+  source?: 'server' | 'local-simulation';
   element: ReducerDomain;
   mutatedRows: number;
   latencyMs: number;
@@ -44,7 +46,7 @@ export const ELEMENTAL_COLORS: Record<ReducerDomain, string> = {
 // Map reducer names to elemental domains & particle physics
 export function categorizeReducer(name: string): { element: ReducerDomain; energy: number } {
   const lower = name.toLowerCase();
-  if (lower.includes('battle') || lower.includes('jing') || lower.includes('strike') || lower.includes('hook') || lower.includes('combat')) {
+  if (lower.includes('battle') || lower.includes('jing') || lower.includes('strike') || lower.includes('hook') || lower.includes('combat') || lower.includes('pillar') || lower.includes('duel')) {
     return { element: 'Fire', energy: 0.95 };
   }
   if (lower.includes('water') || lower.includes('liquidity') || lower.includes('melee') || lower.includes('wallet') || lower.includes('trade')) {
@@ -55,6 +57,27 @@ export function categorizeReducer(name: string): { element: ReducerDomain; energ
   }
   // Air / Aether default (ephemeris, reconciliation, tick, sky)
   return { element: 'Air', energy: 0.9 };
+}
+
+export interface PillarDuelRecord {
+  duelId: number;
+  initiator: string;
+  targetPlayer?: string;
+  targetAgent?: string;
+  sky: 'Diurnal' | 'Nocturnal';
+  openingPillar: string;
+  openingPowerRatio: number;
+  state: 'Open' | 'Resolved' | 'Cancelled';
+  winnerIsInitiator?: boolean;
+  initiatorPools: number[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface PillarPoolRecord {
+  identity: string;
+  esms: [number, number, number, number];
+  updatedAt: number;
 }
 
 class SpacetimeDBSocketClient {
@@ -72,7 +95,21 @@ class SpacetimeDBSocketClient {
 
   private host: string;
   private database: string;
-  private subscribedTables: string[] = ['star_node', 'ephemeris', 'player', 'round_state', 'verified_solana_wallet'];
+  // Core tables published on SpacetimeDB maincloud
+  private coreTables: string[] = [
+    'star_node',
+    'ephemeris',
+    'player',
+    'round_state',
+    'verified_solana_wallet',
+  ];
+  // Pillar extension tables (isolated so schema lag doesn't drop core feeds)
+  private pillarTables: string[] = [
+    'pillar_pool',
+    'pillar_duel',
+    'pillar_cast',
+    'pillar_tension',
+  ];
 
   // Event dispatchers
   private eventListeners: Set<(event: ReducerEvent) => void> = new Set();
@@ -96,7 +133,7 @@ class SpacetimeDBSocketClient {
       pingMs: this.pingMs,
       totalEventsReceived: this.totalEvents,
       lastEventTimestamp: this.lastEventAt,
-      subscribedTables: [...this.subscribedTables],
+      subscribedTables: [...this.coreTables, ...this.pillarTables],
       lastError: this.lastError,
       driftOffsetMs: Math.max(0.2, (this.pingMs * 0.42)),
     };
@@ -186,17 +223,28 @@ class SpacetimeDBSocketClient {
   private sendSubscription(): void {
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
 
-    const queries = this.subscribedTables.map((t) => `SELECT * FROM ${t}`);
-    const subscribeMsg = JSON.stringify({
-      Subscribe: {
-        query_strings: queries,
-      },
-    });
-
+    // 1. Mandatory Core Tables Subscription
     try {
-      this.socket.send(subscribeMsg);
+      const coreQueries = this.coreTables.map((t) => `SELECT * FROM ${t}`);
+      this.socket.send(JSON.stringify({
+        Subscribe: {
+          query_strings: coreQueries,
+        },
+      }));
     } catch (err) {
-      console.error('[SpacetimeDB WS] Failed to send subscription:', err);
+      console.error('[SpacetimeDB WS] Failed to send core table subscription:', err);
+    }
+
+    // 2. Pillar Extension Tables Subscription (Isolated to avoid failing core if schema lags)
+    try {
+      const pillarQueries = this.pillarTables.map((t) => `SELECT * FROM ${t}`);
+      this.socket.send(JSON.stringify({
+        Subscribe: {
+          query_strings: pillarQueries,
+        },
+      }));
+    } catch (err) {
+      console.warn('[SpacetimeDB WS] Pillar extension subscription deferred or failed:', err);
     }
   }
 
@@ -319,12 +367,56 @@ class SpacetimeDBSocketClient {
       timestamp: Date.now(),
       reducerName: chosenName,
       callerIdentity: '0xAhNR...42aK',
-      status: 'committed',
+      status: 'simulated',
+      isSimulated: true,
+      source: 'local-simulation',
       element: chosenElement,
       mutatedRows: 1,
       latencyMs: Math.floor(Math.random() * 18) + 12,
-      hash: 'sha256:' + Math.random().toString(16).slice(2, 8),
+      hash: 'sim:' + Math.random().toString(16).slice(2, 8),
       energy: pick.energy,
+    };
+
+    this.emitReducerEvent(event);
+    return event;
+  }
+
+  public onTableUpdate(tableName: string, cb: (rows: any[]) => void): () => void {
+    if (!this.tableListeners.has(tableName)) {
+      this.tableListeners.set(tableName, new Set());
+    }
+    this.tableListeners.get(tableName)!.add(cb);
+    return () => this.tableListeners.get(tableName)?.delete(cb);
+  }
+
+  /**
+   * Simulates a live 14-Pillars duel cast event for real-time visual canvas and feed validation.
+   */
+  public triggerMockDuelEvent(
+    initiatorAgent: string = 'Sun',
+    targetAgent: string = 'Saturn',
+    openingPillar: string = 'Calcination'
+  ): ReducerEvent {
+    const event: ReducerEvent = {
+      id: `duel_sim_${Date.now()}`,
+      timestamp: Date.now(),
+      reducerName: 'cast_pillar',
+      callerIdentity: `${initiatorAgent} vs ${targetAgent}`,
+      status: 'simulated',
+      isSimulated: true,
+      source: 'local-simulation',
+      element: 'Fire',
+      mutatedRows: 2,
+      latencyMs: Math.floor(Math.random() * 15) + 12,
+      hash: 'sim_duel:' + Math.random().toString(16).slice(2, 8),
+      energy: 0.98,
+      args: {
+        initiator: initiatorAgent,
+        target: targetAgent,
+        openingPillar,
+        sky: 'Diurnal',
+        powerRatio: 1.42,
+      },
     };
 
     this.emitReducerEvent(event);
