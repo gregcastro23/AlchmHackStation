@@ -18,7 +18,10 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const primaryItems = [
+    { id: 'alchm-vessel', label: 'Alchm Vessel', icon: 'science' },
     { id: 'token2022-hub', label: 'Token-2022 Hub', icon: 'token' },
+    { id: 'jing-arena', label: 'Jing Arena Deck', icon: 'swords' },
+    { id: 'all-aboard', label: 'All-Aboard Portal', icon: 'door_front' },
     { id: 'swarm-nexus', label: 'Event Sync Feeder', icon: 'sync' },
     { id: 'planetary-cockpit', label: 'Staking Telemetry', icon: 'explore' },
     { id: 'model-accounts', label: 'RPC & CU Monitor', icon: 'speed' },

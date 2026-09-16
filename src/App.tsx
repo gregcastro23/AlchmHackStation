@@ -25,9 +25,12 @@ import { OvermindConsole } from './components/OvermindConsole';
 import { DiscordLiveFeed } from './components/DiscordLiveFeed';
 import { PlanetaryCockpit } from './components/PlanetaryCockpit';
 import { Token2022CommandCenter } from './components/Token2022CommandCenter';
+import { JingArenaDeck } from './components/JingArenaDeck';
+import { AlchmVessel } from './components/AlchmVessel';
 import { WorkstationLockOverlay } from './components/WorkstationLockOverlay';
 import { decomposeIdea, LANGUAGE_NAMES, LANGUAGES } from './lib/swarmEngine';
 import { HistoryView } from './components/HistoryView';
+import { AllAboardKiosk } from './components/all-aboard/AllAboardKiosk';
 import { DEFAULT_COMPLETED_HACKS } from './lib/completedHacks';
 import type { CompletedHackathon } from './lib/completedHacks';
 import {
@@ -77,7 +80,8 @@ function App() {
   ]);
 
   // Combined V2 states
-  const [activeTab, setActiveTab] = useState<string>('token2022-hub');
+  const [activeTab, setActiveTab] = useState<string>('alchm-vessel');
+  const [hubSection, setHubSection] = useState<'tokens' | 'amm-router'>('tokens');
   const [completedHacks] = useState<CompletedHackathon[]>(() => {
     try {
       const val = window.localStorage.getItem('hackstation-completed-history');
@@ -663,6 +667,15 @@ You are running as Claude Code in the terminal workspace. Review the developer c
     });
   };
 
+  const isAllAboardPath =
+    typeof window !== 'undefined' &&
+    (window.location.pathname.toLowerCase().includes('all-aboard') ||
+      window.location.pathname.toLowerCase() === '/join');
+
+  if (isAllAboardPath) {
+    return <AllAboardKiosk />;
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-on-surface antialiased flex flex-col relative font-sans">
       {/* Background Subtle Radial Lighting Grid */}
@@ -708,8 +721,50 @@ You are running as Claude Code in the terminal workspace. Review the developer c
 
           {/* Right Content Panels */}
           <main className="flex-1 p-4 overflow-y-auto custom-scrollbar min-h-0 flex flex-col">
+            {activeTab === 'alchm-vessel' && (
+              <AlchmVessel
+                onCommitLog={addLog}
+                onRouteToAmm={() => {
+                  setHubSection('amm-router');
+                  setActiveTab('token2022-hub');
+                }}
+              />
+            )}
+
             {(activeTab === 'token2022-hub' || activeTab === 'web3-hub') && (
-              <Token2022CommandCenter onCommitLog={addLog} />
+              <Token2022CommandCenter key={hubSection} initialSection={hubSection} onCommitLog={addLog} />
+            )}
+
+            {activeTab === 'jing-arena' && (
+              <JingArenaDeck onCommitLog={addLog} />
+            )}
+
+            {activeTab === 'all-aboard' && (
+              <div className="flex-1 min-h-[820px] flex flex-col gap-3">
+                <div className="flex items-center justify-between p-3 bg-surface-container border border-outline-variant/30 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-primary text-xl">door_front</span>
+                    <div>
+                      <h2 className="text-sm font-bold text-on-surface">All-Aboard Ecosystem Onboarding Portal</h2>
+                      <p className="text-xs text-on-surface-variant">Live Kiosk for Alchm Kitchen, Planetary Agents & Pentacles Arena</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href="/All-Aboard"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 text-xs font-mono bg-primary/10 text-primary border border-primary/30 rounded-lg hover:bg-primary/20 transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>Full-Screen Kiosk</span>
+                      <span>↗</span>
+                    </a>
+                  </div>
+                </div>
+                <div className="flex-1 min-h-[750px] border border-outline-variant/30 rounded-2xl overflow-hidden shadow-2xl">
+                  <AllAboardKiosk isEmbedded={true} />
+                </div>
+              </div>
             )}
 
             {activeTab === 'history' && (

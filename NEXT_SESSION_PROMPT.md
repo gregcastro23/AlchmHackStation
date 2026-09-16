@@ -13,6 +13,8 @@ The **AlchmHackStation** operates as the mission control hub orchestrating **Alc
   * `/Users/GregCastro/ASOL/alchm-agents-solana/target/idl`
   * `/Users/GregCastro/Pentacles`
 
+* **Master Ecosystem Roadmap:** See [docs/JING_ARENA_PHASE_TRACKING.md](file:///Users/GregCastro/Desktop/AlchmHackStation/AlchmHackStation/docs/JING_ARENA_PHASE_TRACKING.md) for the end-to-end Fourteen Pillars & Jing Arena cross-repo status.
+
 ---
 
 ## 2. Status of Preceding Phases

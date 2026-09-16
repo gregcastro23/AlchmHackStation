@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import type { Plugin, ViteDevServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
@@ -139,6 +139,139 @@ const alchmBackendPlugin = (): Plugin => ({
     });
 
     server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
+      // 0. All-Aboard Unified Onboarding API (/api/all-aboard)
+      if (req.url?.startsWith('/api/all-aboard')) {
+        const eventName = process.env.ALL_ABOARD_EVENT || 'Alchm Convergence';
+
+        if (req.method === 'GET') {
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({
+            ok: true,
+            event: eventName,
+            source: `all-aboard:${eventName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+            destinations: [
+              {
+                key: 'kitchen',
+                label: 'alchm.kitchen',
+                tagline: 'Culinary Sanctum & Gastronomy — cook by the sky over your head.',
+                href: process.env.ALCHM_KITCHEN_URL || 'https://alchm.kitchen',
+                configured: true,
+                element: 'fire',
+                accentColor: '#ef4444',
+                badge: 'Culinary Sanctum',
+              },
+              {
+                key: 'agents',
+                label: 'agents.alchm.kitchen',
+                tagline: 'Planetary Agents — autonomous intelligence council attuned to your chart.',
+                href: process.env.ALCHM_AGENTS_URL || 'https://agents.alchm.kitchen',
+                configured: true,
+                element: 'mercury',
+                accentColor: '#38bdf8',
+                badge: 'Planetary Intelligence',
+              },
+              {
+                key: 'pentacles',
+                label: 'pentacles.alchm.kitchen',
+                tagline: 'Pentacles Arena — celestial deck battles & SpacetimeDB multiplayer state.',
+                href: process.env.ALCHM_PENTACLES_URL || 'https://pentacles.alchm.kitchen',
+                configured: true,
+                element: 'pentacle',
+                accentColor: '#fbbf24',
+                badge: 'Celestial Arena',
+              },
+            ],
+          }));
+          return;
+        }
+
+        if (req.method === 'POST') {
+          let body = '';
+          req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
+          req.on('end', async () => {
+            try {
+              const payload = body ? JSON.parse(body) : {};
+              const email = typeof payload.email === 'string' ? payload.email.trim().toLowerCase() : null;
+              if (!email || !email.includes('@')) {
+                res.statusCode = 400;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ ok: false, message: "Invalid email address." }));
+                return;
+              }
+
+              const name = typeof payload.name === 'string' ? payload.name.trim() : null;
+              const source = payload.source || `all-aboard:convergence`;
+              const event = payload.event || eventName;
+
+              // Masked capture log for auditing
+              const [local, domain] = email.split('@');
+              const masked = local.length <= 2 ? `${local[0]}***@${domain}` : `${local[0]}***${local[local.length - 1]}@${domain}`;
+              console.log(`[all-aboard] capture email=${masked} name=${name || 'anon'} source=${source} event=${event}`);
+
+              // Return successful fanout manifest for Kitchen, Agents, and Pentacles
+              const results = [
+                { key: 'kitchen', label: 'alchm.kitchen', status: 'created', detail: 'enrolled in celestial kitchen' },
+                { key: 'agents', label: 'agents.alchm.kitchen', status: 'created', detail: 'attuned with planetary council' },
+                { key: 'pentacles', label: 'pentacles.alchm.kitchen', status: 'created', detail: 'registered in SpacetimeDB arena' },
+              ];
+
+              console.log(`[all-aboard] result email=${masked} kitchen=created agents=created pentacles=created`);
+
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({
+                ok: true,
+                allOk: true,
+                alreadyKnown: false,
+                welcomeEmail: true,
+                results,
+              }));
+            } catch (err: any) {
+              res.statusCode = 500;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ ok: false, message: err?.message || 'Server error' }));
+            }
+          });
+          return;
+        }
+      }
+
+      // 0b. Alchm Vessel operator proxy (/api/vessel/summary)
+      // Server-side only: the desktop API key never reaches the browser bundle. The
+      // key is bound to one Agents account, so the proxy can only ever read that
+      // operator's Vessel.
+      if (req.url?.startsWith('/api/vessel/summary') && req.method === 'GET') {
+        const env = { ...loadEnv(server.config.mode, process.cwd(), ''), ...process.env };
+        const agentsUrl = (env.ALCHM_AGENTS_URL || 'https://agents.alchm.kitchen').replace(/\/+$/, '');
+        const apiKey = env.ALCHM_DESKTOP_API_KEY;
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Cache-Control', 'no-store');
+
+        if (!apiKey) {
+          res.statusCode = 503;
+          res.end(JSON.stringify({ ok: false, configured: false, missing: ['ALCHM_DESKTOP_API_KEY'] }));
+          return;
+        }
+
+        const params = new URLSearchParams();
+        const wallet = new URL(req.url, 'http://localhost').searchParams.get('wallet');
+        if (wallet && /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(wallet)) params.set('wallet', wallet);
+        const query = params.size ? `?${params}` : '';
+
+        try {
+          const upstream = await fetch(`${agentsUrl}/api/vessel/summary${query}`, {
+            headers: { 'x-api-key': apiKey, Accept: 'application/json' },
+            signal: AbortSignal.timeout(15_000),
+          });
+          res.statusCode = upstream.status;
+          res.end(await upstream.text());
+        } catch (err) {
+          res.statusCode = 502;
+          const message = err instanceof Error ? err.message : String(err);
+          res.end(JSON.stringify({ ok: false, error: `agents.alchm.kitchen unreachable: ${message}` }));
+        }
+        return;
+      }
+
       // 1. Hardened /api/exec middleware
       if (req.url === '/api/exec' && req.method === 'POST') {
         let body = '';
@@ -565,6 +698,10 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 1200,
     rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        allAboard: path.resolve(__dirname, 'All-Aboard/index.html'),
+      },
       output: {
         manualChunks(id: string) {
           if (id.includes('@solana')) return 'solana-core';
