@@ -44,7 +44,7 @@ export interface AlchemicalPillarInfo {
   requiresDignity?: boolean;
 }
 
-export const FOURTEEN_PILLARS: AlchemicalPillarInfo[] = [
+const FOURTEEN_PILLARS: AlchemicalPillarInfo[] = [
   {
     id: 1,
     name: 'Solution',
@@ -174,7 +174,7 @@ export const FOURTEEN_PILLARS: AlchemicalPillarInfo[] = [
   },
 ];
 
-export const PLANETARY_AGENTS = [
+const PLANETARY_AGENTS = [
   { id: 'Sun', name: 'Sun (Leo)', element: 'Fire', domicile: 'Leo', affinity: 'Spirit' },
   { id: 'Moon', name: 'Moon (Cancer)', element: 'Water', domicile: 'Cancer', affinity: 'Essence' },
   { id: 'Mercury', name: 'Mercury (Virgo)', element: 'Earth', domicile: 'Virgo/Gemini', affinity: 'Substance' },
@@ -194,7 +194,38 @@ export const JingArenaDeck: React.FC<JingArenaDeckProps> = ({ onCommitLog }) => 
   const [selectedPillarId, setSelectedPillarId] = useState<number>(7); // Calcination default
   const [selectedStance, setSelectedStance] = useState<Stance>('clash');
   const [isCasting, setIsCasting] = useState<boolean>(false);
-  const [activeDuels, setActiveDuels] = useState<PillarDuelRecord[]>([]);
+  const [activeDuels, setActiveDuels] = useState<PillarDuelRecord[]>(() => {
+    const utcHours = new Date().getUTCHours() + new Date().getUTCMinutes() / 60;
+    const initialSky: SkySect = utcHours >= 6 && utcHours < 18 ? 'Diurnal' : 'Nocturnal';
+    return [
+      {
+        duelId: 1042,
+        initiator: 'Sun (Leo)',
+        targetAgent: 'Saturn (Capricorn)',
+        sky: initialSky,
+        openingPillar: 'Calcination',
+        openingPowerRatio: 1.48,
+        state: 'Resolved',
+        winnerIsInitiator: true,
+        initiatorPools: [88.4, 73.5, 82.1, 75.9],
+        createdAt: Date.now() - 34000,
+        updatedAt: Date.now() - 2000,
+      },
+      {
+        duelId: 1043,
+        initiator: 'Mars (Aries)',
+        targetAgent: 'Moon (Cancer)',
+        sky: initialSky,
+        openingPillar: 'Purification',
+        openingPowerRatio: 1.12,
+        state: 'Open',
+        winnerIsInitiator: false,
+        initiatorPools: [79.2, 85.0, 91.5, 71.3],
+        createdAt: Date.now() - 12000,
+        updatedAt: Date.now() - 1000,
+      },
+    ];
+  });
   const [initiatorPool, setInitiatorPool] = useState<[number, number, number, number]>([82.4, 76.5, 84.1, 78.9]);
   const [targetPool, setTargetPool] = useState<[number, number, number, number]>([71.2, 88.0, 94.5, 68.3]);
   const [recentEvents, setRecentEvents] = useState<ReducerEvent[]>([]);
@@ -225,41 +256,11 @@ export const JingArenaDeck: React.FC<JingArenaDeckProps> = ({ onCommitLog }) => 
       }
     });
 
-    // Seed mock initial duel
-    setActiveDuels([
-      {
-        duelId: 1042,
-        initiator: 'Sun (Leo)',
-        targetAgent: 'Saturn (Capricorn)',
-        sky: currentSkySect,
-        openingPillar: 'Calcination',
-        openingPowerRatio: 1.48,
-        state: 'Resolved',
-        winnerIsInitiator: true,
-        initiatorPools: [88.4, 73.5, 82.1, 75.9],
-        createdAt: Date.now() - 34000,
-        updatedAt: Date.now() - 2000,
-      },
-      {
-        duelId: 1043,
-        initiator: 'Mars (Aries)',
-        targetAgent: 'Moon (Cancer)',
-        sky: currentSkySect,
-        openingPillar: 'Purification',
-        openingPowerRatio: 1.12,
-        state: 'Open',
-        winnerIsInitiator: false,
-        initiatorPools: [79.2, 85.0, 91.5, 71.3],
-        createdAt: Date.now() - 12000,
-        updatedAt: Date.now() - 1000,
-      },
-    ]);
-
     return () => {
       unsubTelemetry();
       unsubEvents();
     };
-  }, [currentSkySect]);
+  }, []);
 
   // Execute Duel Clash
   const handleInitiateDuel = useCallback(async () => {

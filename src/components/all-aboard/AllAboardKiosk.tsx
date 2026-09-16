@@ -228,8 +228,8 @@ export function AllAboardKiosk({ initialEvent, isEmbedded = false }: Props) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
-  const [joinedToday, setJoinedToday] = useState(0);
-  const [pendingQueue, setPendingQueue] = useState(0);
+  const [joinedToday, setJoinedToday] = useState<number>(() => readCount());
+  const [pendingQueue, setPendingQueue] = useState<number>(() => readQueue().length);
   const [idle, setIdle] = useState(false);
   const [inspectingRealm, setInspectingRealm] = useState<PublicDestination | null>(null);
 
@@ -243,8 +243,6 @@ export function AllAboardKiosk({ initialEvent, isEmbedded = false }: Props) {
   }, []);
 
   useEffect(() => {
-    refreshMetrics();
-
     // Outbox background flush interval
     const flushInterval = window.setInterval(async () => {
       const cleared = await flushOutbox();
@@ -287,7 +285,8 @@ export function AllAboardKiosk({ initialEvent, isEmbedded = false }: Props) {
   }, []);
 
   useEffect(() => {
-    bumpIdle();
+    if (idleTimer.current) window.clearTimeout(idleTimer.current);
+    idleTimer.current = window.setTimeout(() => setIdle(true), IDLE_AFTER_MS);
     const events = ["pointerdown", "keydown", "focusin", "touchstart"];
     events.forEach((ev) => window.addEventListener(ev, bumpIdle, { passive: true }));
     return () => {
@@ -351,8 +350,9 @@ export function AllAboardKiosk({ initialEvent, isEmbedded = false }: Props) {
           return current;
         });
       }, timeoutMs);
-    } catch (err: any) {
-      setError(err.message || "Could not register address. Please try again.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Could not register address. Please try again.";
+      setError(message);
     } finally {
       setSending(false);
     }

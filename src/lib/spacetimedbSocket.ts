@@ -17,7 +17,7 @@ export interface ReducerEvent {
   element: ReducerDomain;
   mutatedRows: number;
   latencyMs: number;
-  args?: any;
+  args?: Record<string, unknown> | unknown;
   hash: string;
   energy: number; // 0..1 scale for particle dynamics
 }
@@ -114,7 +114,7 @@ class SpacetimeDBSocketClient {
   // Event dispatchers
   private eventListeners: Set<(event: ReducerEvent) => void> = new Set();
   private statusListeners: Set<(telemetry: SpacetimeTelemetry) => void> = new Set();
-  private tableListeners: Map<string, Set<(rows: any[]) => void>> = new Map();
+  private tableListeners: Map<string, Set<(rows: unknown[]) => void>> = new Map();
 
   constructor() {
     this.host = (import.meta as any).env?.VITE_STDB_HOST?.replace(/^https?:\/\//, '') || 'maincloud.spacetimedb.com';
@@ -381,7 +381,7 @@ class SpacetimeDBSocketClient {
     return event;
   }
 
-  public onTableUpdate(tableName: string, cb: (rows: any[]) => void): () => void {
+  public onTableUpdate(tableName: string, cb: (rows: unknown[]) => void): () => void {
     if (!this.tableListeners.has(tableName)) {
       this.tableListeners.set(tableName, new Set());
     }

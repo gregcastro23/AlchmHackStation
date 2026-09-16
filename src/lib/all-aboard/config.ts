@@ -50,9 +50,10 @@ const firstEnv = (...names: string[]): string | null => {
     }
   }
   // Vite client import.meta.env support
-  if (typeof import.meta !== "undefined" && (import.meta as any).env) {
+  const metaEnv = (import.meta as unknown as { env?: Record<string, string | undefined> })?.env;
+  if (metaEnv) {
     for (const name of names) {
-      const val = (import.meta as any).env[name];
+      const val = metaEnv[name];
       if (val && typeof val === "string" && val.trim().length > 0) return val.trim();
     }
   }

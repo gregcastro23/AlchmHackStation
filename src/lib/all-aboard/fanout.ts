@@ -165,7 +165,7 @@ export async function submitEnrolment(
         alreadyKnown: data.alreadyKnown ?? false,
         welcomeEmail: data.welcomeEmail ?? true,
         queued: false,
-        results: data.results || defaultSuccessResults(email),
+        results: data.results || defaultSuccessResults(),
       };
     }
 
@@ -187,7 +187,7 @@ export async function submitEnrolment(
       queued: true,
       results: defaultQueuedResults(),
     };
-  } catch (error: any) {
+  } catch {
     // Network down or offline
     enqueuePending(email, name);
     incrementCount();
@@ -204,7 +204,7 @@ export async function submitEnrolment(
 }
 
 /** Fallback client-generated results for optimistic offline experience */
-function defaultSuccessResults(_email?: string): DestinationResult[] {
+function defaultSuccessResults(): DestinationResult[] {
   return destinations().map((d) => ({
     key: d.key,
     label: d.label,
