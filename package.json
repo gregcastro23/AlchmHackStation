@@ -28,7 +28,10 @@
     "preview": "vite preview",
     "dev:consensus": "bun run --cwd apps/consensus-profile dev",
     "build:consensus": "bun run --cwd apps/consensus-profile build",
-    "deploy:consensus": "bun run build:consensus && bun x wrangler@3 pages deploy apps/consensus-profile/dist --project-name alchm-consensus"
+    "deploy:consensus": "bun run build:consensus && bun x wrangler@3 pages deploy apps/consensus-profile/dist --project-name alchm-consensus",
+    "dev:all-aboard": "bun run --cwd apps/all-aboard dev",
+    "build:all-aboard": "bun run --cwd apps/all-aboard build",
+    "deploy:all-aboard": "bun run build:all-aboard && bun x wrangler@3 pages deploy apps/all-aboard/dist --project-name alchm-all-aboard"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.1",

@@ -40,8 +40,11 @@ import { PROGRAM_IDS } from '../types/hackstation';
 import { TokenTickerRibbon } from './TokenTickerRibbon';
 import { TokenLiquidityVisualizer } from './TokenLiquidityVisualizer';
 
+type CommandCenterSection = 'tokens' | 'amm-router' | 'hook-resolver' | 'arweave-metadata' | 'star-staking' | 'cluster';
+
 interface Token2022CommandCenterProps {
   onCommitLog: (text: string, type?: 'default' | 'info' | 'success' | 'warning' | 'error') => void;
+  initialSection?: CommandCenterSection;
 }
 
 export type ClusterName = 'devnet' | 'localnet' | 'mainnet-beta';
@@ -144,8 +147,8 @@ const STAR_CATALOG: StarNode[] = [
   { hipId: '17702', name: 'Aldebaran', element: 'Earth', ra: '04h 35m', dec: '+16° 30\'', baseApy: 18.2 },
 ];
 
-export const Token2022CommandCenter: React.FC<Token2022CommandCenterProps> = ({ onCommitLog }) => {
-  const [activeTab, setActiveTab] = useState<'tokens' | 'amm-router' | 'hook-resolver' | 'arweave-metadata' | 'star-staking' | 'cluster'>('tokens');
+export const Token2022CommandCenter: React.FC<Token2022CommandCenterProps> = ({ onCommitLog, initialSection = 'tokens' }) => {
+  const [activeTab, setActiveTab] = useState<CommandCenterSection>(initialSection);
   const [cluster, setCluster] = useState<ClusterName>('devnet');
   const [operatorAddress] = useState('AhNRjjyhJ4dR6ZSvWyJNSpbJFbFnxhkRdUNMY31fJ3S5');
   const [selectedAsset, setSelectedAsset] = useState<ElementalAsset>(ELEMENTAL_ASSETS[0]);
