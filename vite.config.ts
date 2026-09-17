@@ -277,13 +277,11 @@ const alchmBackendPlugin = (): Plugin => ({
       if (req.url?.startsWith('/api/solana/amm-quote') && req.method === 'GET') {
         const env = { ...loadEnv(server.config.mode, process.cwd(), ''), ...process.env };
         const agentsUrl = (env.ALCHM_AGENTS_URL || 'https://agents.alchm.kitchen').replace(/\/+$/, '');
-        const apiKey = env.ALCHM_DESKTOP_API_KEY;
         res.setHeader('Content-Type', 'application/json');
         res.setHeader('Cache-Control', 'no-store');
 
         const search = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
         const headers: Record<string, string> = { Accept: 'application/json' };
-        if (apiKey) headers['x-api-key'] = apiKey;
 
         try {
           const upstream = await fetch(`${agentsUrl}/api/solana/amm-quote${search}`, {
@@ -301,11 +299,10 @@ const alchmBackendPlugin = (): Plugin => ({
       }
 
       // 0d. Solana AMM attestation proxy (/api/solana/amm-attestation)
-      // Server-side: forwards desktop API key to attest celestial aspect readiness for trading.
+      // Server-side: proxies to agents.alchm.kitchen for celestial aspect readiness (public route, no desktop API key forwarded).
       if (req.url?.startsWith('/api/solana/amm-attestation') && req.method === 'POST') {
         const env = { ...loadEnv(server.config.mode, process.cwd(), ''), ...process.env };
         const agentsUrl = (env.ALCHM_AGENTS_URL || 'https://agents.alchm.kitchen').replace(/\/+$/, '');
-        const apiKey = env.ALCHM_DESKTOP_API_KEY;
         res.setHeader('Content-Type', 'application/json');
         res.setHeader('Cache-Control', 'no-store');
 
@@ -316,7 +313,6 @@ const alchmBackendPlugin = (): Plugin => ({
             'Content-Type': 'application/json',
             Accept: 'application/json',
           };
-          if (apiKey) headers['x-api-key'] = apiKey;
 
           try {
             const upstream = await fetch(`${agentsUrl}/api/solana/amm-attestation`, {
