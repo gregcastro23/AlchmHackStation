@@ -272,6 +272,106 @@ const alchmBackendPlugin = (): Plugin => ({
         return;
       }
 
+      // 0c. Solana AMM reserve quote proxy (/api/solana/amm-quote)
+      // Read-only: proxies to agents.alchm.kitchen to fetch on-chain reserve quotes and simulations.
+      if (req.url?.startsWith('/api/solana/amm-quote') && req.method === 'GET') {
+        const env = { ...loadEnv(server.config.mode, process.cwd(), ''), ...process.env };
+        const agentsUrl = (env.ALCHM_AGENTS_URL || 'https://agents.alchm.kitchen').replace(/\/+$/, '');
+        const apiKey = env.ALCHM_DESKTOP_API_KEY;
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Cache-Control', 'no-store');
+
+        const search = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+        const headers: Record<string, string> = { Accept: 'application/json' };
+        if (apiKey) headers['x-api-key'] = apiKey;
+
+        try {
+          const upstream = await fetch(`${agentsUrl}/api/solana/amm-quote${search}`, {
+            headers,
+            signal: AbortSignal.timeout(15_000),
+          });
+          res.statusCode = upstream.status;
+          res.end(await upstream.text());
+        } catch (err) {
+          res.statusCode = 502;
+          const message = err instanceof Error ? err.message : String(err);
+          res.end(JSON.stringify({ ok: false, error: `agents.alchm.kitchen unreachable: ${message}` }));
+        }
+        return;
+      }
+
+      // 0d. Solana AMM attestation proxy (/api/solana/amm-attestation)
+      // Server-side: forwards desktop API key to attest celestial aspect readiness for trading.
+      if (req.url?.startsWith('/api/solana/amm-attestation') && req.method === 'POST') {
+        const env = { ...loadEnv(server.config.mode, process.cwd(), ''), ...process.env };
+        const agentsUrl = (env.ALCHM_AGENTS_URL || 'https://agents.alchm.kitchen').replace(/\/+$/, '');
+        const apiKey = env.ALCHM_DESKTOP_API_KEY;
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Cache-Control', 'no-store');
+
+        let body = '';
+        req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
+        req.on('end', async () => {
+          const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          };
+          if (apiKey) headers['x-api-key'] = apiKey;
+
+          try {
+            const upstream = await fetch(`${agentsUrl}/api/solana/amm-attestation`, {
+              method: 'POST',
+              headers,
+              body,
+              signal: AbortSignal.timeout(15_000),
+            });
+            res.statusCode = upstream.status;
+            res.end(await upstream.text());
+          } catch (err) {
+            res.statusCode = 502;
+            const message = err instanceof Error ? err.message : String(err);
+            res.end(JSON.stringify({ ok: false, error: `agents.alchm.kitchen unreachable: ${message}` }));
+          }
+        });
+        return;
+      }
+
+      // 0e. 14-Pillars duel attestation proxy (/api/solana/duel-attestation)
+      // Server-side: forwards verified duel settlement requests to agents.alchm.kitchen with API key.
+      if (req.url?.startsWith('/api/solana/duel-attestation') && req.method === 'POST') {
+        const env = { ...loadEnv(server.config.mode, process.cwd(), ''), ...process.env };
+        const agentsUrl = (env.ALCHM_AGENTS_URL || 'https://agents.alchm.kitchen').replace(/\/+$/, '');
+        const apiKey = env.ALCHM_DESKTOP_API_KEY;
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Cache-Control', 'no-store');
+
+        let body = '';
+        req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
+        req.on('end', async () => {
+          const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          };
+          if (apiKey) headers['x-api-key'] = apiKey;
+
+          try {
+            const upstream = await fetch(`${agentsUrl}/api/solana/duel-attestation`, {
+              method: 'POST',
+              headers,
+              body,
+              signal: AbortSignal.timeout(15_000),
+            });
+            res.statusCode = upstream.status;
+            res.end(await upstream.text());
+          } catch (err) {
+            res.statusCode = 502;
+            const message = err instanceof Error ? err.message : String(err);
+            res.end(JSON.stringify({ ok: false, error: `agents.alchm.kitchen unreachable: ${message}` }));
+          }
+        });
+        return;
+      }
+
       // 1. Hardened /api/exec middleware
       if (req.url === '/api/exec' && req.method === 'POST') {
         let body = '';

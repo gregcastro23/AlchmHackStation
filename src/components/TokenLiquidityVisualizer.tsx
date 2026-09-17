@@ -12,7 +12,6 @@ import {
   Play
 } from 'lucide-react';
 import { 
-  calculateLosslessSwapQuote, 
   parseEsmsDecimal,
   getLiveTokenQuotes,
   subscribeToPriceIndex,
@@ -77,13 +76,68 @@ const COIN_CONFIGS: Record<CoinSymbol, {
   },
 };
 
+const ELEMENT_IDS: Record<CoinSymbol, { id: number; name: string }> = {
+  SPIRIT: { id: 0, name: 'Spirit' },
+  ESSENCE: { id: 1, name: 'Essence' },
+  MATTER: { id: 2, name: 'Matter' },
+  SUBSTANCE: { id: 3, name: 'Substance' },
+};
+
+function getPoolId(a: CoinSymbol, b: CoinSymbol): number {
+  const lo = Math.min(ELEMENT_IDS[a].id, ELEMENT_IDS[b].id);
+  const hi = Math.max(ELEMENT_IDS[a].id, ELEMENT_IDS[b].id);
+  if (lo === hi) return -1;
+  const pairs = [
+    [0, 1], // Spirit-Essence (0)
+    [0, 2], // Spirit-Matter (1)
+    [0, 3], // Spirit-Substance (2)
+    [1, 2], // Essence-Matter (3)
+    [1, 3], // Essence-Substance (4)
+    [2, 3], // Matter-Substance (5)
+  ];
+  return pairs.findIndex(([p0, p1]) => p0 === lo && p1 === hi);
+}
+
+interface OnChainAmmQuote {
+  loading: boolean;
+  error: string | null;
+  reserves?: { reserveA: string; reserveB: string };
+  feeBps?: number;
+  outAtoms?: string;
+  minOutAtoms?: string;
+  slot?: number;
+}
+
+interface SimulationState {
+  simulated: boolean;
+  err: unknown;
+  logs: string[] | null;
+  unitsConsumed: number | null;
+  slot?: number;
+  errorText?: string;
+}
+
 export const TokenLiquidityVisualizer: React.FC<TokenLiquidityVisualizerProps> = ({ onCommitLog }) => {
   const [quotes, setQuotes] = useState<Record<string, TokenPriceQuote>>(getLiveTokenQuotes());
   const [sourceCoin, setSourceCoin] = useState<CoinSymbol>('SPIRIT');
   const [targetCoin, setTargetCoin] = useState<CoinSymbol>('MATTER');
   const [swapInput, setSwapInput] = useState<string>('25.0000');
   const [simulating, setSimulating] = useState(false);
-  const [simReceipt, setSimReceipt] = useState<string | null>(null);
+  const [ammQuote, setAmmQuote] = useState<OnChainAmmQuote>({ loading: false, error: null });
+  const [simulationResult, setSimulationResult] = useState<SimulationState | null>(null);
+
+  const poolId = getPoolId(sourceCoin, targetCoin);
+  const inAmountAtoms = parseEsmsDecimal(swapInput, 4);
+  const inputValidationError =
+    poolId < 0
+      ? 'Identical source and target element pair'
+      : inAmountAtoms <= 0n
+        ? 'Input quantity must be > 0'
+        : null;
+
+  const currentQuote: OnChainAmmQuote = inputValidationError
+    ? { loading: false, error: inputValidationError }
+    : ammQuote;
 
   useEffect(() => {
     const unsub = subscribeToPriceIndex(() => {
@@ -92,18 +146,115 @@ export const TokenLiquidityVisualizer: React.FC<TokenLiquidityVisualizerProps> =
     return () => unsub();
   }, []);
 
-  const parsedInputAtoms = parseEsmsDecimal(swapInput, 4);
-  const quote = calculateLosslessSwapQuote(sourceCoin, targetCoin, parsedInputAtoms);
+  // Fetch reserve-based quote from on-chain pool state via dev proxy
+  useEffect(() => {
+    if (poolId < 0 || inAmountAtoms <= 0n) return;
 
-  const handleSimulateSwap = () => {
+    let active = true;
+    const inElementName = ELEMENT_IDS[sourceCoin].name;
+    const inAtomsStr = inAmountAtoms.toString();
+
+    const timer = setTimeout(async () => {
+      setAmmQuote((prev) => ({ ...prev, loading: true, error: null }));
+      try {
+        const res = await fetch(
+          `/api/solana/amm-quote?poolId=${poolId}&inElement=${inElementName}&inAmountAtoms=${inAtomsStr}`,
+          { cache: 'no-store' }
+        );
+        const data = await res.json().catch(() => null);
+        if (!active) return;
+        if (!res.ok || !data?.ok) {
+          setAmmQuote({
+            loading: false,
+            error: data?.error || `HTTP ${res.status}: quote unavailable`,
+          });
+        } else {
+          setAmmQuote({
+            loading: false,
+            error: null,
+            reserves: data.reserves,
+            feeBps: data.feeBps,
+            outAtoms: data.outAtoms,
+            minOutAtoms: data.minOutAtoms,
+            slot: data.slot,
+          });
+        }
+      } catch (err) {
+        if (!active) return;
+        const msg = err instanceof Error ? err.message : String(err);
+        setAmmQuote({ loading: false, error: `Quote unavailable: ${msg}` });
+      }
+    }, 250);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [poolId, inAmountAtoms, sourceCoin]);
+
+  const handleSimulateSwap = async () => {
+    const poolId = getPoolId(sourceCoin, targetCoin);
+    if (poolId < 0) return;
+    const inAmountAtoms = parseEsmsDecimal(swapInput, 4);
+    if (inAmountAtoms <= 0n) return;
+
     setSimulating(true);
-    setSimReceipt(null);
-    setTimeout(() => {
+    setSimulationResult(null);
+
+    const inElementName = ELEMENT_IDS[sourceCoin].name;
+    const trader = '11111111111111111111111111111111';
+
+    try {
+      const res = await fetch(
+        `/api/solana/amm-quote?poolId=${poolId}&inElement=${inElementName}&inAmountAtoms=${inAmountAtoms.toString()}&trader=${trader}`,
+        { cache: 'no-store' }
+      );
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        const errText = data?.error || `HTTP ${res.status}: Devnet simulation call failed`;
+        setSimulationResult({
+          simulated: false,
+          err: errText,
+          logs: null,
+          unitsConsumed: null,
+          errorText: errText,
+        });
+        onCommitLog?.(`[AMM] Simulation failed: ${errText}`, 'error');
+      } else if (data.simulation) {
+        setSimulationResult({
+          simulated: true,
+          err: data.simulation.err,
+          logs: data.simulation.logs,
+          unitsConsumed: data.simulation.unitsConsumed,
+          slot: data.slot,
+        });
+        const logMsg = data.simulation.err
+          ? `[AMM] Simulated on Devnet, not sent. Error: ${JSON.stringify(data.simulation.err)} (slot ${data.slot})`
+          : `[AMM] Simulated on Devnet, not sent. Consumed ${data.simulation.unitsConsumed ?? 0} CUs (slot ${data.slot})`;
+        onCommitLog?.(logMsg, data.simulation.err ? 'warning' : 'success');
+      } else {
+        setSimulationResult({
+          simulated: true,
+          err: null,
+          logs: null,
+          unitsConsumed: null,
+          slot: data.slot,
+        });
+        onCommitLog?.(`[AMM] Quoted against reserves at slot ${data.slot}.`, 'info');
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setSimulationResult({
+        simulated: false,
+        err: msg,
+        logs: null,
+        unitsConsumed: null,
+        errorText: msg,
+      });
+      onCommitLog?.(`[AMM] Simulation unreachable: ${msg}`, 'error');
+    } finally {
       setSimulating(false);
-      const receipt = `Devnet Swap Simulation Confirmed: ${swapInput} $${sourceCoin} (${quotes[sourceCoin]?.index.toFixed(4)} IDX) -> ${quote.outFormatted} $${targetCoin} (${quotes[targetCoin]?.index.toFixed(4)} IDX) [Rate: ${quote.effectiveRate.toFixed(4)}, Status: 0x0 SUCCESS]`;
-      setSimReceipt(receipt);
-      if (onCommitLog) onCommitLog(receipt, 'success');
-    }, 600);
+    }
   };
 
   return (
@@ -245,8 +396,19 @@ export const TokenLiquidityVisualizer: React.FC<TokenLiquidityVisualizerProps> =
                     <option value="ESSENCE">🝑 ESSENCE (Water - {quotes.ESSENCE?.index.toFixed(4)})</option>
                     <option value="SUBSTANCE">🝉 SUBSTANCE (Air - {quotes.SUBSTANCE?.index.toFixed(4)})</option>
                   </select>
-                  <div className="flex-1 bg-[#0d1117]/60 border border-[#30363d] text-xs font-mono text-emerald-400 rounded-lg p-2.5 font-bold">
-                    ≈ {quote.outFormatted} ${targetCoin}
+                  <div className="flex-1 bg-[#0d1117]/60 border border-[#30363d] text-xs font-mono rounded-lg p-2.5 font-bold">
+                    {currentQuote.loading ? (
+                      <span className="text-[#8b949e] animate-pulse">Quoting on-chain pool reserves…</span>
+                    ) : currentQuote.outAtoms ? (
+                      <span className="text-emerald-400">
+                        ≈ {(Number(BigInt(currentQuote.outAtoms)) / 10_000).toFixed(4)} ${targetCoin}{' '}
+                        <span className="text-[10px] font-normal text-[#8b949e]">(slot {currentQuote.slot})</span>
+                      </span>
+                    ) : (
+                      <span className="text-amber-400/90 text-[11px]">
+                        {currentQuote.error || 'Quote unavailable'}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -262,9 +424,43 @@ export const TokenLiquidityVisualizer: React.FC<TokenLiquidityVisualizerProps> =
               <Play className="w-3.5 h-3.5" />
               {simulating ? 'Simulating Atomic Swap on Devnet...' : 'Execute Bespoke Swap Simulation'}
             </button>
-            {simReceipt && (
-              <div className="mt-2.5 p-2 rounded bg-emerald-950/30 border border-emerald-500/30 text-[11px] font-mono text-emerald-400">
-                {simReceipt}
+            {simulationResult && (
+              <div
+                className={`mt-2.5 p-3 rounded border text-[11px] font-mono ${
+                  simulationResult.simulated && !simulationResult.err
+                    ? 'bg-indigo-950/30 border-indigo-500/30 text-indigo-300'
+                    : 'bg-amber-950/30 border-amber-500/30 text-amber-300'
+                }`}
+              >
+                <div className="flex items-center justify-between font-bold mb-1">
+                  <span>Simulated on Devnet, not sent</span>
+                  {simulationResult.slot && <span>Slot #{simulationResult.slot}</span>}
+                </div>
+                {simulationResult.unitsConsumed != null && (
+                  <div>Compute units: {simulationResult.unitsConsumed.toLocaleString()} CU</div>
+                )}
+                {simulationResult.err ? (
+                  <div className="text-red-400 mt-1">
+                    Simulation result:{' '}
+                    {typeof simulationResult.err === 'object'
+                      ? JSON.stringify(simulationResult.err)
+                      : String(simulationResult.err)}
+                  </div>
+                ) : (
+                  <div className="text-emerald-400 mt-1">
+                    Status: 0x0 Simulation verified against Devnet pool reserves.
+                  </div>
+                )}
+                {simulationResult.logs && simulationResult.logs.length > 0 && (
+                  <details className="mt-2 text-[10px] cursor-pointer">
+                    <summary className="text-[#8b949e] hover:text-white">
+                      View simulation logs ({simulationResult.logs.length})
+                    </summary>
+                    <pre className="mt-1 p-2 rounded bg-black/50 text-[9px] text-[#8b949e] overflow-x-auto max-h-32 whitespace-pre-wrap">
+                      {simulationResult.logs.join('\n')}
+                    </pre>
+                  </details>
+                )}
               </div>
             )}
           </div>
@@ -282,22 +478,34 @@ export const TokenLiquidityVisualizer: React.FC<TokenLiquidityVisualizerProps> =
 
             <div className="space-y-2.5 text-xs font-mono">
               <div className="flex justify-between py-1.5 border-b border-[#21262d]">
-                <span className="text-[#8b949e]">Relative Elemental Parity:</span>
-                <span className="text-[#f0f6fc] font-bold">1 ${sourceCoin} = {quote.effectiveRate.toFixed(4)} ${targetCoin}</span>
-              </div>
-              <div className="flex justify-between py-1.5 border-b border-[#21262d]">
-                <span className="text-[#8b949e]">Protocol Liquidity Fee (0.30%):</span>
-                <span className="text-[#f0f6fc]">{quote.feeFormatted} ${sourceCoin}</span>
-              </div>
-              <div className="flex justify-between py-1.5 border-b border-[#21262d]">
-                <span className="text-[#8b949e]">Price Impact:</span>
-                <span className={quote.priceImpactPct > 1 ? 'text-amber-400' : 'text-emerald-400'}>
-                  {quote.priceImpactPct.toFixed(4)}%
+                <span className="text-[#8b949e]">On-Chain Effective Rate:</span>
+                <span className="text-[#f0f6fc] font-bold">
+                  {currentQuote.outAtoms
+                    ? `1 $${sourceCoin} = ${(Number(BigInt(currentQuote.outAtoms)) / Math.max(1, Number(parseEsmsDecimal(swapInput, 4)))).toFixed(4)} $${targetCoin}`
+                    : 'Quote unavailable'}
                 </span>
               </div>
               <div className="flex justify-between py-1.5 border-b border-[#21262d]">
-                <span className="text-[#8b949e]">Invariant Conservation (10^4 Lossless):</span>
-                <span className="text-emerald-400 font-bold">100.0000% (Lossless Integer Math)</span>
+                <span className="text-[#8b949e]">Protocol Liquidity Fee:</span>
+                <span className="text-[#f0f6fc]">
+                  {currentQuote.feeBps != null
+                    ? `${(currentQuote.feeBps / 100).toFixed(2)}% (${((Number(parseEsmsDecimal(swapInput, 4)) * currentQuote.feeBps) / 10_000 / 10_000).toFixed(4)} $${sourceCoin})`
+                    : '0.30% (Standard)'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-[#21262d]">
+                <span className="text-[#8b949e]">Guaranteed Min Received:</span>
+                <span className="text-emerald-400">
+                  {currentQuote.minOutAtoms
+                    ? `${(Number(BigInt(currentQuote.minOutAtoms)) / 10_000).toFixed(4)} $${targetCoin} (1% slip)`
+                    : '—'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-[#21262d]">
+                <span className="text-[#8b949e]">On-Chain State Slot:</span>
+                <span className="text-indigo-300 font-bold">
+                  {currentQuote.slot ? `Slot #${currentQuote.slot}` : 'Awaiting reserve read'}
+                </span>
               </div>
               <div className="flex justify-between py-1.5">
                 <span className="text-[#8b949e]">Custody Model:</span>
