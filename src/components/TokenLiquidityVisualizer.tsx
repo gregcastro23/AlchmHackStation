@@ -115,6 +115,7 @@ interface SimulationState {
   unitsConsumed: number | null;
   slot?: number;
   errorText?: string;
+  reason?: string;
 }
 
 export const TokenLiquidityVisualizer: React.FC<TokenLiquidityVisualizerProps> = ({ onCommitLog }) => {
@@ -210,7 +211,7 @@ export const TokenLiquidityVisualizer: React.FC<TokenLiquidityVisualizerProps> =
         { cache: 'no-store' }
       );
       const data = await res.json().catch(() => null);
-      if (!res.ok || !data?.ok) {
+      if (!res.ok || (data && data.ok === false)) {
         const errText = data?.error || `HTTP ${res.status}: Devnet simulation call failed`;
         setSimulationResult({
           simulated: false,
@@ -220,27 +221,35 @@ export const TokenLiquidityVisualizer: React.FC<TokenLiquidityVisualizerProps> =
           errorText: errText,
         });
         onCommitLog?.(`[AMM] Simulation failed: ${errText}`, 'error');
-      } else if (data.simulation) {
+      } else if (data?.simulation) {
         setSimulationResult({
-          simulated: true,
+          simulated: data.simulation.simulated,
           err: data.simulation.err,
           logs: data.simulation.logs,
           unitsConsumed: data.simulation.unitsConsumed,
+          reason: data.simulation.reason,
           slot: data.slot,
         });
-        const logMsg = data.simulation.err
-          ? `[AMM] Simulated on Devnet, not sent. Error: ${JSON.stringify(data.simulation.err)} (slot ${data.slot})`
-          : `[AMM] Simulated on Devnet, not sent. Consumed ${data.simulation.unitsConsumed ?? 0} CUs (slot ${data.slot})`;
-        onCommitLog?.(logMsg, data.simulation.err ? 'warning' : 'success');
+        if (data.simulation.reason === 'attestation_required') {
+          onCommitLog?.(
+            `[AMM] Quoted against reserves at slot ${data.slot}. Execution requires celestial aspect attestation.`,
+            'info'
+          );
+        } else {
+          const logMsg = data.simulation.err
+            ? `[AMM] Simulated on Devnet, not sent. Error: ${JSON.stringify(data.simulation.err)} (slot ${data.slot})`
+            : `[AMM] Simulated on Devnet, not sent. Consumed ${data.simulation.unitsConsumed ?? 0} CUs (slot ${data.slot})`;
+          onCommitLog?.(logMsg, data.simulation.err ? 'warning' : 'success');
+        }
       } else {
         setSimulationResult({
           simulated: true,
           err: null,
           logs: null,
           unitsConsumed: null,
-          slot: data.slot,
+          slot: data?.slot,
         });
-        onCommitLog?.(`[AMM] Quoted against reserves at slot ${data.slot}.`, 'info');
+        onCommitLog?.(`[AMM] Quoted against reserves at slot ${data?.slot}.`, 'info');
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -427,39 +436,54 @@ export const TokenLiquidityVisualizer: React.FC<TokenLiquidityVisualizerProps> =
             {simulationResult && (
               <div
                 className={`mt-2.5 p-3 rounded border text-[11px] font-mono ${
-                  simulationResult.simulated && !simulationResult.err
+                  simulationResult.reason === 'attestation_required'
+                    ? 'bg-[#161b22] border-[#30363d] text-zinc-300'
+                    : simulationResult.simulated && !simulationResult.err
                     ? 'bg-indigo-950/30 border-indigo-500/30 text-indigo-300'
                     : 'bg-amber-950/30 border-amber-500/30 text-amber-300'
                 }`}
               >
                 <div className="flex items-center justify-between font-bold mb-1">
-                  <span>Simulated on Devnet, not sent</span>
+                  <span>
+                    {simulationResult.reason === 'attestation_required'
+                      ? 'Simulation Pending Attestation'
+                      : 'Simulated on Devnet, not sent'}
+                  </span>
                   {simulationResult.slot && <span>Slot #{simulationResult.slot}</span>}
                 </div>
-                {simulationResult.unitsConsumed != null && (
-                  <div>Compute units: {simulationResult.unitsConsumed.toLocaleString()} CU</div>
-                )}
-                {simulationResult.err ? (
-                  <div className="text-red-400 mt-1">
-                    Simulation result:{' '}
-                    {typeof simulationResult.err === 'object'
-                      ? JSON.stringify(simulationResult.err)
-                      : String(simulationResult.err)}
+                {simulationResult.reason === 'attestation_required' ? (
+                  <div className="text-zinc-400 mt-1">
+                    On-chain swap execution requires celestial aspect attestation via{' '}
+                    <code className="text-indigo-300">/api/solana/amm-attestation</code>. Live reserve quote above is active.
                   </div>
                 ) : (
-                  <div className="text-emerald-400 mt-1">
-                    Status: 0x0 Simulation verified against Devnet pool reserves.
-                  </div>
-                )}
-                {simulationResult.logs && simulationResult.logs.length > 0 && (
-                  <details className="mt-2 text-[10px] cursor-pointer">
-                    <summary className="text-[#8b949e] hover:text-white">
-                      View simulation logs ({simulationResult.logs.length})
-                    </summary>
-                    <pre className="mt-1 p-2 rounded bg-black/50 text-[9px] text-[#8b949e] overflow-x-auto max-h-32 whitespace-pre-wrap">
-                      {simulationResult.logs.join('\n')}
-                    </pre>
-                  </details>
+                  <>
+                    {simulationResult.unitsConsumed != null && (
+                      <div>Compute units: {simulationResult.unitsConsumed.toLocaleString()} CU</div>
+                    )}
+                    {simulationResult.err ? (
+                      <div className="text-red-400 mt-1">
+                        Simulation result:{' '}
+                        {typeof simulationResult.err === 'object'
+                          ? JSON.stringify(simulationResult.err)
+                          : String(simulationResult.err)}
+                      </div>
+                    ) : (
+                      <div className="text-emerald-400 mt-1">
+                        Status: 0x0 Simulation verified against Devnet pool reserves.
+                      </div>
+                    )}
+                    {simulationResult.logs && simulationResult.logs.length > 0 && (
+                      <details className="mt-2 text-[10px] cursor-pointer">
+                        <summary className="text-[#8b949e] hover:text-white">
+                          View simulation logs ({simulationResult.logs.length})
+                        </summary>
+                        <pre className="mt-1 p-2 rounded bg-black/50 text-[9px] text-[#8b949e] overflow-x-auto max-h-32 whitespace-pre-wrap">
+                          {simulationResult.logs.join('\n')}
+                        </pre>
+                      </details>
+                    )}
+                  </>
                 )}
               </div>
             )}
