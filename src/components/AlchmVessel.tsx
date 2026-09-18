@@ -43,6 +43,7 @@ const SOURCE_LABEL: Record<VesselSourceKey, string> = {
   agentsArena: 'Agents arena (agents.alchm.kitchen)',
   spacetimedb: 'Pentacles SpacetimeDB',
   priceIndex: 'Canonical price index',
+  onchain: 'Solana Devnet Token-2022',
 };
 
 const fmt = (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 4 });
@@ -148,105 +149,130 @@ const AlembicFlask: React.FC<{ balances: EsmsTuple; halo: boolean }> = ({ balanc
               ctx.beginPath();
               ctx.arc(mx + Math.sin(t / 700 + seed) * 4, my, 1.4, 0, Math.PI * 2);
               ctx.fillStyle = `${color}`;
-              ctx.globalAlpha = 0.25 + 0.5 * (1 - cycle);
               ctx.fill();
-              ctx.globalAlpha = 1;
             }
           }
           base = top;
         });
       }
+
       ctx.restore();
 
-      // Glass: outline plus a specular highlight.
+      // Glass highlights and neck lip
+      ctx.save();
+      ctx.strokeStyle = haloRef.current ? 'rgba(255, 203, 86, 0.65)' : 'rgba(255, 255, 255, 0.22)';
+      ctx.lineWidth = 1.6;
       flaskPath(ctx, width, height);
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = haloRef.current ? 'rgba(250, 204, 21, 0.75)' : 'rgba(204, 255, 128, 0.45)';
       ctx.stroke();
+
+      // Neck lip
       ctx.beginPath();
-      ctx.arc(geo.cx, geo.bulbCy, geo.bulbR * 0.82, Math.PI * 1.08, Math.PI * 1.32);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
-      ctx.lineWidth = 3;
+      ctx.ellipse(geo.cx, geo.neckTop, geo.neckW, geo.neckW * 0.28, 0, 0, Math.PI * 2);
       ctx.stroke();
+
+      // Specular glare on the shoulder
+      const glare = ctx.createRadialGradient(
+        geo.cx - geo.bulbR * 0.35,
+        geo.bulbCy - geo.bulbR * 0.35,
+        2,
+        geo.cx - geo.bulbR * 0.35,
+        geo.bulbCy - geo.bulbR * 0.35,
+        geo.bulbR * 0.5,
+      );
+      glare.addColorStop(0, 'rgba(255, 255, 255, 0.22)');
+      glare.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.fillStyle = glare;
+      ctx.beginPath();
+      ctx.arc(geo.cx - geo.bulbR * 0.35, geo.bulbCy - geo.bulbR * 0.35, geo.bulbR * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     };
 
+    staticRedrawRef.current = () => draw(0);
+    resize();
+
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => {
+        resize();
+        if (reduceMotion) draw(0);
+      });
+      ro.observe(canvas);
+    }
+
+    if (reduceMotion) {
+      draw(0);
+      return () => ro?.disconnect();
+    }
+
+    let running = true;
     const loop = (t: number) => {
-      if (!document.hidden) draw(t);
+      if (!running) return;
+      draw(t);
       frame = requestAnimationFrame(loop);
     };
-
-    // Resizing clears the bitmap, so always repaint one frame immediately —
-    // rAF may not fire while the page is hidden.
-    const paintNow = () => draw(reduceMotion ? 0 : performance.now());
-    resize();
-    paintNow();
-    const observer = new ResizeObserver(() => {
-      resize();
-      paintNow();
-    });
-    observer.observe(canvas);
-    if (reduceMotion) staticRedrawRef.current = paintNow;
-    else frame = requestAnimationFrame(loop);
+    frame = requestAnimationFrame(loop);
 
     return () => {
+      running = false;
       cancelAnimationFrame(frame);
-      observer.disconnect();
-      staticRedrawRef.current = null;
+      ro?.disconnect();
     };
   }, []);
 
-  // The animated loop reads these refs every frame; a static (reduced-motion)
-  // frame only needs repainting when the holdings or halo change.
   useEffect(() => {
     sharesRef.current = shares;
     haloRef.current = halo;
     staticRedrawRef.current?.();
   }, [shares, halo]);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="w-full h-[260px]"
-      role="img"
-      aria-label={`Alembic holdings: ${ESMS_META.map((m, i) => `${m.label} ${Math.round(shares[i] * 100)}%`).join(', ')}`}
-    />
-  );
+  return <canvas ref={canvasRef} className="w-full h-44 sm:h-52" aria-label="Alembic flask ESMS distribution" />;
 };
 
-// ── Small pieces ────────────────────────────────────────────────────────────
+// ── Secondary visualizers ───────────────────────────────────────────────────
 
 const Sparkline: React.FC<{ points: TotalPoint[] }> = ({ points }) => {
-  if (points.length < 2) {
-    return <span className="text-[10px] text-on-surface-variant/60 font-mono">collecting sync history…</span>;
-  }
+  if (points.length < 2) return null;
   const values = points.map((p) => p.total);
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
-  const d = points
-    .map((p, i) => `${(i / (points.length - 1)) * 100},${28 - ((p.total - min) / range) * 26}`)
+  const w = 120;
+  const h = 28;
+  const path = points
+    .map((p, i) => {
+      const x = (i / (points.length - 1)) * w;
+      const y = h - ((p.total - min) / range) * (h - 6) - 3;
+      return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+    })
     .join(' ');
+
   return (
-    <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="w-full h-8" aria-label="Observed Vessel total across syncs">
-      <polyline points={d} fill="none" stroke="#ccff80" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-7 text-primary/80 overflow-visible" aria-hidden="true">
+      <path d={path} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 };
 
 const EsmsBars: React.FC<{ esms: EsmsTuple }> = ({ esms }) => {
-  const max = Math.max(...esms, 0);
+  const max = Math.max(...esms, 1);
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-1.5 justify-center py-1">
       {ESMS_META.map((m, i) => (
-        <div key={m.key} className="grid grid-cols-[88px_1fr_88px] items-center gap-2 text-xs font-mono">
-          <span style={{ color: m.color }}>{m.label}</span>
-          <div className="h-2 rounded bg-surface-container-highest overflow-hidden">
+        <div key={m.key} className="flex items-center gap-2 text-xs">
+          <span className="w-16 font-mono text-[11px]" style={{ color: m.color }}>
+            {m.label}
+          </span>
+          <div className="flex-1 h-2 rounded-full bg-surface-container overflow-hidden">
             <div
-              className="h-full rounded transition-all duration-700"
-              style={{ width: max > 0 ? `${(esms[i] / max) * 100}%` : '0%', backgroundColor: m.color }}
+              className="h-full rounded-full transition-all duration-300"
+              style={{
+                width: `${Math.min(100, Math.max(3, (esms[i] / max) * 100))}%`,
+                backgroundColor: m.color,
+              }}
             />
           </div>
-          <span className="text-right text-on-surface">{fmt(esms[i])}</span>
+          <span className="w-16 text-right font-mono text-on-surface-variant text-[11px]">{fmt(esms[i])}</span>
         </div>
       ))}
     </div>
@@ -467,16 +493,42 @@ export const AlchmVessel: React.FC<AlchmVesselProps> = ({ onCommitLog, onRouteTo
           }`}
         >
           <AlembicFlask balances={balances} halo={halo} />
-          <div className="grid grid-cols-2 gap-2 mt-2">
-            {ESMS_META.map((m, i) => (
-              <div key={m.key} className="rounded-lg bg-surface-container px-2 py-1.5">
-                <div className="flex items-center justify-between text-[10px] font-mono uppercase">
-                  <span style={{ color: m.color }}>{m.label}</span>
-                  <span className="text-on-surface-variant">{m.element}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+            {ESMS_META.map((m, i) => {
+              const ledgerVal = balances[i];
+              const onchainAtoms = vessel?.onchain?.atoms?.[i];
+              const onchainEsms = onchainAtoms != null ? Number(BigInt(onchainAtoms)) / 10_000 : null;
+              const pillarVal = vessel?.streams.pentaclesMelee.pillarPool?.[i] ?? null;
+
+              return (
+                <div key={m.key} className="rounded-lg bg-surface-container px-2.5 py-2 space-y-1">
+                  <div className="flex items-center justify-between text-[10px] font-mono uppercase">
+                    <span className="font-bold" style={{ color: m.color }}>{m.label}</span>
+                    <span className="text-on-surface-variant">{m.element}</span>
+                  </div>
+                  <div className="space-y-0.5 text-[11px] font-mono">
+                    <div className="flex items-center justify-between">
+                      <span className="text-on-surface-variant text-[10px]">Off-chain ledger:</span>
+                      <span className="text-on-surface font-semibold">{fmt(ledgerVal)} ESMS</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-on-surface-variant text-[10px]">
+                        On-chain Devnet{vessel?.onchain?.slot ? ` (slot ${vessel.onchain.slot})` : ''}:
+                      </span>
+                      <span className="text-on-surface">
+                        {onchainEsms != null ? `${fmt(onchainEsms)} ESMS` : '—'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-on-surface-variant text-[10px]">Pillar pool (10=1):</span>
+                      <span className="text-on-surface">
+                        {pillarVal != null ? `${fmt(pillarVal)} units` : '—'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="font-mono text-sm text-on-surface">{fmt(balances[i])}</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

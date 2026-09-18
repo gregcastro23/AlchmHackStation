@@ -36,6 +36,7 @@ WTEN profile "Tokens" tab ◄── GET /api/economy/vessel (direct)
 | HackStation `.env.local` | `ALCHM_DESKTOP_API_KEY` | An `alchm_desktop_…` key bound to the operator's Agents account (30-day expiry). Sign in at `agents.alchm.kitchen/profile?desktopLink=true` and take the `apiKey` from the "Open desktop" link. Issuing a key retires the previous Alchm Desktop key, so reuse the desktop companion's key if you run both. Server-side only. |
 | | `ALCHM_AGENTS_URL` | Optional, defaults to `https://agents.alchm.kitchen`. |
 | ASOL | `ALCHM_KITCHEN_SYNC_URL`, `ALCHM_KITCHEN_SYNC_SECRET` | ASOL → Kitchen only (already used by `/api/economy/balances`). No client holds this secret. |
+| | `SPACETIMEDB_IDENTITY` | Required 64-hex SpacetimeDB database identity. Duel attestation and receipt derivation fail closed (503 `arena_misconfigured`) if unset or invalid hex. |
 | | `VESSEL_ORIGINS` | Optional extra CORS origins (comma-separated), e.g. `http://localhost:5173` for Pentacles dev. |
 | | `NEXT_PUBLIC_SPACETIME_URI`, `NEXT_PUBLIC_SPACETIME_MODULE` | Which Pentacles database to read. Defaults to `cookingwithcastrollc`; the Pentacles client defaults to `pentacles1`, so confirm they match. |
 | Pentacles | `VITE_AGENTS_ORIGIN` | Optional, defaults to `https://agents.alchm.kitchen` (already covered by the CSP `https://*.alchm.kitchen`). |

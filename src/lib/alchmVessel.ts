@@ -9,8 +9,13 @@
 // ============================================================================
 
 export type EsmsTuple = [number, number, number, number];
+
+export function atomsToEsms(atoms: string | bigint): number {
+  return Number(BigInt(atoms)) / 10_000;
+}
+
 export type VesselStreamKey = 'jingDuels' | 'staking' | 'pentaclesMelee' | 'kitchenAchievements';
-export type VesselSourceKey = 'kitchenLedger' | 'agentsArena' | 'spacetimedb' | 'priceIndex';
+export type VesselSourceKey = 'kitchenLedger' | 'agentsArena' | 'spacetimedb' | 'priceIndex' | 'onchain';
 
 export interface VesselLedgerEntry {
   id: string;
@@ -44,6 +49,12 @@ export interface AlchmVesselState {
     totalUsdEquivalent: number | null;
     usdRail: { perTokenUsd: number; source: string | null } | null;
   };
+  onchain?: {
+    cluster: 'devnet' | 'mainnet-beta';
+    wallet: string;
+    atoms: [string, string, string, string];
+    slot: number;
+  } | null;
   streams: {
     jingDuels: {
       ledgerEsms: EsmsTuple;
