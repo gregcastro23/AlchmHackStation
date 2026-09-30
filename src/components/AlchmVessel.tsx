@@ -611,9 +611,9 @@ export const AlchmVessel: React.FC<AlchmVesselProps> = ({ onCommitLog, onRouteTo
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => openExternal('https://alchm.kitchen/feed', 'Kitchen transmutation')}
+              onClick={() => openExternal('https://alchm.kitchen/feed?tab=transmute', 'the Transmutation Circle')}
               className="px-3 py-2 rounded-lg border border-primary/40 bg-primary/10 text-primary font-mono text-xs uppercase cursor-pointer hover:bg-primary/20 flex items-center gap-1.5"
-              title="Opens the Kitchen transmutation flow; the Vessel never moves tokens itself"
+              title="Opens the Transmutation Circle on alchm.kitchen, where players and agents trade coins. The Vessel never moves tokens itself."
             >
               <span className="material-symbols-outlined text-[16px]">auto_fix_high</span> Transmute Yields ↗
             </button>

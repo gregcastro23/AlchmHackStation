@@ -49,7 +49,7 @@ The WTEN route must be deployed before ASOL's `kitchenLedger` source works, and 
 - A presented desktop key is the only credential considered: an invalid key or the unlinked `dev-desktop-token` gets 401 and never falls back to a cookie.
 - Sync-secret comparisons are timing-safe. CORS credentials are echoed only for allowlisted origins.
 - Offline caches are keyed per signed-in user and cleared on 401.
-- The Vessel never mints, moves, or converts ESMS. "Transmute", "Route via AMM", and "On-Chain Sync" hand off to the existing flows (alchm.kitchen/feed, Token-2022 Hub → Bespoke AMM, agents.alchm.kitchen/account).
+- The Vessel never mints, moves, or converts ESMS. "Transmute", "Route via AMM", and "On-Chain Sync" hand off to the existing flows (alchm.kitchen/feed?tab=transmute (the Transmutation Circle), Token-2022 Hub → Bespoke AMM, agents.alchm.kitchen/account).
 
 ## Data coverage (what is real today)
 
@@ -58,8 +58,10 @@ The WTEN route must be deployed before ASOL's `kitchenLedger` source works, and 
 | Jing & 14 Pillars duels | `duel_yield` ledger credits; Agents `AgentJingDuel` count; Pentacles `jing_duel`/`pillar_duel` wins | Agents Jing rows have no winner; `pillar_*` tables exist only once the module is republished |
 | Staking & yields | `daily_yield`, `kitchen_daily_yield`, `agents_daily_yield`, `agents_yield`, `streak_bonus`, `transit_attunement`; streak | StarVault accrual (`star_stake` is private; on-chain positions not aggregated server-side); decan dividends |
 | Pentacles melee | `player.tokens`, `word_wins`, `pillar_pool`, live `melee_seat` | Trick/meld/clean-sweep rewards are not persisted per player or credited to the ledger |
-| Kitchen achievements | `quest_reward`, `group_chat_quest`, `alchemical_log`; `user_quest_progress` | — |
+| Kitchen achievements | `quest_reward`, `group_chat_quest`, `alchemical_log`, `practice_reward`; `user_quest_progress` | — |
 | USD value | Kitchen price index `railsUsd.redeemPerTokenUsd` | Shown as "—" whenever no rail is published; no APY is computed |
+
+Trades and swaps are written to the Kitchen ledger as `transmutation` rows. They are not income: /api/economy/vessel leaves them out of every stream total and returns them in `ledger` with `stream: "other"` and descriptions such as "Transmutation Circle (offer 1a2b3c4d): gave 3 Spirit". The cockpit already renders them through STREAM_META.other. A trade moves value between two wallets, so it changes balances without changing any stream.
 
 To add a stream source, write it as a credit with a new `source_type`, then add that type to `VESSEL_STREAM_SOURCES` in WTEN (the tests pin that no type maps to two streams).
 
